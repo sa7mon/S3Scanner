@@ -39,11 +39,11 @@ do
   	else
   		echo "[$domain]    Seems good!"
   		# Create directory if it doesn't already exist
-  		if [ ! -d $domain ]; then
-		  mkdir -p $domain;
+  		if [ ! -d "./buckets/$domain" ]; then
+		  mkdir -p "./buckets/$domain";
 		fi
 
 		# Download bucket into directory
-		aws s3 sync s3://$domain ./$domain/ --no-sign-request --region $region
+		aws s3 sync s3://$domain ./buckets/$domain/ --no-sign-request --region $region
 	fi
 done < "domains.test"
