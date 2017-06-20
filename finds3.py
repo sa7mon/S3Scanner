@@ -42,23 +42,30 @@ def checkSite(site):
 			resultText = "	A record: " + str(rdata) + " - "
 
 			nslookup = subprocess.Popen("nslookup " + str(rdata),stdout=subprocess.PIPE,shell=True)
-			match = re.search("(name = )\w(.*amazonaws\.com)",nslookup.stdout.read())
+			match = re.search("(?:name = s3-website-)(.*)(?:\.amazonaws\.com)",nslookup.stdout.read())
 			if match:
-				pprint(True, site + " : " + str(rdata) + " : S3!")
+				aws = str(match.group(1))
+				printLine = site + ":" + aws
+				print("\033[0;32m" + printLine + "\033[0;m")
+				logFile.write(printLine)
 			else:
 				pprint(False, site + " : " + str(rdata) + " : Not")
 			i += 1
 	except dns.resolver.NoAnswer as err:
 		pprint(False, "Caught 'No A Record' error. Skipping...")
+	except dns.resolver.NXDOMAIN as err:
+		pprint(False, "Caught 'No NX Domain' error. Skipping...")
+	except dns.resolver.NoNameservers as err:
+		pprint(False, "Caught 'All nameservers failed' error. Skipping...")
+	except dns.exception.Timeout as err:
+		pprint(False, "Caught 'DNS timout' error. Skipping...")
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Find S3 sites!')
 
 # Declare arguments
 parser.add_argument('-g', '--goodDomains', required=True, help='Name of file to save the success domains in')
-# parser.add_argument('-g', '--email', required=False, help='Optional email to resume at')
 parser.add_argument('domains', help='Name of file containing domains to check')
-# parser.add_argument('-t', '--threads', type=int, required=False, help='Number of threads to use')
 
 # Parse the args
 args = parser.parse_args()
