@@ -17,10 +17,11 @@ function trapint {
     exit 0
 }
 
+s3file=$1
+
 # Read file with lines in format:
-# domain:s3region
-#
-# i.e.  google.com:us-west-2
+# domain:s3region (i.e. google.com:us-west-2)
+
 while read line
 do
     # Do what you want to $domain
@@ -45,5 +46,8 @@ do
 
 		# Download bucket into directory
 		aws s3 sync s3://$domain ./buckets/$domain/ --no-sign-request --region $region
-	fi
-done < "domains.test"
+	
+    # TODO: Here if the bucket/domain folder is empty, delete it
+  fi
+done < $s3file
+ 
