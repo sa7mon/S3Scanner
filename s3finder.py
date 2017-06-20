@@ -47,7 +47,7 @@ def checkSite(site):
 				aws = str(match.group(1))
 				printLine = site + ":" + aws
 				print("\033[0;32m" + printLine + "\033[0;m")
-				logFile.write(printLine)
+				logFile.write(printLine + "\n")
 			else:
 				pprint(False, site + " : " + str(rdata) + " : Not")
 			i += 1
