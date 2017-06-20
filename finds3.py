@@ -14,7 +14,9 @@ import re
 import argparse
 
 resolver = dns.resolver.Resolver()
-# resolver.nameservers=[socket.gethostbyname('ns1.cisco.com')]
+resolver.nameservers=['8.8.8.8', '8.8.4.4', '208.67.222.222',
+					'208.67.220.220', '216.146.35.35',
+					'216.146.36.36', socket.gethostbyname('ns1.cisco.com')]
 
 serverCountLimit = 2
 logFileName = "results.txt"
@@ -32,22 +34,22 @@ def pprint(good, message):
 
 def checkSite(site):
 	i = 1
-	# try:
-	for rdata in resolver.query(site, 'A'):
-		if (i > serverCountLimit):
-			pprint(False, "Skipping " + site + " additional A server(s)...")
-			continue
-		resultText = "	A record: " + str(rdata) + " - "
+	try:
+		for rdata in resolver.query(site, 'A'):
+			if (i > serverCountLimit):
+				pprint(False, "Skipping " + site + " additional A server(s)...")
+				continue
+			resultText = "	A record: " + str(rdata) + " - "
 
-		nslookup = subprocess.Popen("nslookup " + str(rdata),stdout=subprocess.PIPE,shell=True)
-		match = re.search("(name = )\w(.*amazonaws\.com)",nslookup.stdout.read())
-		if match:
-			pprint(True, site + " : " + str(rdata) + " : S3!")
-		else:
-			pprint(False, site + " : " + str(rdata) + " : Not")
-		i += 1
-	# except:
-		# pprint(False, "Caught error. Skipping...")
+			nslookup = subprocess.Popen("nslookup " + str(rdata),stdout=subprocess.PIPE,shell=True)
+			match = re.search("(name = )\w(.*amazonaws\.com)",nslookup.stdout.read())
+			if match:
+				pprint(True, site + " : " + str(rdata) + " : S3!")
+			else:
+				pprint(False, site + " : " + str(rdata) + " : Not")
+			i += 1
+	except dns.resolver.NoAnswer as err:
+		pprint(False, "Caught 'No A Record' error. Skipping...")
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Find S3 sites!')
