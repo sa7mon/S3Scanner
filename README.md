@@ -16,6 +16,8 @@ This script takes in a list of domains with regions made by s3finder.py. For eac
 
 **Usage:** `$> s3dumper.sh output.txt`
 
+**Requirements:** [aws-cli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
+
 ![2 - s3dumper.sh](https://user-images.githubusercontent.com/3712226/30464321-8e8e6d34-9996-11e7-8739-94f13e082877.png)
 
 # Contributing
