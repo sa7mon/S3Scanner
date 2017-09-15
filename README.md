@@ -1,6 +1,6 @@
 # S3Scanner
 
-A quick and dirty script to find unsecured S3 buckets and dump their contents. 
+A quick and dirty script to find unsecured S3 buckets and dump their contents :droplet:
 
 The tool has 2 parts:
 
@@ -18,5 +18,8 @@ This script takes in a list of domains with regions made by s3finder.py. For eac
 
 ![2 - s3dumper.sh](https://user-images.githubusercontent.com/3712226/30464321-8e8e6d34-9996-11e7-8739-94f13e082877.png)
 
-## License
+# Contributing
+Please make pull requests if you can improve on the code at all (which is certain as the code can be greatly optimized).
+
+# License
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International [(CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
