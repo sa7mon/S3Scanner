@@ -4,7 +4,9 @@
 # 
 # Author:  Dan Salmon (twitter.com/bltjetpack, github.com/sa7mon)
 # Created: 6/19/17
+# License: Creative Commons (CC BY-NC-SA 4.0))
 #
+#########
 
 import dns.resolver
 import socket
@@ -14,9 +16,7 @@ import re
 import argparse
 
 resolver = dns.resolver.Resolver()
-resolver.nameservers=['8.8.8.8', '8.8.4.4', '208.67.222.222',
-					'208.67.220.220', '216.146.35.35',
-					'216.146.36.36', socket.gethostbyname('ns1.cisco.com')]
+resolver.nameservers=['8.8.8.8', '8.8.4.4', '208.67.222.222', '208.67.220.220', '216.146.35.35', '216.146.36.36', socket.gethostbyname('ns1.cisco.com')]
 
 serverCountLimit = 2
 logFileName = "results.txt"
@@ -64,15 +64,15 @@ def checkSite(site):
 parser = argparse.ArgumentParser(description='Find S3 sites!')
 
 # Declare arguments
-parser.add_argument('-g', '--goodDomains', required=True, help='Name of file to save the success domains in')
-parser.add_argument('domains', help='Name of file containing domains to check')
+parser.add_argument('-o', '--outFile', required=True, help='Name of file to save the successfully checked domains in')
+parser.add_argument('domains', help='Name of text file containing domains to check')
 
 # Parse the args
 args = parser.parse_args()
 
 
 # Open log file for writing
-logFile = open(args.goodDomains, 'a+')
+logFile = open(args.outFile, 'a+')
 
 with open(args.domains, 'r') as f:
 	for line in f:
