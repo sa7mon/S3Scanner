@@ -1,9 +1,20 @@
 # S3Scanner
 
-A quick and dirty script to scan domain names and check if their A records resolve to *.amazonaws.com indicating they're hosted on Amazon S3.
+A quick and dirty script to find unsecured S3 buckets and dump their contents. 
 
-## Demo
-![Demo](https://user-images.githubusercontent.com/3712226/27308378-8485c49a-554e-11e7-8883-984b1a0f21b0.png)
+The tool has 2 parts:
+
+## 1 - s3finder.py
+This script takes a list of domain names and checks if their hosted on Amazon S3. Found S3 domains are output to file with their corresponding region in format "domain:region". 
+
+`$>python s3finder.py -o output.txt domainsToCheck.txt`
+
+![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/30464005-9e8ab0c8-9994-11e7-8757-e32f1db975da.png)
+
+## 2 - s3dumper.sh
+This script takes in a list of domains with regions made by s3finder.py. For each domain, it checks if there are publicly readable buckets and dumps them if so. 
+
+![2 - s3dumper.sh](https://user-images.githubusercontent.com/3712226/30464321-8e8e6d34-9996-11e7-8739-94f13e082877.png)
 
 ## License
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International [(CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
