@@ -1,6 +1,6 @@
 #########
 #
-# AWS S3scanner - Scans domain names for A records that resolve to *.amazonaws.com
+# AWS S3scanner - Scans domain names for S3 buckets
 # 
 # Author:  Dan Salmon (twitter.com/bltjetpack, github.com/sa7mon)
 # Created: 6/19/17
@@ -37,8 +37,7 @@ def checkSite(site, region):
 
     if r.status_code == 200:
         # Successfully found a bucket!
-        pprint(True, site + ":" +
-               region)
+        pprint(True, site + ":" + region)
     elif r.status_code == 301:
         # We got the region wrong. The 'x-amz-bucket-region' header will give us the correct one.
         checkSite(site, r.headers['x-amz-bucket-region'])
