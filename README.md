@@ -17,13 +17,13 @@ This script takes a list of domain names and checks if their hosted on Amazon S3
 1. (Optional) `virtualenv venv && source ./venv/bin/activate`
 2. `pip install -r requirements.txt`
 
+**Support:**
+Only tested with Python 2.7.14
+
 ## 2 - s3dumper.sh
 This script takes in a list of domains with regions made by s3finder.py. For each domain, it checks if there are publicly readable buckets and dumps them if so. 
 
 **Usage:** `$> s3dumper.sh output.txt`
-
-**Support:**
-Only tested with Python 2.7.14
 
 **Requirements:** [aws-cli](http://docs.aws.amazon.com/cli/latest/userguide/installing.html)
 
