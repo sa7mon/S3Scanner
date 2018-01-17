@@ -33,8 +33,12 @@ def checkSite(site, region):
 
     # Concat domain name with the default region
     bucketDomain = 'http://' + site + '.s3-' + region + '.amazonaws.com'
-    r = requests.get(bucketDomain)
-
+    try:
+        r = requests.get(bucketDomain)
+    except requests.exceptions.ConnectionError:
+        # Couldn't resolve the hostname. Definitely not a bucket.
+        pprint(False, site)
+        return
     if r.status_code == 200:
         # Successfully found a bucket!
         pprint(True, site + ":" + region)
