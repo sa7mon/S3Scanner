@@ -1,5 +1,7 @@
 # S3Scanner
 
+[![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
+
 A quick and dirty script to find unsecured S3 buckets and dump their contents :droplet:
 
 The tool has 2 parts:
