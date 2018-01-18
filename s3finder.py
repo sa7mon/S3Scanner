@@ -10,7 +10,7 @@
 
 import argparse
 import requests
-import sh
+import s3utils as s3
 
 defaultRegion = "us-west-1"
 
@@ -23,15 +23,6 @@ def pprint(good, message):
     else:
         # print in red
         print("\033[0;91m" + message + "\033[0;m")
-
-
-def getBucketSize(bucketName):
-    """ Use awscli to 'ls' the bucket which will give us the total size of the bucket."""
-
-    a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request','s3://' + bucketName)
-
-    # Get the last line of the output, get everything to the right of the colon, and strip whitespace
-    return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
 
 def checkBucket(bucketName, region):
@@ -52,7 +43,7 @@ def checkBucket(bucketName, region):
         return
     if r.status_code == 200:
         # Successfully found a bucket!
-        message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucketName + ":" + region + " - " + getBucketSize(site))
+        message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucketName + ":" + region + " - " + s3.getBucketSize(site))
         pprint(True, message)
     elif r.status_code == 301:
         # We got the region wrong. The 'x-amz-bucket-region' header will give us the correct one.
