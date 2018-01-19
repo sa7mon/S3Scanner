@@ -18,8 +18,8 @@ This script takes a list of domain names and checks if they're hosted on Amazon 
 * **Usage:** 
   `$> python s3finder.py -o output.txt domainsToCheck.txt`
 
-**Support:**
-Only tested with Python 2.7.14
+**Compatibility:**
+Tested with Python 2.7 & 3.6
 
 ### 2 - s3dumper.sh
 This script takes in a list of domains with regions made by s3finder.py. For each domain, it checks if there are publicly readable buckets and dumps them if so. 
