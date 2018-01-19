@@ -27,7 +27,7 @@ def pprint(good, message, log):
 parser = argparse.ArgumentParser(description='Find AWS S3 buckets!')
 
 # Declare arguments
-parser.add_argument('-o', '--outFile', required=False,
+parser.add_argument('-o', '--out-file', required=False, dest='bucketsFile',
                     help='Name of file to save the successfully checked domains in. Default: buckets.txt')
 parser.add_argument('-c', '--include-closed', required=False, dest='includeClosed', action='store_true',
                     help='Include found but closed buckets in the outFile. Default: false')
@@ -54,11 +54,11 @@ with open(args.domains, 'r') as f:
 
         if result[0] == 301:
             result = s3.checkBucket(site, result[1])
-        if result[0] in [900, 404]:  # These are our 'bucket not found' codes
+        if result[0] in [900, 404]:     # These are our 'bucket not found' codes
             pprint(False, result[1], False)
         elif result[0] == 403:          # Found but closed bucket. Only log if user says to.
             pprint(False, result[1], args.includeClosed)
-        elif result[0] == 200:            # The only 'bucket found and open' codes
+        elif result[0] == 200:          # The only 'bucket found and open' codes
             pprint(True, result[1], True)
         else:
             raise ValueError("Got back unknown code from checkBucket()")
