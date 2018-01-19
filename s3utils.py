@@ -3,7 +3,11 @@ import requests
 
 
 def getBucketSize(bucketName):
-    """ Use awscli to 'ls' the bucket which will give us the total size of the bucket."""
+    """
+    Use awscli to 'ls' the bucket which will give us the total size of the bucket.
+    NOTE:
+        Function assumes the bucket exists and doesn't catch errors if it doesn't.
+    """
 
     a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request','s3://' + bucketName)
 
@@ -28,14 +32,14 @@ def checkBucket(bucketName, region):
         return 900, message
     if r.status_code == 200:
         # Successfully found a bucket!
-        message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucketName + ":" + region + " - " +
-                                              getBucketSize(bucketName))
+        message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucketName
+                                              + ":" + region + " - " + getBucketSize(bucketName))
         return 200, message
     elif r.status_code == 301:
         # We got the region wrong. The 'x-amz-bucket-region' header will give us the correct one.
         return 301, r.headers['x-amz-bucket-region']
     elif r.status_code == 403:
-        # We probably need to have an AWS account defined.
+        # Bucket exists, but we're not allowed to LIST it.
         message = "{0:>15} : {1}".format("[found] [closed]", bucketName + ":" + region)
         return 403, message
     elif r.status_code == 404:
