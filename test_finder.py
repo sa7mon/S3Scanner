@@ -1,4 +1,4 @@
-import s3utils as s3
+from .. import s3utils as s3
 import sh
 
 
