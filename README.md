@@ -11,7 +11,7 @@ This script takes a list of domain names and checks if their hosted on Amazon S3
 
 **Usage:** `$> python s3finder.py -o output.txt domainsToCheck.txt`
 
-![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/30464005-9e8ab0c8-9994-11e7-8757-e32f1db975da.png)
+![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/35163013-e6a544e8-fd0a-11e7-9022-3c641aaf09c1.png)
 
 **Install:**
 1. (Optional) `virtualenv venv && source ./venv/bin/activate`

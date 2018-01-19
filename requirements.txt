@@ -1,3 +1,5 @@
 argparse
 requests
 awscli
+sh
+pytest

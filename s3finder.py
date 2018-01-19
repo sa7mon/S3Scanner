@@ -9,7 +9,7 @@
 #########
 
 import argparse
-import requests
+import s3utils as s3
 
 defaultRegion = "us-west-1"
 
@@ -22,37 +22,6 @@ def pprint(good, message):
     else:
         # print in red
         print("\033[0;91m" + message + "\033[0;m")
-
-
-def checkSite(site, region):
-    """ Does a simple GET request with the Requests library and interprets the results.
-
-    site - A domain name without protocol (http[s])
-    region - An s3 region. See: https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-    """
-
-    # Concat domain name with the default region
-    bucketDomain = 'http://' + site + '.s3-' + region + '.amazonaws.com'
-    try:
-        r = requests.get(bucketDomain)
-    except requests.exceptions.ConnectionError:
-        # Couldn't resolve the hostname. Definitely not a bucket.
-        pprint(False, site)
-        return
-    if r.status_code == 200:
-        # Successfully found a bucket!
-        pprint(True, site + ":" + region)
-    elif r.status_code == 301:
-        # We got the region wrong. The 'x-amz-bucket-region' header will give us the correct one.
-        checkSite(site, r.headers['x-amz-bucket-region'])
-    elif r.status_code == 403:
-        # We probably need to have an AWS account defined.
-        pprint(False, site + ":" + region + ' - Need an authenticated user to verify')
-    elif r.status_code == 404:
-        # This is definitely not a valid bucket name.
-        pprint(False, site)
-    else:
-        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + site + ":" + region)
 
 
 # Instantiate the parser
@@ -71,4 +40,15 @@ logFile = open(args.outFile, 'a+')
 with open(args.domains, 'r') as f:
     for line in f:
         site = line.rstrip()
-        checkSite(site, defaultRegion)
+        result = s3.checkBucket(site, defaultRegion)
+
+        if result[0] == 301:
+            result = s3.checkBucket(site, result[1])
+        if result[0] in [900, 403, 404]:  # These are our 'bucket not found' codes
+            pprint(False, result[1])
+        elif result[0] == 200:            # The only 'bucket found and open' codes
+            pprint(True, result[1])
+        else:
+            raise ValueError("Got back unknown code from checkBucket()")
+
+
