@@ -7,15 +7,16 @@ A quick and dirty script to find unsecured S3 buckets and dump their contents :d
 The tool has 2 parts:
 
 ### 1 - s3finder.py
-This script takes a list of domain names and checks if their hosted on Amazon S3. Found S3 domains are output to file with their corresponding region in format "domain:region". 
-
-**Usage:** `$> python s3finder.py -o output.txt domainsToCheck.txt`
+This script takes a list of domain names and checks if they're hosted on Amazon S3. Found S3 domains are output to file with their corresponding region in format "domain:region". 
 
 ![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/35163013-e6a544e8-fd0a-11e7-9022-3c641aaf09c1.png)
 
-**Install:**
-1. (Optional) `virtualenv venv && source ./venv/bin/activate`
-2. `pip install -r requirements.txt`
+* **Install:**
+  1. (Optional) `virtualenv venv && source ./venv/bin/activate`
+  2. `pip install -r requirements.txt`
+
+* **Usage:** 
+  `$> python s3finder.py -o output.txt domainsToCheck.txt`
 
 **Support:**
 Only tested with Python 2.7.14
