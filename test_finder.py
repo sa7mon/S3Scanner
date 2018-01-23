@@ -1,6 +1,7 @@
 import s3utils as s3
 import sh
-
+import os
+import subprocess as sp
 
 def test_getBucketSize():
     """
@@ -55,3 +56,18 @@ def test_checkBucket():
     result = s3.checkBucket('flaws.cloud', 'us-west-2')
     assert result[0] == 200
     assert 'flaws.cloud:us-west-2' in result[1]
+
+
+def run_sh(args):
+    # Run the s3finder file with sh, passing in args to it
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    script = dir_path + "/s3finder.py"
+
+    try:
+        run1 = sh.python(script)
+    except sh.ErrorReturnCode as e:
+        return e.stderr.decode('utf-8'), e.stdout.decode('utf-8')
+
+
+def test_arguments():
+
