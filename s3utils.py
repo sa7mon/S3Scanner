@@ -19,19 +19,16 @@ def checkBucket(bucketName, region):
     """ Does a simple GET request with the Requests library and interprets the results.
 
     site - A domain name without protocol (http[s])
-    region - An s3 region. See: https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-    """
+    region - An s3 region. See: https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region  """
 
-    # Concat domain name with the default region
     bucketDomain = 'http://' + bucketName + '.s3-' + region + '.amazonaws.com'
+
     try:
         r = requests.get(bucketDomain)
-    except requests.exceptions.ConnectionError:
-        # Couldn't resolve the hostname. Definitely not a bucket.
+    except requests.exceptions.ConnectionError:  # Couldn't resolve the hostname. Definitely not a bucket.
         message = "{0:>16} : {1}".format("[not found]", bucketName)
         return 900, message
-    if r.status_code == 200:
-        # Successfully found a bucket!
+    if r.status_code == 200:    # Successfully found a bucket!
         message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucketName
                                               + ":" + region + " - " + getBucketSize(bucketName))
         return 200, message
@@ -45,4 +42,3 @@ def checkBucket(bucketName, region):
         return 404, message
     else:
         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName + ":" + region)
-
