@@ -70,4 +70,7 @@ def run_sh(args):
 
 
 def test_arguments():
-
+    # Scenario 1: No arguments
+    scen1 = run_sh("")
+    assert scen1[1] == ""
+    assert "s3finder.py: error: the following arguments are required: domains" in scen1[0]
