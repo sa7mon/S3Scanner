@@ -1,4 +1,5 @@
 venv/
+venv2.7/
 .idea/
 __pycache__
 *.pyc

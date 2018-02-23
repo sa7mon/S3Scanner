@@ -8,9 +8,11 @@ def getBucketSize(bucketName):
     NOTE:
         Function assumes the bucket exists and doesn't catch errors if it doesn't.
     """
-
-    a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request','s3://' + bucketName)
-
+    try:
+        a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' +
+                   bucketName, _timeout=8)
+    except sh.TimeoutException:
+        return "Unknown Size"
     # Get the last line of the output, get everything to the right of the colon, and strip whitespace
     return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
@@ -24,7 +26,7 @@ def checkBucket(bucketName, region):
     bucketDomain = 'http://' + bucketName + '.s3-' + region + '.amazonaws.com'
 
     try:
-        r = requests.get(bucketDomain)
+        r = requests.head(bucketDomain)
     except requests.exceptions.ConnectionError:  # Couldn't resolve the hostname. Definitely not a bucket.
         message = "{0:>16} : {1}".format("[not found]", bucketName)
         return 900, message
