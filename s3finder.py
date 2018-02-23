@@ -72,7 +72,18 @@ coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
 with open(args.domains, 'r') as f:
     for line in f:
         site = line.rstrip()            # Remove any extra whitespace
-        result = s3.checkBucket(site, args.defaultRegion)
+
+        # Determine what kind of input we're given. Options:
+        #   bucket name i.e. mybucket
+        #   domain name i.e. flaws.cloud
+        #   full S3 url i.e. flaws.cloud.s3-us-west-2.amazonaws.com
+
+        if ".amazonaws.com" in site:    # We were given a full s3 url
+            bucket = site[:site.rfind(".s3")]
+            region = site[len(site[:site.rfind(".s3")])+4:site.rfind(".amazonaws.com")]
+            result = s3.checkBucket(bucket, region)
+        else:
+            result = s3.checkBucket(site, args.defaultRegion)
 
         if result[0] == 301:
             result = s3.checkBucket(site, result[1])
