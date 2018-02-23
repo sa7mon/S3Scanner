@@ -40,20 +40,12 @@ parser.set_defaults(defaultRegion='us-west-1')
 parser.set_defaults(includeClosed=False)
 parser.set_defaults(bucketsFile='./buckets.txt')
 
-
 # Parse the args
 args = parser.parse_args()
 
-
-# Open log file for writing
-# logFile = open(args.bucketsFile, 'a+')
-
-
-
-
 # Create logger
 flog = logging.getLogger('s3scanner')
-flog.setLevel(logging.INFO)    # Log level for console?
+flog.setLevel(logging.INFO)              # Set log level for logger object
 
 # Create file handler which logs even debug messages
 fh = logging.FileHandler(args.bucketsFile)
@@ -76,10 +68,6 @@ flog.addHandler(fh)
 # fh.setFormatter(formatter)
 
 
-
-
-
-
 with open(args.domains, 'r') as f:
     for line in f:
         site = line.rstrip()
@@ -91,15 +79,11 @@ with open(args.domains, 'r') as f:
             pprint(False, result[1], False)
         elif result[0] == 403:          # Found but closed bucket. Only log if user says to.
             message = "{0:>15} : {1}".format("[found] [closed]", result[1] + ":" + result[2])
-
             pprint(False, message, args.includeClosed)
-
             if args.includeClosed:
                 flog.info(result[1] + ":" + result[2])
         elif result[0] == 200:          # The only 'bucket found and open' codes
-            message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1]
-                            + ":" + result[2] + " - " + result[3])
-
+            message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1] + ":" + result[2] + " - " + result[3])
             pprint(True, message, True)
             flog.info(result[1] + ":" + result[2])
         else:
