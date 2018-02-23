@@ -98,23 +98,6 @@ def test_checkIncludeClosed():
         os.remove(inFile)
 
 
-def run_sh(args=None):
-    # Run the s3finder file with sh, passing in args to it
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    script = dir_path + "/s3finder.py"
-
-    s3finder = sh.python.bake(script)
-
-    try:
-        if args is None:
-            run1 = s3finder()
-        else:
-            run1 = s3finder(args)
-    except sh.ErrorReturnCode as e:
-        return e.stderr.decode('utf-8'), e.stdout.decode('utf-8')
-    return run1
-
-
 def test_outputFormat():
     """
     Scenario:
@@ -149,9 +132,12 @@ def test_outputFormat():
 def test_arguments():
     # Scenario 1: No arguments
 
-    scen1 = run_sh()
-    assert scen1[1] == ""
-    if sys.version_info[0] == 2:
-        assert "s3finder.py: error: too few arguments" in scen1[0]
-    else:
-        assert "s3finder.py: error: the following arguments are required: domains" in scen1[0]
+    try:
+        sh.python(s3FinderLocation + 's3finder.py')
+    except sh.ErrorReturnCode as e:
+        assert e.stdout.decode('utf-8') == ""
+
+        if sys.version_info[0] == 2:
+            assert "s3finder.py: error: too few arguments" in e.stderr.decode('utf-8')
+        else:
+            assert "s3finder.py: error: the following arguments are required: domains" in e.stderr.decode('utf-8')
