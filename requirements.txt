@@ -3,5 +3,4 @@ requests
 awscli
 sh
 pytest
-logging
 coloredlogs
