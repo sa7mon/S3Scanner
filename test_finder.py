@@ -1,7 +1,6 @@
 import s3utils as s3
 import sh
 import os
-import subprocess as sp
 import sys
 
 pyVersion = sys.version_info
@@ -58,7 +57,8 @@ def test_checkBucket():
     # Scenario 2
     result = s3.checkBucket('flaws.cloud', 'us-west-2')
     assert result[0] == 200
-    assert 'flaws.cloud:us-west-2' in result[1]
+    assert result[1] == 'flaws.cloud'
+    assert result[2] == 'us-west-2'
 
 
 def run_sh(args):

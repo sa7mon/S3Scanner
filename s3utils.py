@@ -31,14 +31,14 @@ def checkBucket(bucketName, region):
         message = "{0:>16} : {1}".format("[not found]", bucketName)
         return 900, message
     if r.status_code == 200:    # Successfully found a bucket!
-        message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucketName
-                                              + ":" + region + " - " + getBucketSize(bucketName))
-        return 200, message
+        size = getBucketSize(bucketName)
+        return 200, bucketName, region, size
+
     elif r.status_code == 301:  # We tried the wrong region. 'x-amz-bucket-region' header will give us the correct one.
         return 301, r.headers['x-amz-bucket-region']
+
     elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
-        message = "{0:>15} : {1}".format("[found] [closed]", bucketName + ":" + region)
-        return 403, message
+        return 403, bucketName, region
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
         message = "{0:>15} : {1}".format("[not found]", bucketName)
         return 404, message
