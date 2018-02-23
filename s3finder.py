@@ -10,6 +10,7 @@
 
 import argparse
 import s3utils as s3
+import logging
 
 
 def pprint(good, message, log):
@@ -20,8 +21,8 @@ def pprint(good, message, log):
         # print in red
         print("\033[0;91m" + message + "\033[0;m")
 
-    if log:
-        logFile.write(message + "\n")
+    # if log:
+    #     logFile.write(message + "\n")
 
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='Find AWS S3 buckets!')
@@ -45,7 +46,39 @@ args = parser.parse_args()
 
 
 # Open log file for writing
-logFile = open(args.bucketsFile, 'a+')
+# logFile = open(args.bucketsFile, 'a+')
+
+
+
+
+# Create logger
+flog = logging.getLogger('s3scanner')
+flog.setLevel(logging.INFO)    # Log level for console?
+
+# Create file handler which logs even debug messages
+fh = logging.FileHandler(args.bucketsFile)
+fh.setLevel(logging.DEBUG)
+
+# Add the handlers to logger
+flog.addHandler(fh)
+
+# Create console handler with a higher log level
+# ch = logging.StreamHandler()
+
+# if args.verbose:
+#     ch.setLevel(logging.DEBUG)
+# else:
+#     ch.setLevel(logging.ERROR)
+
+# Create formatter and add it to the handlers
+# formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', "%Y-%m-%d %H:%M:%S")
+# ch.setFormatter(formatter)
+# fh.setFormatter(formatter)
+
+
+
+
+
 
 with open(args.domains, 'r') as f:
     for line in f:
@@ -57,8 +90,17 @@ with open(args.domains, 'r') as f:
         if result[0] in [900, 404]:     # These are our 'bucket not found' codes
             pprint(False, result[1], False)
         elif result[0] == 403:          # Found but closed bucket. Only log if user says to.
-            pprint(False, result[1], args.includeClosed)
+            message = "{0:>15} : {1}".format("[found] [closed]", result[1] + ":" + result[2])
+
+            pprint(False, message, args.includeClosed)
+
+            if args.includeClosed:
+                flog.info(result[1] + ":" + result[2])
         elif result[0] == 200:          # The only 'bucket found and open' codes
-            pprint(True, result[1], True)
+            message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1]
+                            + ":" + result[2] + " - " + result[3])
+
+            pprint(True, message, True)
+            flog.info(result[1] + ":" + result[2])
         else:
             raise ValueError("Got back unknown code from checkBucket()")
