@@ -35,7 +35,7 @@ This script takes in a list of domains with regions made by s3finder.py. For eac
 
 * [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner) - master
    * [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=enhancements)](https://travis-ci.org/sa7mon/S3Scanner) - enhancements
-   * bugs
+   * [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=bugs)](https://travis-ci.org/sa7mon/S3Scanner) - bugs
 
 ## Contributing
 Please make pull requests if you can improve on the code at all (which is certain as the code can be greatly optimized).
