@@ -118,9 +118,9 @@ def run_sh(args=None):
 def test_outputFormat():
     """
     Scenario:
-        Verify that the main script outputs found buckets in the format 'bucket:region'
+        Verify that the main script outputs found buckets in the format "bucket:region"
     Expected:
-
+        The output for flaws.cloud should be the following: "flaws.cloud:us-west-2"
     """
 
     inFile = testingFolder + 'test_outputFormat_in.txt'
