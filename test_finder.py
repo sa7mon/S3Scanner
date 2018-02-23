@@ -5,6 +5,9 @@ import sys
 
 pyVersion = sys.version_info
 
+s3FinderLocation = "./"
+testingFolder = "./test/"
+
 def test_getBucketSize():
     """
     Scenario 1: Bucket doesn't exist
@@ -61,21 +64,56 @@ def test_checkBucket():
     assert result[2] == 'us-west-2'
 
 
-def run_sh(args):
+def test_checkIncludeClosed():
+    """ Verify that the '--include-closed' argument is working correctly.
+        Expected:
+            The bucket name 'yahoo.com' is expected to exist, but be closed. The bucket name
+            and region should be included in the output buckets file in the format 'bucket:region'.
+    """
+
+    # Create a file called testing.txt and write 'yahoo.com' to it
+
+    f = open(testingFolder + 'test_checkIncludeClosed_in.txt', 'w')
+    f.write('yahoo.com\n')  # python will convert \n to os.linesep
+    f.close()
+
+    run1 = sh.python(s3FinderLocation + "s3finder.py", "--out-file", testingFolder + "test_checkIncludeClosed_out.txt",
+                     "--include-closed", testingFolder + "test_checkIncludeClosed_in.txt")
+
+    found = False
+    with open(testingFolder + 'test_checkIncludeClosed_out.txt', 'r') as g:
+        for line in g:
+            if 'yahoo.com' in line:
+                found = True
+
+    try:
+        assert found is True
+    finally:
+        # Cleanup testing files
+        os.remove(testingFolder + 'test_checkIncludeClosed.txt')
+        os.remove(testingFolder + 'testing.txt')
+
+
+def run_sh(args=None):
     # Run the s3finder file with sh, passing in args to it
     dir_path = os.path.dirname(os.path.realpath(__file__))
     script = dir_path + "/s3finder.py"
 
+    s3finder = sh.python.bake(script)
+
     try:
-        run1 = sh.python(script)
+        if args is None:
+            run1 = s3finder()
+        else:
+            run1 = s3finder(args)
     except sh.ErrorReturnCode as e:
         return e.stderr.decode('utf-8'), e.stdout.decode('utf-8')
-
+    return run1
 
 def test_arguments():
     # Scenario 1: No arguments
 
-    scen1 = run_sh("")
+    scen1 = run_sh()
     assert scen1[1] == ""
     if sys.version_info[0] == 2:
         assert "s3finder.py: error: too few arguments" in scen1[0]
