@@ -8,6 +8,7 @@ pyVersion = sys.version_info
 s3FinderLocation = "./"
 testingFolder = "./test/"
 
+
 def test_getBucketSize():
     """
     Scenario 1: Bucket doesn't exist
@@ -73,15 +74,18 @@ def test_checkIncludeClosed():
 
     # Create a file called testing.txt and write 'yahoo.com' to it
 
-    f = open(testingFolder + 'test_checkIncludeClosed_in.txt', 'w')
+    inFile = testingFolder + 'test_checkIncludeClosed_in.txt'
+    outFile = testingFolder + 'test_checkIncludeClosed_out.txt'
+
+    f = open(inFile, 'w')
     f.write('yahoo.com\n')  # python will convert \n to os.linesep
     f.close()
 
-    run1 = sh.python(s3FinderLocation + "s3finder.py", "--out-file", testingFolder + "test_checkIncludeClosed_out.txt",
-                     "--include-closed", testingFolder + "test_checkIncludeClosed_in.txt")
+    run1 = sh.python(s3FinderLocation + "s3finder.py", "--out-file", outFile,
+                     "--include-closed", inFile)
 
     found = False
-    with open(testingFolder + 'test_checkIncludeClosed_out.txt', 'r') as g:
+    with open(outFile, 'r') as g:
         for line in g:
             if 'yahoo.com' in line:
                 found = True
@@ -90,8 +94,8 @@ def test_checkIncludeClosed():
         assert found is True
     finally:
         # Cleanup testing files
-        os.remove(testingFolder + 'test_checkIncludeClosed.txt')
-        os.remove(testingFolder + 'testing.txt')
+        os.remove(outFile)
+        os.remove(inFile)
 
 
 def run_sh(args=None):
@@ -109,6 +113,38 @@ def run_sh(args=None):
     except sh.ErrorReturnCode as e:
         return e.stderr.decode('utf-8'), e.stdout.decode('utf-8')
     return run1
+
+
+def test_outputFormat():
+    """
+    Scenario:
+        Verify that the main script outputs found buckets in the format 'bucket:region'
+    Expected:
+
+    """
+
+    inFile = testingFolder + 'test_outputFormat_in.txt'
+    outFile = testingFolder + 'test_outputFormat_out.txt'
+
+    f = open(inFile, 'w')
+    f.write('flaws.cloud\n')  # python will convert \n to os.linesep
+    f.close()
+
+    sh.python(s3FinderLocation+'/s3finder.py', '--out-file', outFile, inFile)
+
+    found = False
+    with open(outFile, 'r') as g:
+        for line in g:
+            if line.strip() == 'flaws.cloud:us-west-2':
+                found = True
+
+        try:
+            assert found is True
+        finally:
+            # Cleanup testing files
+            os.remove(outFile)
+            os.remove(inFile)
+
 
 def test_arguments():
     # Scenario 1: No arguments
