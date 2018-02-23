@@ -9,7 +9,7 @@ The tool has 2 parts:
 ### 1 - s3finder.py
 This script takes a list of domain names and checks if they're hosted on Amazon S3. Found S3 domains are output to file with their corresponding region in format "domain:region". 
 
-![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/35163013-e6a544e8-fd0a-11e7-9022-3c641aaf09c1.png)
+![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/36616997-726614a6-18ab-11e8-9dd3-c43715ef7355.png)
 
 * **Install:**
   1. (Optional) `virtualenv venv && source ./venv/bin/activate`
