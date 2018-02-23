@@ -24,7 +24,7 @@ def checkBucket(bucketName, region):
     bucketDomain = 'http://' + bucketName + '.s3-' + region + '.amazonaws.com'
 
     try:
-        r = requests.get(bucketDomain)
+        r = requests.head(bucketDomain)
     except requests.exceptions.ConnectionError:  # Couldn't resolve the hostname. Definitely not a bucket.
         message = "{0:>16} : {1}".format("[not found]", bucketName)
         return 900, message
