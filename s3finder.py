@@ -24,11 +24,14 @@ parser.add_argument('-c', '--include-closed', required=False, dest='includeClose
                     help='Include found but closed buckets in the outFile. Default: false')
 parser.add_argument('-r', '--default-region', dest='',
                     help='AWS region to check first for buckets. Default: us-west-1')
+parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
+                    help='Whether or not to dump this bucket locally. Default: false')
 parser.add_argument('domains', help='Name of text file containing domains to check')
 
 parser.set_defaults(defaultRegion='us-west-1')
 parser.set_defaults(includeClosed=False)
 parser.set_defaults(bucketsFile='./buckets.txt')
+parser.set_defaults(dump=False)
 
 # Parse the args
 args = parser.parse_args()
@@ -71,22 +74,25 @@ coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
 
 with open(args.domains, 'r') as f:
     for line in f:
-        site = line.rstrip()            # Remove any extra whitespace
+        bucket = line.rstrip()            # Remove any extra whitespace
+        region = args.defaultRegion
 
         # Determine what kind of input we're given. Options:
         #   bucket name i.e. mybucket
         #   domain name i.e. flaws.cloud
         #   full S3 url i.e. flaws.cloud.s3-us-west-2.amazonaws.com
 
-        if ".amazonaws.com" in site:    # We were given a full s3 url
-            bucket = site[:site.rfind(".s3")]
-            region = site[len(site[:site.rfind(".s3")])+4:site.rfind(".amazonaws.com")]
-            result = s3.checkBucket(bucket, region)
-        else:
-            result = s3.checkBucket(site, args.defaultRegion)
+        if ".amazonaws.com" in bucket:    # We were given a full s3 url
+            bucket = bucket[:bucket.rfind(".s3")]
+            region = bucket[len(bucket[:bucket.rfind(".s3")]) + 4:bucket.rfind(".amazonaws.com")]
+        #     result = s3.checkBucket(bucket, region)
+        # else:
+        #     result = s3.checkBucket(bucket, args.defaultRegion)
+
+        result = s3.checkBucket(bucket, region)
 
         if result[0] == 301:
-            result = s3.checkBucket(site, result[1])
+            result = s3.checkBucket(bucket, result[1])
 
         if result[0] in [900, 404]:     # These are our 'bucket not found' codes
             slog.error(result[1])
@@ -101,5 +107,7 @@ with open(args.domains, 'r') as f:
             message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1] + ":" + result[2] + " - " + result[3])
             slog.info(message)
             flog.debug(result[1] + ":" + result[2])
+            if args.dump:
+                s3.dumpBucket(bucket, result[2])
         else:
             raise ValueError("Got back unknown code from checkBucket()")
