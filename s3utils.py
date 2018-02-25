@@ -44,8 +44,12 @@ def dumpBucket(bucketName, region):
     if not os.path.exists(bucketDir):
         os.makedirs(bucketDir)
 
-    # aws s3 sync s3://$domain ./buckets/$domain/ --no-sign-request --region $region
     sh.aws('s3', 'sync', 's3://'+bucketName, bucketDir, '--no-sign-request', _fg=True)
+
+    # Check if folder is empty. If it is, delete it
+    if not os.listdir(bucketDir):
+        # Delete empty folder
+        os.rmdir(bucketDir)
 
 
 def getBucketSize(bucketName):
