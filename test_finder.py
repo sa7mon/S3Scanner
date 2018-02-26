@@ -5,8 +5,10 @@ import sys
 import shutil
 
 pyVersion = sys.version_info
+# pyVersion[0] can be 2 or 3
 
-s3FinderLocation = "./"
+
+s3scannerLocation = "./"
 testingFolder = "./test/"
 
 
@@ -14,14 +16,10 @@ def test_arguments():
     # Scenario 1: No arguments
 
     try:
-        sh.python(s3FinderLocation + 's3finder.py')
+        sh.python(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
-        assert e.stdout.decode('utf-8') == ""
-
-        if sys.version_info[0] == 2:
-            assert "s3finder.py: error: too few arguments" in e.stderr.decode('utf-8')
-        else:
-            assert "s3finder.py: error: the following arguments are required: domains" in e.stderr.decode('utf-8')
+        assert e.stderr.decode('utf-8') == ""
+        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-r] [-d] buckets" in e.stdout.decode('utf-8')
 
 
 def test_checkBucket():
@@ -73,7 +71,7 @@ def test_checkIncludeClosed():
     f.write('yahoo.com\n')  # python will convert \n to os.linesep
     f.close()
 
-    run1 = sh.python(s3FinderLocation + "s3finder.py", "--out-file", outFile,
+    run1 = sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile,
                      "--include-closed", inFile)
 
     found = False
@@ -159,7 +157,7 @@ def test_outputFormat():
     f.write('flaws.cloud\n')  # python will convert \n to os.linesep
     f.close()
 
-    sh.python(s3FinderLocation+'/s3finder.py', '--out-file', outFile, inFile)
+    sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
 
     found = False
     with open(outFile, 'r') as g:
