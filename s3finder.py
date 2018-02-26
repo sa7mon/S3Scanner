@@ -9,26 +9,33 @@
 #########
 
 import argparse
-from argparse import RawTextHelpFormatter
 import s3utils as s3
 import logging
 import coloredlogs
 import sys
 
 
+# We want to use both formatter classes, so a custom class it is
+class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
+
+
 # Instantiate the parser
-parser = argparse.ArgumentParser(description='Find AWS S3 buckets!', formatter_class=RawTextHelpFormatter)
+parser = argparse.ArgumentParser(description='#  s3scanner - Find S3 buckets and dump!\n'
+                                             '#\n'
+                                             '#  Author: Dan Salmon - @bltjetpack, github.com/sa7mon\n',
+                                 prog='s3scanner', formatter_class=CustomFormatter)
 
 # Declare arguments
 parser.add_argument('-o', '--out-file', required=False, dest='outFile',
-                    help='Name of file to save the successfully checked domains in. (Default: buckets.txt)')
+                    help='Name of file to save the successfully checked buckets in (Default: buckets.txt)')
 parser.add_argument('-c', '--include-closed', required=False, dest='includeClosed', action='store_true',
-                    help='Include found but closed buckets in the outFile. Default: False')
+                    help='Include found but closed buckets in the out-file')
 parser.add_argument('-r', '--default-region', dest='',
-                    help='AWS region to check first for buckets. \n   Default: us-west-1')
+                    help='AWS region to default to (Default: us-west-1)')
 parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
-                    help='Whether or not to dump this bucket locally. \n   Default: False')
-parser.add_argument('domains', help='Name of text file containing domains to check')
+                    help='Dump all found open buckets locally')
+parser.add_argument('buckets', help='Name of text file containing buckets to check')
 
 parser.set_defaults(defaultRegion='us-west-1')
 parser.set_defaults(includeClosed=False)
@@ -79,7 +86,7 @@ coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
                     level_styles=levelStyles, field_styles=fieldStyles)
 
 
-with open(args.domains, 'r') as f:
+with open(args.buckets, 'r') as f:
     for line in f:
         bucket = line.rstrip()            # Remove any extra whitespace
         region = args.defaultRegion
