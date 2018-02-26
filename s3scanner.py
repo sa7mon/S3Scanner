@@ -88,17 +88,23 @@ coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
 
 with open(args.buckets, 'r') as f:
     for line in f:
-        bucket = line.rstrip()            # Remove any extra whitespace
+        line = line.rstrip()            # Remove any extra whitespace
         region = args.defaultRegion
 
         # Determine what kind of input we're given. Options:
-        #   bucket name i.e. mybucket
-        #   domain name i.e. flaws.cloud
-        #   full S3 url i.e. flaws.cloud.s3-us-west-2.amazonaws.com
+        #   bucket name   i.e. mybucket
+        #   domain name   i.e. flaws.cloud
+        #   full S3 url   i.e. flaws.cloud.s3-us-west-2.amazonaws.com
+        #   bucket:region i.e. flaws.cloud:us-west-2
 
-        if ".amazonaws.com" in bucket:    # We were given a full s3 url
-            bucket = bucket[:bucket.rfind(".s3")]
-            region = bucket[len(bucket[:bucket.rfind(".s3")]) + 4:bucket.rfind(".amazonaws.com")]
+        if ".amazonaws.com" in line:    # We were given a full s3 url
+            bucket = line[:line.rfind(".s3")]
+            region = line[len(line[:line.rfind(".s3")]) + 4:line.rfind(".amazonaws.com")]
+        elif ":" in line:               # We were given a bucket in 'bucket:region' format
+            region = line.split(":")[1]
+            bucket = line.split(":")[0]
+        else:                           # We were either given a bucket name or domain name
+            bucket = line
 
         result = s3.checkBucket(bucket, region)
 
