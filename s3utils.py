@@ -1,20 +1,6 @@
 import sh
 import requests
-
-
-def getBucketSize(bucketName):
-    """
-    Use awscli to 'ls' the bucket which will give us the total size of the bucket.
-    NOTE:
-        Function assumes the bucket exists and doesn't catch errors if it doesn't.
-    """
-    try:
-        a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' +
-                   bucketName, _timeout=8)
-    except sh.TimeoutException:
-        return "Unknown Size"
-    # Get the last line of the output, get everything to the right of the colon, and strip whitespace
-    return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
+import os
 
 
 def checkBucket(bucketName, region):
@@ -44,3 +30,39 @@ def checkBucket(bucketName, region):
         return 404, message
     else:
         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName + ":" + region)
+
+
+def dumpBucket(bucketName, region):
+
+    # Check to make sure the bucket is open
+    b = checkBucket(bucketName, region)
+    if b[0] != 200:
+        raise ValueError("The specified bucket is not open.")
+
+    # Dump the bucket into bucket folder
+    bucketDir = './buckets/' + bucketName
+    if not os.path.exists(bucketDir):
+        os.makedirs(bucketDir)
+
+    sh.aws('s3', 'sync', 's3://'+bucketName, bucketDir, '--no-sign-request', _fg=True)
+
+    # Check if folder is empty. If it is, delete it
+    if not os.listdir(bucketDir):
+        # Delete empty folder
+        os.rmdir(bucketDir)
+
+
+def getBucketSize(bucketName):
+    """
+    Use awscli to 'ls' the bucket which will give us the total size of the bucket.
+    NOTE:
+        Function assumes the bucket exists and doesn't catch errors if it doesn't.
+    """
+    try:
+        a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' +
+                   bucketName, _timeout=8)
+    except sh.TimeoutException:
+        return "Unknown Size"
+    # Get the last line of the output, get everything to the right of the colon, and strip whitespace
+    return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
+

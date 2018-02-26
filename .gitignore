@@ -4,3 +4,4 @@ venv2.7/
 __pycache__
 *.pyc
 .cache/
+.pytest_cache

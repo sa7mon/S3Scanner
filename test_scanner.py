@@ -2,34 +2,24 @@ import s3utils as s3
 import sh
 import os
 import sys
+import shutil
 
 pyVersion = sys.version_info
+# pyVersion[0] can be 2 or 3
 
-s3FinderLocation = "./"
+
+s3scannerLocation = "./"
 testingFolder = "./test/"
 
 
-def test_getBucketSize():
-    """
-    Scenario 1: Bucket doesn't exist
-        Expected: 255
+def test_arguments():
+    # Scenario 1: No arguments
 
-    Scenario 2: Bucket exists, listing open to public
-        Expected:
-            Size: 9.1 KiB
-        Note:
-            Using flaws.cloud as example by permission of owner (@0xdabbad00)
-
-    """
-
-    # Scenario 1
     try:
-        result = s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
-    except sh.ErrorReturnCode_255:
-        assert True
-
-    # Scenario 3
-    assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
+        sh.python(s3scannerLocation + 's3scanner.py')
+    except sh.ErrorReturnCode as e:
+        assert e.stderr.decode('utf-8') == ""
+        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-r] [-d] buckets" in e.stdout.decode('utf-8')
 
 
 def test_checkBucket():
@@ -81,7 +71,7 @@ def test_checkIncludeClosed():
     f.write('yahoo.com\n')  # python will convert \n to os.linesep
     f.close()
 
-    run1 = sh.python(s3FinderLocation + "s3finder.py", "--out-file", outFile,
+    run1 = sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile,
                      "--include-closed", inFile)
 
     found = False
@@ -96,6 +86,60 @@ def test_checkIncludeClosed():
         # Cleanup testing files
         os.remove(outFile)
         os.remove(inFile)
+
+
+def test_dumpBucket():
+    """
+        Verify the dumpBucket() function is working as intended.
+
+        Expected: Supplying the function with the arguments ("flaws.cloud", "us-west-2") should result in 6 files
+                being downloaded into the buckets folder. The expected file sizes of each file are listed in the
+                'expectedFiles' dictionary.
+    """
+
+    # Dump the flaws.cloud bucket
+    s3.dumpBucket("flaws.cloud", "us-west-2")
+
+    # Folder to look for the files in
+    dumpDir = './buckets/flaws.cloud/'
+
+    # Expected sizes of each file
+    expectedFiles = {'hint1.html': 2575, 'hint2.html': 1707, 'hint3.html': 1101, 'index.html': 2877,
+                     'robots.txt': 46, 'secret-dd02c7c.html': 1051}
+
+    try:
+        # Assert number of files in the folder
+        assert len(os.listdir(dumpDir)) == len(expectedFiles)
+
+        # For each file, assert the size
+        for file, size in expectedFiles.items():
+            assert os.path.getsize(dumpDir + file) == size
+    finally:
+        # No matter what happens with the asserts, cleanup after the test by deleting the flaws.cloud directory
+        shutil.rmtree(dumpDir)
+
+
+def test_getBucketSize():
+    """
+    Scenario 1: Bucket doesn't exist
+        Expected: 255
+
+    Scenario 2: Bucket exists, listing open to public
+        Expected:
+            Size: 9.1 KiB
+        Note:
+            Using flaws.cloud as example by permission of owner (@0xdabbad00)
+
+    """
+
+    # Scenario 1
+    try:
+        result = s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
+    except sh.ErrorReturnCode_255:
+        assert True
+
+    # Scenario 3
+    assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
 
 
 def test_outputFormat():
@@ -113,7 +157,7 @@ def test_outputFormat():
     f.write('flaws.cloud\n')  # python will convert \n to os.linesep
     f.close()
 
-    sh.python(s3FinderLocation+'/s3finder.py', '--out-file', outFile, inFile)
+    sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
 
     found = False
     with open(outFile, 'r') as g:
@@ -127,17 +171,3 @@ def test_outputFormat():
             # Cleanup testing files
             os.remove(outFile)
             os.remove(inFile)
-
-
-def test_arguments():
-    # Scenario 1: No arguments
-
-    try:
-        sh.python(s3FinderLocation + 's3finder.py')
-    except sh.ErrorReturnCode as e:
-        assert e.stdout.decode('utf-8') == ""
-
-        if sys.version_info[0] == 2:
-            assert "s3finder.py: error: too few arguments" in e.stderr.decode('utf-8')
-        else:
-            assert "s3finder.py: error: the following arguments are required: domains" in e.stderr.decode('utf-8')
