@@ -9,29 +9,36 @@
 #########
 
 import argparse
+from argparse import RawTextHelpFormatter
 import s3utils as s3
 import logging
 import coloredlogs
+import sys
 
 
 # Instantiate the parser
-parser = argparse.ArgumentParser(description='Find AWS S3 buckets!')
+parser = argparse.ArgumentParser(description='Find AWS S3 buckets!', formatter_class=RawTextHelpFormatter)
 
 # Declare arguments
-parser.add_argument('-o', '--out-file', required=False, dest='bucketsFile',
-                    help='Name of file to save the successfully checked domains in. Default: buckets.txt')
+parser.add_argument('-o', '--out-file', required=False, dest='outFile',
+                    help='Name of file to save the successfully checked domains in. (Default: buckets.txt)')
 parser.add_argument('-c', '--include-closed', required=False, dest='includeClosed', action='store_true',
-                    help='Include found but closed buckets in the outFile. Default: false')
+                    help='Include found but closed buckets in the outFile. Default: False')
 parser.add_argument('-r', '--default-region', dest='',
-                    help='AWS region to check first for buckets. Default: us-west-1')
+                    help='AWS region to check first for buckets. \n   Default: us-west-1')
 parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
-                    help='Whether or not to dump this bucket locally. Default: false')
+                    help='Whether or not to dump this bucket locally. \n   Default: False')
 parser.add_argument('domains', help='Name of text file containing domains to check')
 
 parser.set_defaults(defaultRegion='us-west-1')
 parser.set_defaults(includeClosed=False)
-parser.set_defaults(bucketsFile='./buckets.txt')
+parser.set_defaults(outFile='./buckets.txt')
 parser.set_defaults(dump=False)
+
+# If there are no args supplied, print the full help text instead of the short usage text
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
 
 # Parse the args
 args = parser.parse_args()
@@ -41,7 +48,7 @@ flog = logging.getLogger('s3scanner-file')
 flog.setLevel(logging.DEBUG)              # Set log level for logger object
 
 # Create file handler which logs even debug messages
-fh = logging.FileHandler(args.bucketsFile)
+fh = logging.FileHandler(args.outFile)
 fh.setLevel(logging.DEBUG)
 
 # Add the handler to logger
