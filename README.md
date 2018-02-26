@@ -31,6 +31,7 @@ This tool accepts the following type of bucket formats to check:
 - bucket name - `google-dev`
 - domain name - `uber.com`, `sub.domain.com`
 - full s3 url - `yahoo-staging.s3-us-west-2.amazonaws.com` (To easily combine with other tools like [bucket-stream](https://github.com/eth0izzle/bucket-stream))
+- bucket:region - `flaws.cloud:us-west-2`
 
 ```bash
 > cat names.txt
@@ -38,6 +39,7 @@ flaws.cloud
 google-dev
 testing.microsoft.com
 yelp-production.s3-us-west-1.amazonaws.com
+github-dev:us-east-1
 ```
 	
 1. Dump all open buckets, log both open and closed buckets to found.txt
