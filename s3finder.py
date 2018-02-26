@@ -85,9 +85,6 @@ with open(args.domains, 'r') as f:
         if ".amazonaws.com" in bucket:    # We were given a full s3 url
             bucket = bucket[:bucket.rfind(".s3")]
             region = bucket[len(bucket[:bucket.rfind(".s3")]) + 4:bucket.rfind(".amazonaws.com")]
-        #     result = s3.checkBucket(bucket, region)
-        # else:
-        #     result = s3.checkBucket(bucket, args.defaultRegion)
 
         result = s3.checkBucket(bucket, region)
 
