@@ -29,7 +29,7 @@ This tool accepts the following type of bucket formats to check:
 
 - bucket name - `google-dev`
 - domain name - `uber.com`, `sub.domain.com`
-- full s3 url - `yahoo-staging.s3-us-west-2.amazonaws.com`
+- full s3 url - `yahoo-staging.s3-us-west-2.amazonaws.com` (To easily combine with other tools like [bucket-stream](https://github.com/eth0izzle/bucket-stream))
 
 ```bash
 > cat names.txt
