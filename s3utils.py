@@ -25,7 +25,10 @@ def checkBucket(bucketName, region):
     elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
 
         # Check if we can list the bucket
-        output = subprocess.check_output("aws s3 ls s3://" + bucketName, shell=True)
+        try: 
+            output = subprocess.check_output("aws s3 ls s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            return 403, bucketName, region
 
         if not "An error occured (" in output:
             return 200, bucketName, region, "0"
