@@ -1,7 +1,7 @@
 import sh
 import requests
 import os
-
+import subprocess
 
 def checkBucket(bucketName, region):
     """ Does a simple GET request with the Requests library and interprets the results.
@@ -22,8 +22,14 @@ def checkBucket(bucketName, region):
 
     elif r.status_code == 301:  # We tried the wrong region. 'x-amz-bucket-region' header will give us the correct one.
         return 301, r.headers['x-amz-bucket-region']
-
     elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
+
+        # Check if we can list the bucket
+        output = subprocess.check_output("aws s3 ls s3://" + bucketName, shell=True)
+
+        if not "An error occured (" in output:
+            return 200, bucketName, region, "0"
+
         return 403, bucketName, region
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
         message = "{0:>15} : {1}".format("[not found]", bucketName)
