@@ -3,6 +3,9 @@ import requests
 import os
 
 
+sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
+
+
 def checkBucket(bucketName, region):
     """ Does a simple GET request with the Requests library and interprets the results.
 
@@ -60,7 +63,7 @@ def getBucketSize(bucketName):
     """
     try:
         a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' +
-                   bucketName, _timeout=8)
+                   bucketName, _timeout=sizeCheckTimeout)
     except sh.TimeoutException:
         return "Unknown Size"
     # Get the last line of the output, get everything to the right of the colon, and strip whitespace
