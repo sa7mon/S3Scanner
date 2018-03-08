@@ -79,6 +79,7 @@ def listBucket(bucketName, region):
 
     if not "An error occured (" in output:
         f = open(bucketDir, 'w')
+        f.write(bucketName + '\r\n')
         f.write(output)
         f.close()
     else:
