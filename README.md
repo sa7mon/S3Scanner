@@ -61,14 +61,17 @@ github-dev:us-east-1
 (Compatibility has been tested with Python 2.7 and 3.6)
 
 ## Contributing
-Issues are welcome and Pull Requests are appreciated.
+Issues are welcome and Pull Requests are appreciated. All contributions should be compatible with both Python 2.7 and 3.6.
 
 |    master    |    [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)    |
 |:------------:|:-------------------------------------------------------------------------------------------------------------------------:|
 | enhancements | [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=enhancements)](https://travis-ci.org/sa7mon/S3Scanner) |
 |     bugs     |     [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=bugs)](https://travis-ci.org/sa7mon/S3Scanner)     |
 
-All contributions should be compatiable with both Python 2.7 and 3.6. Run tests with `pytest` in 2.7 and 3.6 virtual environments.
+### Testing
+* All test are currently in `test_scanner.py`
+* Run tests with in 2.7 and 3.6 virtual environments.
+* This project uses **pytest-xdist** to run tests. Use `pytest -n NUM` where num is number of parallel processes.
 
 ## License
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International [(CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)

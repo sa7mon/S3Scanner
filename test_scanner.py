@@ -3,6 +3,7 @@ import sh
 import os
 import sys
 import shutil
+import time
 
 pyVersion = sys.version_info
 # pyVersion[0] can be 2 or 3
@@ -140,6 +141,26 @@ def test_getBucketSize():
 
     # Scenario 3
     assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
+
+
+def test_getBucketSizeTimeout():
+    """
+    Verify that dumpBucket() times out after X amount of seconds on buckets with many files.
+
+    Expected:
+        Use e27.co to test with. Verify that getBucketSize returns an unknown size and doesn't take longer
+        than sizeCheckTimeout set in s3utils
+    """
+
+    startTime = time.time()
+
+    output = s3.getBucketSize("e27.co")
+    duration = time.time() - startTime
+
+    # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
+    # for processing time.
+    assert duration <= s3.sizeCheckTimeout + 1
+    assert output == "Unknown Size"
 
 
 def test_outputFormat():
