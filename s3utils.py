@@ -60,6 +60,33 @@ def dumpBucket(bucketName, region):
         # Delete empty folder
         os.rmdir(bucketDir)
 
+def listBucket(bucketName, region):
+
+    # Check to make sure the bucket is open
+    b = checkBucket(bucketName, region)
+    if b[0] != 200:
+        raise ValueError("The specified bucket is not open.")
+
+    # Dump the bucket into bucket folder
+    bucketDir = './list-buckets/' + bucketName + '.txt'
+    if not os.path.exists('./list-buckets/'):
+        os.makedirs('./list-buckets/')
+
+    try: 
+        output = subprocess.check_output("aws s3 ls --recursive --no-sign-request s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        raise ValueError("The specified bucket is not open.")
+
+    if not "An error occured (" in output:
+        f = open(bucketDir, 'w')
+        f.write(output)
+        f.close()
+    else:
+        raise ValueError("The specified bucket is not open.")
+
+
+    
+
 
 def getBucketSize(bucketName):
     """
