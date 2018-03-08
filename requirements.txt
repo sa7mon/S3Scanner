@@ -2,5 +2,5 @@ argparse
 requests
 awscli
 sh
-pytest
+pytest-xdist
 coloredlogs
