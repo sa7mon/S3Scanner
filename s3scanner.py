@@ -35,6 +35,8 @@ parser.add_argument('-r', '--default-region', dest='',
                     help='AWS region to default to (Default: us-west-1)')
 parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
                     help='Dump all found open buckets locally')
+parser.add_argument('-l', '--list', required=False, dest='list', action='store_true',
+                    help='List all found open buckets locally')
 parser.add_argument('buckets', help='Name of text file containing buckets to check')
 
 parser.set_defaults(defaultRegion='us-west-1')
@@ -85,6 +87,10 @@ fieldStyles = {
 coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
                     level_styles=levelStyles, field_styles=fieldStyles)
 
+if not s3.checkAwsCreds():
+    s3.awsCredsConfigured = False
+    slog.error("Warning: AWS credentials not configured. Open buckets will be shown as closed. Run:"
+               " `aws configure` to fix this.\n")
 
 with open(args.buckets, 'r') as f:
     for line in f:
@@ -126,6 +132,8 @@ with open(args.buckets, 'r') as f:
             flog.debug(result[1] + ":" + result[2])
             if args.dump:
                 s3.dumpBucket(bucket, result[2])
+            if args.list:
+                s3.listBucket(bucket, result[2])
 
         elif result[0] == 999:
             message = "{0:>16} : {1}".format("[invalid]", result[1])
