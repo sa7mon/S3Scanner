@@ -4,6 +4,24 @@ import os
 import subprocess
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
+awsCredsConfigured = True
+
+def checkAwsCreds():
+    """
+    Checks to see if the user has credentials for AWS properly configured.
+    This is essentially a requirement for getting accurate results.
+
+    Returns: True if AWS credentials are properly configured. False if not.
+    """
+    try:
+        sh.aws('sts', 'get-caller-identity', '--output', 'text', '--query', 'Account')
+    except sh.ErrorReturnCode_255 as e:
+        if "Unable to locate credentials" in e.stderr.decode("utf-8"):
+            return False
+        else:
+            raise e
+
+    return True
 
 
 def checkBucket(bucketName, region):
