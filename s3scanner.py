@@ -129,6 +129,6 @@ with open(args.buckets, 'r') as f:
             if args.dump:
                 s3.dumpBucket(bucket, result[2])
             if args.list:
-            	s3.listBucket(bucket, result[2])
+                s3.listBucket(bucket, result[2])
         else:
             raise ValueError("Got back unknown code from checkBucket()")
