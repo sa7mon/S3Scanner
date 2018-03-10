@@ -33,8 +33,8 @@ def checkBucket(bucketName, region):
         except subprocess.CalledProcessError as e:
             return 403, bucketName, region
 
-        if not "An error occured (" in output:
-            return 200, bucketName, region, "0"
+        if not "An error occured (" in str(output):
+            return 200, bucketName, region, getBucketSize(bucketName)
 
         return 403, bucketName, region
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
@@ -63,34 +63,6 @@ def dumpBucket(bucketName, region):
         # Delete empty folder
         os.rmdir(bucketDir)
 
-def listBucket(bucketName, region):
-
-    # Check to make sure the bucket is open
-    b = checkBucket(bucketName, region)
-    if b[0] != 200:
-        raise ValueError("The specified bucket is not open.")
-
-    # Dump the bucket into bucket folder
-    bucketDir = './list-buckets/' + bucketName + '.txt'
-    if not os.path.exists('./list-buckets/'):
-        os.makedirs('./list-buckets/')
-
-    try: 
-        output = subprocess.check_output("aws s3 ls --recursive --no-sign-request s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        raise ValueError("The specified bucket is not open.")
-
-    if not "An error occured (" in output:
-        f = open(bucketDir, 'w')
-        f.write(bucketName + '\r\n')
-        f.write(output)
-        f.close()
-    else:
-        raise ValueError("The specified bucket is not open.")
-
-
-    
-
 
 def getBucketSize(bucketName):
     """
@@ -106,3 +78,28 @@ def getBucketSize(bucketName):
     # Get the last line of the output, get everything to the right of the colon, and strip whitespace
     return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
+
+def listBucket(bucketName, region):
+
+    # Check to make sure the bucket is open
+    b = checkBucket(bucketName, region)
+    if b[0] != 200:
+        raise ValueError("The specified bucket is not open.")
+
+    # Dump the bucket into bucket folder
+    bucketDir = './list-buckets/' + bucketName + '.txt'
+    if not os.path.exists('./list-buckets/'):
+        os.makedirs('./list-buckets/')
+
+    try:
+        output = subprocess.check_output("aws s3 ls --recursive --no-sign-request s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        raise ValueError("The specified bucket is not open.")
+
+    if not "An error occured (" in output:
+        f = open(bucketDir, 'w')
+        f.write(bucketName + '\r\n')
+        f.write(output)
+        f.close()
+    else:
+        raise ValueError("The specified bucket is not open.")
