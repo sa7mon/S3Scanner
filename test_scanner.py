@@ -29,6 +29,8 @@ def test_setup():
 
 
 def test_arguments():
+    test_setup()
+
     # Scenario 1: No arguments
 
     try:
@@ -59,6 +61,8 @@ def test_checkBucket():
             Using flaws.cloud as example by permission of owner (@0xdabbad00)
 
     """
+    test_setup()
+
     # Scenario 1
     result = s3.checkBucket('amazon.com', 'ap-south-1')
     assert result[0] == 301
@@ -80,6 +84,7 @@ def test_checkBucketInvalidName():
         Expected: checkBucket() should return 999
 
     """
+    test_setup()
 
     # Scenario 1
     result = s3.checkBucket('ab', 'us-west-1')
@@ -97,6 +102,7 @@ def test_checkIncludeClosed():
             The bucket name 'yahoo.com' is expected to exist, but be closed. The bucket name
             and region should be included in the output buckets file in the format 'bucket:region'.
     """
+    test_setup()
 
     # Create a file called testing.txt and write 'yahoo.com' to it
 
@@ -132,6 +138,7 @@ def test_dumpBucket():
                 being downloaded into the buckets folder. The expected file sizes of each file are listed in the
                 'expectedFiles' dictionary.
     """
+    test_setup()
 
     # Dump the flaws.cloud bucket
     s3.dumpBucket("flaws.cloud", "us-west-2")
@@ -167,6 +174,7 @@ def test_getBucketSize():
             Using flaws.cloud as example by permission of owner (@0xdabbad00)
 
     """
+    test_setup()
 
     # Scenario 1
     try:
@@ -186,7 +194,6 @@ def test_getBucketSizeTimeout():
         Use e27.co to test with. Verify that getBucketSize returns an unknown size and doesn't take longer
         than sizeCheckTimeout set in s3utils
     """
-
     test_setup()
 
     s3.awsCredsConfigured = False
@@ -209,6 +216,7 @@ def test_outputFormat():
     Expected:
         The output for flaws.cloud should be the following: "flaws.cloud:us-west-2"
     """
+    test_setup()
 
     inFile = testingFolder + 'test_outputFormat_in.txt'
     outFile = testingFolder + 'test_outputFormat_out.txt'
