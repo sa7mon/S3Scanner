@@ -182,7 +182,7 @@ def test_getBucketSize():
 
     # Scenario 1
     try:
-        result = s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
+        s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
     except sh.ErrorReturnCode_255:
         assert True
 
