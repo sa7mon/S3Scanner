@@ -1,7 +1,7 @@
 import sh
 import requests
 import os
-
+import subprocess
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 
@@ -25,8 +25,17 @@ def checkBucket(bucketName, region):
 
     elif r.status_code == 301:  # We tried the wrong region. 'x-amz-bucket-region' header will give us the correct one.
         return 301, r.headers['x-amz-bucket-region']
-
     elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
+
+        # Check if we can list the bucket
+        try: 
+            output = subprocess.check_output("aws s3 ls s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            return 403, bucketName, region
+
+        if not "An error occured (" in output:
+            return 200, bucketName, region, "0"
+
         return 403, bucketName, region
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
         message = "{0:>15} : {1}".format("[not found]", bucketName)
@@ -53,6 +62,34 @@ def dumpBucket(bucketName, region):
     if not os.listdir(bucketDir):
         # Delete empty folder
         os.rmdir(bucketDir)
+
+def listBucket(bucketName, region):
+
+    # Check to make sure the bucket is open
+    b = checkBucket(bucketName, region)
+    if b[0] != 200:
+        raise ValueError("The specified bucket is not open.")
+
+    # Dump the bucket into bucket folder
+    bucketDir = './list-buckets/' + bucketName + '.txt'
+    if not os.path.exists('./list-buckets/'):
+        os.makedirs('./list-buckets/')
+
+    try: 
+        output = subprocess.check_output("aws s3 ls --recursive --no-sign-request s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        raise ValueError("The specified bucket is not open.")
+
+    if not "An error occured (" in output:
+        f = open(bucketDir, 'w')
+        f.write(bucketName + '\r\n')
+        f.write(output)
+        f.close()
+    else:
+        raise ValueError("The specified bucket is not open.")
+
+
+    
 
 
 def getBucketSize(bucketName):
