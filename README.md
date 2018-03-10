@@ -21,6 +21,7 @@ optional arguments:
   -c, --include-closed    Include found but closed buckets in the out-file
   -r , --default-region   AWS region to default to (Default: us-west-1)
   -d, --dump              Dump all found open buckets locally
+  -l, --list              List all found open buckets locally
 </pre>
 
 The tool takes in a list of bucket names to check. Found S3 domains are output to file with their corresponding region in the format 'domain:region'. The tool will also dump the contents of 'open' buckets locally.
@@ -52,6 +53,11 @@ github-dev:us-east-1
 	```bash
 	> python ./s3scanner.py names.txt
 	```
+3. Save file listings of all open buckets to file
+    ```bash
+    > python ./s3scanner.py --list names.txt
+
+    ```
 
 ## Installation
   1. (Optional) `virtualenv venv && source ./venv/bin/activate`
