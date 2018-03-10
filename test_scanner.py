@@ -20,7 +20,7 @@ def test_arguments():
         sh.python(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
         assert e.stderr.decode('utf-8') == ""
-        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-r] [-d] buckets" in e.stdout.decode('utf-8')
+        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-r] [-d] [-l] buckets" in e.stdout.decode('utf-8')
 
 
 def test_checkBucket():
