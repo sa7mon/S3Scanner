@@ -233,7 +233,7 @@ def test_listBucket():
         for line in g:
             lines.append(line)
 
-    assert lines[0][0:41] == '2017-03-13 22:00:38       2575 hint1.html'  # Assert the first line is correct
+    assert lines[0][26:41] == '2575 hint1.html'  # Assert the first line is correct
     assert len(lines) == 6                                            # Assert number of lines in the file is correct
 
 
