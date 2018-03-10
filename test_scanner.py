@@ -213,6 +213,30 @@ def test_getBucketSizeTimeout():
     assert output == "Unknown Size - timeout"
 
 
+def test_listBucket():
+    """
+    Verify that listBucket() function: creates the directory, creates the list file, writes to file correctly
+
+    Expected:
+        Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
+    """
+    test_setup()
+
+    listFile = './list-buckets/flaws.cloud.txt'
+
+    s3.listBucket('flaws.cloud', 'us-west-2')
+
+    assert os.path.exists(listFile)                                   # Assert file was created in the correct location
+
+    lines = []
+    with open(listFile, 'r') as g:
+        for line in g:
+            lines.append(line)
+
+    assert lines[0] == '2017-03-13 22:00:38       2575 hint1.html\n'  # Assert the first line is correct
+    assert len(lines) == 6                                            # Assert number of lines in the file is correct
+
+
 def test_outputFormat():
     """
     Scenario:
