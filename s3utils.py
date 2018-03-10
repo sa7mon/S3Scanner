@@ -75,6 +75,8 @@ def getBucketSize(bucketName):
                    bucketName, _timeout=sizeCheckTimeout)
     except sh.TimeoutException:
         return "Unknown Size"
+    except sh.ErrorReturnCode_255:
+        return "Unknown Size"
     # Get the last line of the output, get everything to the right of the colon, and strip whitespace
     return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
@@ -92,14 +94,6 @@ def listBucket(bucketName, region):
         os.makedirs('./list-buckets/')
 
     try:
-        output = subprocess.check_output("aws s3 ls --recursive --no-sign-request s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        raise ValueError("The specified bucket is not open.")
-
-    if not "An error occured (" in output:
-        f = open(bucketDir, 'w')
-        f.write(bucketName + '\r\n')
-        f.write(output)
-        f.close()
-    else:
+        sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
+    except sh.ErrorReturnCode_255:
         raise ValueError("The specified bucket is not open.")
