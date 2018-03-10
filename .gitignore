@@ -5,3 +5,5 @@ __pycache__
 *.pyc
 .cache/
 .pytest_cache
+list-buckets/
+buckets.txt
