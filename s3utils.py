@@ -6,6 +6,7 @@ import subprocess
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
 
+
 def checkAwsCreds():
     """
     Checks to see if the user has credentials for AWS properly configured.
@@ -92,17 +93,21 @@ def getBucketSize(bucketName):
         Function assumes the bucket exists and doesn't catch errors if it doesn't.
     """
     try:
-        a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' +
-                   bucketName, _timeout=sizeCheckTimeout)
+        if awsCredsConfigured:
+            a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', 's3://' +
+                       bucketName, _timeout=sizeCheckTimeout)
+        else:
+            a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' + bucketName,
+                       _timeout=sizeCheckTimeout)
     except sh.TimeoutException:
-        return "Unknown Size"
-    except sh.ErrorReturnCode_255:
-        return "Unknown Size"
+        return "Unknown Size - timeout"
+
     # Get the last line of the output, get everything to the right of the colon, and strip whitespace
     return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
 
 def listBucket(bucketName, region):
+    """ If we find an open bucket, save the contents of the bucket listing to file. """
 
     # Check to make sure the bucket is open
     b = checkBucket(bucketName, region)
@@ -115,6 +120,9 @@ def listBucket(bucketName, region):
         os.makedirs('./list-buckets/')
 
     try:
-        sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
+        if awsCredsConfigured:
+            sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
+        else:
+            sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
     except sh.ErrorReturnCode_255:
         raise ValueError("The specified bucket is not open.")
