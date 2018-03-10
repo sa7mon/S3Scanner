@@ -130,5 +130,10 @@ with open(args.buckets, 'r') as f:
                 s3.dumpBucket(bucket, result[2])
             if args.list:
                 s3.listBucket(bucket, result[2])
+
+        elif result[0] == 999:
+            message = "{0:>16} : {1}".format("[invalid]", result[1])
+            slog.error(message)
+
         else:
-            raise ValueError("Got back unknown code from checkBucket()")
+            raise ValueError("Got back unknown code from checkBucket(): " + str(result[0]))

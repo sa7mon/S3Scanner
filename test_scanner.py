@@ -56,6 +56,26 @@ def test_checkBucket():
     assert result[2] == 'us-west-2'
 
 
+def test_checkBucketInvalidName():
+    """
+    Scenario 1: Name too short - 2 characters
+        Expected: checkBucket() should return 999
+
+    Scenario 2: Name too long - 75 characters
+        Expected: checkBucket() should return 999
+
+    """
+
+    # Scenario 1
+    result = s3.checkBucket('ab', 'us-west-1')
+    assert result[0] == 999
+
+    # Scenario 2
+    tooLong = "asdfasdf12834092834nMSdfnasjdfhu23y49u2y4jsdkfjbasdfbasdmn4asfasdf23423423423423"  # 80 characters
+    result = s3.checkBucket(tooLong, 'us-east-1')
+    assert result[0] == 999
+
+
 def test_checkIncludeClosed():
     """ Verify that the '--include-closed' argument is working correctly.
         Expected:
