@@ -12,6 +12,21 @@ pyVersion = sys.version_info
 s3scannerLocation = "./"
 testingFolder = "./test/"
 
+setupRan = False
+
+
+def test_setup():
+    """ Setup code to run before we run all tests. """
+    global setupRan
+
+    if setupRan:    # We only need to run this once per test-run
+        return
+
+    # Check if AWS creds are configured
+    s3.awsCredsConfigured = s3.checkAwsCreds()
+
+    setupRan = True
+
 
 def test_arguments():
     # Scenario 1: No arguments
@@ -172,6 +187,10 @@ def test_getBucketSizeTimeout():
         than sizeCheckTimeout set in s3utils
     """
 
+    test_setup()
+
+    s3.awsCredsConfigured = False
+
     startTime = time.time()
 
     output = s3.getBucketSize("e27.co")
@@ -180,7 +199,7 @@ def test_getBucketSizeTimeout():
     # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
     # for processing time.
     assert duration <= s3.sizeCheckTimeout + 1
-    assert output == "Unknown Size"
+    assert output == "Unknown Size - timeout"
 
 
 def test_outputFormat():
