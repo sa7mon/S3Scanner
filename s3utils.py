@@ -34,6 +34,10 @@ def checkBucket(bucketName, region):
     if (len(bucketName) < 3) or (len(bucketName) > 63):  # Bucket names can be 3-63 (inclusively) characters long.
         return 999, bucketName
 
+    for char in bucketName:  # Bucket names can contain letters, numbers, periods, and hyphens
+        if char.lower() not in "abcdefghijklmnopqrstuvwxyz0123456789.-":
+            return 999, bucketName
+
     bucketDomain = 'http://' + bucketName + '.s3-' + region + '.amazonaws.com'
 
     try:

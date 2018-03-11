@@ -78,6 +78,7 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * All test are currently in `test_scanner.py`
 * Run tests with in 2.7 and 3.6 virtual environments.
 * This project uses **pytest-xdist** to run tests. Use `pytest -n NUM` where num is number of parallel processes.
+* Run individual tests like this: `pytest -q -s test_scanner.py::test_namehere`
 
 ## License
 Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International [(CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
