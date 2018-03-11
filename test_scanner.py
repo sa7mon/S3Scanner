@@ -87,6 +87,9 @@ def test_checkBucketInvalidName():
     Scenario 2: Name too long - 75 characters
         Expected: checkBucket() should return 999
 
+    Scenario 3: Name contains bad characters
+        Expected: checkBucket() should return 999
+
     """
     test_setup()
 
@@ -98,6 +101,10 @@ def test_checkBucketInvalidName():
     tooLong = "asdfasdf12834092834nMSdfnasjdfhu23y49u2y4jsdkfjbasdfbasdmn4asfasdf23423423423423"  # 80 characters
     result = s3.checkBucket(tooLong, 'us-east-1')
     assert result[0] == 999
+
+    # Scenario 3
+    badBucket = "mycoolbucket:dev"
+    assert s3.checkBucket(badBucket, 'us-west-2')[0] == 999
 
 
 def test_checkIncludeClosed():
