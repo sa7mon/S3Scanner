@@ -13,7 +13,7 @@ import s3utils as s3
 import logging
 import coloredlogs
 import sys
-
+import botocore
 
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -129,6 +129,14 @@ with open(args.buckets, 'r') as f:
         elif result[0] == 200:          # The only 'bucket found and open' codes
             message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1] + ":" + result[2] + " - " + result[3])
             slog.info(message)
+
+            try:
+                acls = s3.getAcl(result[1])
+                slog.info("   ACLs - allUsers: " + str(acls["allUsers"]))
+                slog.info("   ACLSs - authUsers: " + str(acls["authUsers"]))
+            except botocore.exceptions.ClientError:
+                print("AccessDenied getting ACLs.")
+
             flog.debug(result[1] + ":" + result[2])
             if args.dump:
                 s3.dumpBucket(bucket, result[2])
