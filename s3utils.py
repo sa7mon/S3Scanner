@@ -2,9 +2,33 @@ import sh
 import requests
 import os
 import subprocess
+import boto3
+import json
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
+
+client = boto3.client('s3')
+
+
+def getAcl(bucket):
+
+    allUsersGrants = []
+    authUsersGrants = []
+
+    s3 = boto3.resource('s3')
+    bucket_acl = s3.BucketAcl(bucket)
+    # bucket_acl.load()
+
+    for grant in bucket_acl.grants:
+        if 'URI' in grant['Grantee']:
+            if grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AllUsers":
+                allUsersGrants.append(grant['Permission'])
+            elif grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers":
+                authUsersGrants.append(grant['Permission'])
+
+    return {"allUsers": allUsersGrants,
+            "authUsers": authUsersGrants}
 
 
 def checkAwsCreds():
