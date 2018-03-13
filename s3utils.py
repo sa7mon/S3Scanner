@@ -3,7 +3,7 @@ import requests
 import os
 import subprocess
 import boto3
-import json
+import botocore
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
@@ -12,13 +12,25 @@ client = boto3.client('s3')
 
 
 def getAcl(bucket):
-
     allUsersGrants = []
     authUsersGrants = []
 
     s3 = boto3.resource('s3')
-    bucket_acl = s3.BucketAcl(bucket)
-    # bucket_acl.load()
+
+    try:
+        bucket_acl = s3.BucketAcl(bucket)
+        bucket_acl.load()
+    except client.exceptions.NoSuchBucket:
+        print("Bucket not found: " + bucket)
+        return {"found": False, "acls": {}}
+
+    except client.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "AccessDenied":
+            return {"found": True, "acls": {}}
+        else:
+            raise e
+
+    print("Bucket was found: " + bucket)
 
     for grant in bucket_acl.grants:
         if 'URI' in grant['Grantee']:
@@ -27,8 +39,7 @@ def getAcl(bucket):
             elif grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers":
                 authUsersGrants.append(grant['Permission'])
 
-    return {"allUsers": allUsersGrants,
-            "authUsers": authUsersGrants}
+    return {"found": True, "acls": {"allUsers": allUsersGrants, "authUsers": authUsersGrants}}
 
 
 def checkAwsCreds():
@@ -92,6 +103,25 @@ def checkBucket(bucketName, region):
         return 404, message
     else:
         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName + ":" + region)
+
+
+def checkBucketBoto(bucketName):
+    s3 = boto3.resource('s3')
+
+    global exists
+    exists = True
+
+    try:
+        response = client.head_bucket(
+            Bucket=bucketName
+        )
+        print(response)
+    except botocore.exceptions.ClientError as e:
+        if int(e.response['Error']['Code']) == 404:
+            # global exists
+            exists = False
+
+    return exists
 
 
 def dumpBucket(bucketName, region):
