@@ -21,16 +21,15 @@ def checkAcl(bucket):
         bucket_acl = s3.BucketAcl(bucket)
         bucket_acl.load()
     except client.exceptions.NoSuchBucket:
-        # print("Bucket not found: " + bucket)
         return {"found": False, "acls": {}}
 
     except client.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "AccessDenied":
             return {"found": True, "acls": "AccessDenied"}
+        elif e.response['Error']['Code'] == "AllAccessDisabled":
+            return {"found": True, "acls": "AllAccessDisabled"}
         else:
             raise e
-
-    # print("Bucket was found: " + bucket)
 
     for grant in bucket_acl.grants:
         if 'URI' in grant['Grantee']:
@@ -149,11 +148,19 @@ def getBucketSize(bucketName):
         else:
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' + bucketName,
                        _timeout=sizeCheckTimeout)
+        # Get the last line of the output, get everything to the right of the colon, and strip whitespace
+        return a.splitlines()[len(a.splitlines()) - 1].split(":")[1].strip()
     except sh.TimeoutException:
         return "Unknown Size - timeout"
+    except sh.ErrorReturnCode_255 as e:
+        if "AccessDenied" in e.stderr.decode("UTF-8"):
+            return "AccessDenied"
+        elif "AllAccessDisabled" in e.stderr.decode("UTF-8"):
+            return "AllAccessDisabled"
+        else:
+            raise e
 
-    # Get the last line of the output, get everything to the right of the colon, and strip whitespace
-    return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
+
 
 
 def listBucket(bucketName):
