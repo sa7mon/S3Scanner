@@ -133,7 +133,7 @@ with open(args.buckets, 'r') as f:
             if args.dump:
                 s3.dumpBucket(bucket)
             if args.list:
-                if str(b["acls"]) != "AccessDenied":
+                if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
                     s3.listBucket(bucket)
         else:
             message = "{0:>12} : {1}".format("[not found]", bucket)
