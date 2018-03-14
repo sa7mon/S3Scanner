@@ -115,19 +115,17 @@ with open(args.buckets, 'r') as f:
         valid = s3.checkBucketName(bucket)
 
         if not valid:
-            message = "{0:>16} : {1}".format("[invalid]", bucket)
+            message = "{0:>12} : {1}".format("[invalid]", bucket)
             slog.error(message)
             continue
 
         b = s3.checkAcl(bucket)
 
         if b["found"]:
-            # print("Found bucket: " + bucket + " | Acls: " + str(b["acls"]))
-            size = "Unknown Size - Closed"
-            if str(b["acls"]) != "AccessDenied":
-                size = s3.getBucketSize(bucket)
 
-            message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucket + " | " + size + " | ACLs: " +
+            size = s3.getBucketSize(bucket)  # Try to get the size of the bucket
+
+            message = "{0:>12} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " +
                                                   str(b["acls"]))
             slog.info(message)
             flog.debug(bucket)
@@ -138,7 +136,7 @@ with open(args.buckets, 'r') as f:
                 if str(b["acls"]) != "AccessDenied":
                     s3.listBucket(bucket)
         else:
-            message = "{0:>16} : {1}".format("[not found]", bucket)
+            message = "{0:>12} : {1}".format("[not found]", bucket)
             slog.error(message)
 
 
@@ -149,13 +147,8 @@ with open(args.buckets, 'r') as f:
         #     message = "{0:>15} : {1}".format("[found] [closed]", result[1] + ":" + result[2])
         #     slog.warning(message)
         #     if args.includeClosed:      # If user supplied '--include-closed' flag, log this bucket to file
-        #         flog.debug(result[1] + ":" + result[2])
-        #
-        #
-        # elif result[0] == 999:
-        #     message = "{0:>16} : {1}".format("[invalid]", result[1])
-        #     slog.error(message)
-        #
+        #         flog.debug(result[1] + ":" + result[2])        #
+
         # else:
         #     raise ValueError("Got back unknown code from checkBucket(): " +
         #                      str(result[0]) + "Please report this to https://github.com/sa7mon/S3Scanner/issues")
