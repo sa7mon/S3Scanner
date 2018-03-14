@@ -161,8 +161,6 @@ def getBucketSize(bucketName):
             raise e
 
 
-
-
 def listBucket(bucketName):
     """ If we find an open bucket, save the contents of the bucket listing to file. """
 
@@ -182,4 +180,5 @@ def listBucket(bucketName):
         else:
             sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
     except sh.ErrorReturnCode_255:
-        raise ValueError("The specified bucket is not open.")
+        raise ValueError("Bucket doesn't seem open.")
+
