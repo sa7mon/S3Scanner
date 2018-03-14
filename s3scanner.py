@@ -138,17 +138,3 @@ with open(args.buckets, 'r') as f:
         else:
             message = "{0:>12} : {1}".format("[not found]", bucket)
             slog.error(message)
-
-
-        # if result[0] in [900, 404]:     # These are our 'bucket not found' codes
-        #     slog.error(result[1])
-        #
-        # elif result[0] == 403:          # Found but closed bucket. Only log if user says to.
-        #     message = "{0:>15} : {1}".format("[found] [closed]", result[1] + ":" + result[2])
-        #     slog.warning(message)
-        #     if args.includeClosed:      # If user supplied '--include-closed' flag, log this bucket to file
-        #         flog.debug(result[1] + ":" + result[2])        #
-
-        # else:
-        #     raise ValueError("Got back unknown code from checkBucket(): " +
-        #                      str(result[0]) + "Please report this to https://github.com/sa7mon/S3Scanner/issues")
