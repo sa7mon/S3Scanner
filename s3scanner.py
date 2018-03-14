@@ -112,15 +112,28 @@ with open(args.buckets, 'r') as f:
         else:                           # We were either given a bucket name or domain name
             bucket = line
 
-        # result = s3.checkBucket(bucket, region)
+        b = s3.checkAcl(bucket)
 
-        # s3.checkBucketBoto(bucket)
-        a = s3.getAcl(bucket)
+        if b["found"]:
+            # print("Found bucket: " + bucket + " | Acls: " + str(b["acls"]))
+            size = "Unknown Size - Closed"
+            if str(b["acls"]) != "AccessDenied":
+                size = s3.getBucketSize(bucket)
 
-        if a["found"]:
-            print("Found bucket: " + bucket + " | Acls: " + str(a["acls"]))
+            message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", bucket + " | " + size + " | ACLs: " +
+                                                  str(b["acls"]))
+            slog.info(message)
+            flog.debug(bucket)
+
+            if args.dump:
+                s3.dumpBucket(bucket)
+            if args.list:
+                if str(b["acls"]) != "AccessDenied":
+                    s3.listBucket(bucket)
+
         else:
             print("Bucket not found: " + bucket)
+
 
         # if result[0] == 301:
         #     result = s3.checkBucket(bucket, result[1])

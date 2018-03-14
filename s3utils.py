@@ -11,7 +11,7 @@ awsCredsConfigured = True
 client = boto3.client('s3')
 
 
-def getAcl(bucket):
+def checkAcl(bucket):
     allUsersGrants = []
     authUsersGrants = []
 
@@ -26,11 +26,11 @@ def getAcl(bucket):
 
     except client.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "AccessDenied":
-            return {"found": True, "acls": {}}
+            return {"found": True, "acls": "AccessDenied"}
         else:
             raise e
 
-    print("Bucket was found: " + bucket)
+    # print("Bucket was found: " + bucket)
 
     for grant in bucket_acl.grants:
         if 'URI' in grant['Grantee']:
@@ -124,12 +124,12 @@ def checkBucketBoto(bucketName):
     return exists
 
 
-def dumpBucket(bucketName, region):
+def dumpBucket(bucketName):
 
     # Check to make sure the bucket is open
-    b = checkBucket(bucketName, region)
-    if b[0] != 200:
-        raise ValueError("The specified bucket is not open.")
+    # b = checkBucket(bucketName, region)
+    # if b[0] != 200:
+    #     raise ValueError("The specified bucket is not open.")
 
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
@@ -164,13 +164,13 @@ def getBucketSize(bucketName):
     return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
 
-def listBucket(bucketName, region):
+def listBucket(bucketName):
     """ If we find an open bucket, save the contents of the bucket listing to file. """
 
     # Check to make sure the bucket is open
-    b = checkBucket(bucketName, region)
-    if b[0] != 200:
-        raise ValueError("The specified bucket is not open.")
+    # b = checkBucket(bucketName, region)
+    # if b[0] != 200:
+    #     raise ValueError("The specified bucket is not open.")
 
     # Dump the bucket into bucket folder
     bucketDir = './list-buckets/' + bucketName + '.txt'
