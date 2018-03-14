@@ -21,7 +21,7 @@ def checkAcl(bucket):
         bucket_acl = s3.BucketAcl(bucket)
         bucket_acl.load()
     except client.exceptions.NoSuchBucket:
-        print("Bucket not found: " + bucket)
+        # print("Bucket not found: " + bucket)
         return {"found": False, "acls": {}}
 
     except client.exceptions.ClientError as e:

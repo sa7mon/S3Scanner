@@ -112,6 +112,13 @@ with open(args.buckets, 'r') as f:
         else:                           # We were either given a bucket name or domain name
             bucket = line
 
+        valid = s3.checkBucketName(bucket)
+
+        if not valid:
+            message = "{0:>16} : {1}".format("[invalid]", bucket)
+            slog.error(message)
+            continue
+
         b = s3.checkAcl(bucket)
 
         if b["found"]:
@@ -130,14 +137,11 @@ with open(args.buckets, 'r') as f:
             if args.list:
                 if str(b["acls"]) != "AccessDenied":
                     s3.listBucket(bucket)
-
         else:
-            print("Bucket not found: " + bucket)
+            message = "{0:>16} : {1}".format("[not found]", bucket)
+            slog.error(message)
 
 
-        # if result[0] == 301:
-        #     result = s3.checkBucket(bucket, result[1])
-        #
         # if result[0] in [900, 404]:     # These are our 'bucket not found' codes
         #     slog.error(result[1])
         #
@@ -147,22 +151,6 @@ with open(args.buckets, 'r') as f:
         #     if args.includeClosed:      # If user supplied '--include-closed' flag, log this bucket to file
         #         flog.debug(result[1] + ":" + result[2])
         #
-        # elif result[0] == 200:          # The only 'bucket found and open' codes
-        #     message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1] + ":" + result[2] + " - " + result[3])
-        #     slog.info(message)
-        #
-        #     try:
-        #         acls = s3.getAcl(result[1])
-        #         slog.info("   ACLs - allUsers: " + str(acls["allUsers"]))
-        #         slog.info("   ACLSs - authUsers: " + str(acls["authUsers"]))
-        #     except botocore.exceptions.ClientError:
-        #         print("AccessDenied getting ACLs.")
-        #
-        #     flog.debug(result[1] + ":" + result[2])
-        #     if args.dump:
-        #         s3.dumpBucket(bucket, result[2])
-        #     if args.list:
-        #         s3.listBucket(bucket, result[2])
         #
         # elif result[0] == 999:
         #     message = "{0:>16} : {1}".format("[invalid]", result[1])
