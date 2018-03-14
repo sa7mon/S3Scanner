@@ -105,23 +105,15 @@ def checkBucket(bucketName, region):
         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName + ":" + region)
 
 
-def checkBucketBoto(bucketName):
-    s3 = boto3.resource('s3')
+def checkBucketName(bucketName):
+    if (len(bucketName) < 3) or (len(bucketName) > 63):  # Bucket names can be 3-63 (inclusively) characters long.
+        return False
 
-    global exists
-    exists = True
+    for char in bucketName:  # Bucket names can contain letters, numbers, periods, and hyphens
+        if char.lower() not in "abcdefghijklmnopqrstuvwxyz0123456789.-":
+            return False
 
-    try:
-        response = client.head_bucket(
-            Bucket=bucketName
-        )
-        print(response)
-    except botocore.exceptions.ClientError as e:
-        if int(e.response['Error']['Code']) == 404:
-            # global exists
-            exists = False
-
-    return exists
+    return True
 
 
 def dumpBucket(bucketName):
