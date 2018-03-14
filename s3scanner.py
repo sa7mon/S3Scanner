@@ -13,7 +13,7 @@ import s3utils as s3
 import logging
 import coloredlogs
 import sys
-import botocore
+
 
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
