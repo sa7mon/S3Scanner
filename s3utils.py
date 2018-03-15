@@ -69,11 +69,6 @@ def checkBucketName(bucketName):
 
 def dumpBucket(bucketName):
 
-    # Check to make sure the bucket is open
-    # b = checkBucket(bucketName, region)
-    # if b[0] != 200:
-    #     raise ValueError("The specified bucket is not open.")
-
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
     if not os.path.exists(bucketDir):

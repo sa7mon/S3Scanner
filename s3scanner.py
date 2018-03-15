@@ -31,8 +31,6 @@ parser.add_argument('-o', '--out-file', required=False, dest='outFile',
                     help='Name of file to save the successfully checked buckets in (Default: buckets.txt)')
 parser.add_argument('-c', '--include-closed', required=False, dest='includeClosed', action='store_true',
                     help='Include found but closed buckets in the out-file')
-parser.add_argument('-r', '--default-region', dest='',
-                    help='AWS region to default to (Default: us-west-1)')
 parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
                     help='Dump all found open buckets locally')
 parser.add_argument('-l', '--list', required=False, dest='list', action='store_true',
@@ -68,8 +66,7 @@ slog = logging.getLogger('s3scanner-screen')
 slog.setLevel(logging.INFO)
 
 # Logging levels for the screen logger:
-#   INFO  = found, open
-#   WARN  = found, closed
+#   INFO  = found
 #   ERROR = not found
 # The levels serve no other purpose than to specify the output color
 
@@ -95,7 +92,6 @@ if not s3.checkAwsCreds():
 with open(args.buckets, 'r') as f:
     for line in f:
         line = line.rstrip()            # Remove any extra whitespace
-        region = args.defaultRegion
 
         # Determine what kind of input we're given. Options:
         #   bucket name   i.e. mybucket
@@ -105,9 +101,7 @@ with open(args.buckets, 'r') as f:
 
         if ".amazonaws.com" in line:    # We were given a full s3 url
             bucket = line[:line.rfind(".s3")]
-            region = line[len(line[:line.rfind(".s3")]) + 4:line.rfind(".amazonaws.com")]
         elif ":" in line:               # We were given a bucket in 'bucket:region' format
-            region = line.split(":")[1]
             bucket = line.split(":")[0]
         else:                           # We were either given a bucket name or domain name
             bucket = line
@@ -115,7 +109,7 @@ with open(args.buckets, 'r') as f:
         valid = s3.checkBucketName(bucket)
 
         if not valid:
-            message = "{0:>12} : {1}".format("[invalid]", bucket)
+            message = "{0:>11} : {1}".format("[invalid]", bucket)
             slog.error(message)
             continue
 
@@ -125,8 +119,7 @@ with open(args.buckets, 'r') as f:
 
             size = s3.getBucketSize(bucket)  # Try to get the size of the bucket
 
-            message = "{0:>12} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " +
-                                                  str(b["acls"]))
+            message = "{0:>11} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " + str(b["acls"]))
             slog.info(message)
             flog.debug(bucket)
 
@@ -136,5 +129,5 @@ with open(args.buckets, 'r') as f:
                 if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
                     s3.listBucket(bucket)
         else:
-            message = "{0:>12} : {1}".format("[not found]", bucket)
+            message = "{0:>11} : {1}".format("[not found]", bucket)
             slog.error(message)
