@@ -5,6 +5,7 @@ import requests
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
+errorCodes = ['AccessDenied', 'AllAccessDisabled']
 
 client = boto3.client('s3')
 
@@ -44,7 +45,7 @@ def checkAwsCreds():
     Checks to see if the user has credentials for AWS properly configured.
     This is essentially a requirement for getting accurate results.
 
-    Returns: True if AWS credentials are properly configured. False if not.
+    :return: True if AWS credentials are properly configured. False if not.
     """
     try:
         sh.aws('sts', 'get-caller-identity', '--output', 'text', '--query', 'Account')
@@ -58,19 +59,23 @@ def checkAwsCreds():
 
 
 def checkBucketName(bucketName):
+    """ Checks to make sure bucket names input are valid according to S3 naming conventions
+    :param bucketName: Name of bucket to check
+    :return: Boolean - whether or not the name is valid
+    """
+
     if (len(bucketName) < 3) or (len(bucketName) > 63):  # Bucket names can be 3-63 (inclusively) characters long.
         return False
 
     for char in bucketName:  # Bucket names can contain letters, numbers, periods, and hyphens
         if char.lower() not in "abcdefghijklmnopqrstuvwxyz0123456789.-":
             return False
-
     return True
 
 
 def checkBucketWithoutCreds(bucketName):
     """ Does a simple GET request with the Requests library and interprets the results.
-    site - A domain name without protocol (http[s]) """
+    bucketName - A domain name without protocol (http[s]) """
 
     bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
 
@@ -83,7 +88,8 @@ def checkBucketWithoutCreds(bucketName):
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
         return False
     else:
-        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName)
+        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for bucket: " + bucketName +
+                         ". Please open an issue at: https://github.com/sa7mon/s3scanner/issues and include this info.")
 
 
 def dumpBucket(bucketName):
