@@ -5,6 +5,11 @@ import sys
 import shutil
 import time
 
+# TODO
+""" 
+- Test checkBucketWithoutCreds
+"""
+
 pyVersion = sys.version_info
 # pyVersion[0] can be 2 or 3
 
@@ -66,6 +71,9 @@ def test_checkAcl():
 
     """
     test_setup()
+
+    if not s3.awsCredsConfigured:  # Don't run tests if AWS creds aren't configured
+        return
 
     # Scenario 1
     result = s3.checkAcl('amazon.com')
@@ -258,7 +266,14 @@ def test_outputFormat():
     f.write('flaws.cloud\n')  # python will convert \n to os.linesep
     f.close()
 
-    sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
+    try:
+        sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
+    except sh.ErrorReturnCode_1 as e:
+        if s3.awsCredsConfigured:
+            raise e
+        if "Warning: AWS credentials not configured." not in e.stderr.decode("UTF-8"):
+            raise e
+
 
     found = False
     with open(outFile, 'r') as g:
