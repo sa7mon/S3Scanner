@@ -1,5 +1,4 @@
 argparse
-requests
 awscli
 sh
 pytest-xdist
