@@ -1,6 +1,7 @@
 import sh
 import os
 import boto3
+import requests
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
@@ -65,6 +66,24 @@ def checkBucketName(bucketName):
             return False
 
     return True
+
+
+def checkBucketWithoutCreds(bucketName):
+    """ Does a simple GET request with the Requests library and interprets the results.
+    site - A domain name without protocol (http[s]) """
+
+    bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
+
+    r = requests.head(bucketUrl)
+
+    if r.status_code == 200:    # Successfully found a bucket!
+        return True
+    elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
+        return True
+    elif r.status_code == 404:  # This is definitely not a valid bucket name.
+        return False
+    else:
+        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName)
 
 
 def dumpBucket(bucketName):
