@@ -41,10 +41,10 @@ def test_arguments():
         sh.python(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
         assert e.stderr.decode('utf-8') == ""
-        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-r] [-d] [-l] buckets" in e.stdout.decode('utf-8')
+        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-d] [-l] buckets" in e.stdout.decode('utf-8')
 
 
-def test_checkBucket():
+def test_checkAcl():
     """
     Scenario 1: Bucket name exists, region is wrong
         Expected:
@@ -68,43 +68,42 @@ def test_checkBucket():
     test_setup()
 
     # Scenario 1
-    result = s3.checkBucket('amazon.com', 'ap-south-1')
-    assert result[0] == 301
-    assert result[1].count("-") == 2
+    result = s3.checkAcl('amazon.com')
+    assert result["found"] is True
+    assert result["acls"] == "AllAccessDisabled"
 
     # Scenario 2
-    result = s3.checkBucket('flaws.cloud', 'us-west-2')
-    assert result[0] == 200
-    assert result[1] == 'flaws.cloud'
-    assert result[2] == 'us-west-2'
+    result = s3.checkAcl('flaws.cloud')
+    assert result["found"] is True
+    assert result["acls"] == "AccessDenied"
 
 
-def test_checkBucketInvalidName():
+def test_checkBucketName():
     """
     Scenario 1: Name too short - 2 characters
-        Expected: checkBucket() should return 999
+        Expected: checkBucketName() should return 999
 
     Scenario 2: Name too long - 75 characters
-        Expected: checkBucket() should return 999
+        Expected: checkBucketName() should return 999
 
     Scenario 3: Name contains bad characters
-        Expected: checkBucket() should return 999
+        Expected: checkBucketName() should return 999
 
     """
     test_setup()
 
     # Scenario 1
-    result = s3.checkBucket('ab', 'us-west-1')
-    assert result[0] == 999
+    result = s3.checkBucketName('ab')
+    assert result is False
 
     # Scenario 2
     tooLong = "asdfasdf12834092834nMSdfnasjdfhu23y49u2y4jsdkfjbasdfbasdmn4asfasdf23423423423423"  # 80 characters
-    result = s3.checkBucket(tooLong, 'us-east-1')
-    assert result[0] == 999
+    result = s3.checkBucketName(tooLong)
+    assert result is False
 
     # Scenario 3
     badBucket = "mycoolbucket:dev"
-    assert s3.checkBucket(badBucket, 'us-west-2')[0] == 999
+    assert s3.checkBucketName(badBucket) is False
 
 
 def test_checkIncludeClosed():
@@ -152,7 +151,7 @@ def test_dumpBucket():
     test_setup()
 
     # Dump the flaws.cloud bucket
-    s3.dumpBucket("flaws.cloud", "us-west-2")
+    s3.dumpBucket("flaws.cloud")
 
     # Folder to look for the files in
     dumpDir = './buckets/flaws.cloud/'
@@ -231,7 +230,7 @@ def test_listBucket():
 
     listFile = './list-buckets/flaws.cloud.txt'
 
-    s3.listBucket('flaws.cloud', 'us-west-2')
+    s3.listBucket('flaws.cloud')
 
     assert os.path.exists(listFile)                                   # Assert file was created in the correct location
 
@@ -265,7 +264,7 @@ def test_outputFormat():
     found = False
     with open(outFile, 'r') as g:
         for line in g:
-            if line.strip() == 'flaws.cloud:us-west-2':
+            if line.strip() == 'flaws.cloud':
                 found = True
 
         try:
