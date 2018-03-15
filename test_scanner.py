@@ -30,6 +30,8 @@ def test_setup():
     # Check if AWS creds are configured
     s3.awsCredsConfigured = s3.checkAwsCreds()
 
+    print("--> AWS credentials configured: " + str(s3.awsCredsConfigured))
+
     # Create testingFolder if it doesn't exist
     if not os.path.exists(testingFolder) or not os.path.isdir(testingFolder):
         os.makedirs(testingFolder)
