@@ -112,7 +112,12 @@ with open(args.buckets, 'r') as f:
             slog.error(message)
             continue
 
-        b = s3.checkAcl(bucket)
+        if s3.awsCredsConfigured:
+            b = s3.checkAcl(bucket)
+        else:
+            a = s3.checkBucketWithoutCreds(bucket)
+            # b = s3.checkAcl(bucket)
+            b = {"found": a, "acls": "unknown - no aws creds"}
 
         if b["found"]:
 
