@@ -3,8 +3,7 @@ python:
   - "2.7"
   - "3.6"
 env:
-  - AWS_ACCESS_KEY_ID=''
-  - AWS_SECRET_ACCESS_KEY=''
+  - AWS_ACCESS_KEY_ID= AWS_SECRET_ACCESS_KEY=
 cache: pip
 install:
   - pip install -r requirements.txt
