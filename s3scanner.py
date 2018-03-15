@@ -116,7 +116,6 @@ with open(args.buckets, 'r') as f:
             b = s3.checkAcl(bucket)
         else:
             a = s3.checkBucketWithoutCreds(bucket)
-            # b = s3.checkAcl(bucket)
             b = {"found": a, "acls": "unknown - no aws creds"}
 
         if b["found"]:
