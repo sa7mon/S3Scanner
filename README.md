@@ -19,12 +19,40 @@ optional arguments:
   -h, --help              show this help message and exit
   -o, --out-file OUTFILE  Name of file to save the successfully checked buckets in (Default: buckets.txt)
   -c, --include-closed    Include found but closed buckets in the out-file
-  -r , --default-region   AWS region to default to (Default: us-west-1)
   -d, --dump              Dump all found open buckets locally
   -l, --list              List all found open buckets locally
 </pre>
 
 The tool takes in a list of bucket names to check. Found S3 domains are output to file with their corresponding region in the format 'domain:region'. The tool will also dump the contents of 'open' buckets locally.
+
+### Interpreting Results
+
+This tool will attempt to get all available information about a bucket, but it's up to you to interpret the results.
+
+[Settings available](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/set-bucket-permissions.html) for buckets:
+* Object Access (object in this case refers to files stored in the bucket)
+  * List Objects
+  * Write Objects
+* ACL Access
+  * Read Permissions
+  * Write Permissions
+  
+Any or all of these permissions can be set for the 2 main user groups:
+* Authenticated Users
+* Public Users (those without AWS credentials set)
+* (They can also be applied to specific users, but that's out of scope)
+  
+**What this means:** Just because a bucket returns "AccessDenied" for it's ACLs doesn't mean you can't read/write to it.
+Conversely, you may be able to list ACLs but not read/write to the bucket
+
+
+## Installation
+  1. (Optional) `virtualenv venv && source ./venv/bin/activate`
+  2. `pip install -r requirements.txt`
+  3. `python ./s3scanner.py`
+
+(Compatibility has been tested with Python 2.7 and 3.6)
+
 
 ## Examples
 This tool accepts the following type of bucket formats to check:
@@ -58,13 +86,6 @@ github-dev:us-east-1
     > python ./s3scanner.py --list names.txt
 
     ```
-
-## Installation
-  1. (Optional) `virtualenv venv && source ./venv/bin/activate`
-  2. `pip install -r requirements.txt`
-  3. `python ./s3scanner.py`
-
-(Compatibility has been tested with Python 2.7 and 3.6)
 
 ## Contributing
 Issues are welcome and Pull Requests are appreciated. All contributions should be compatible with both Python 2.7 and 3.6.
