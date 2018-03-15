@@ -4,3 +4,4 @@ sh
 pytest-xdist
 coloredlogs
 boto3
+requests
