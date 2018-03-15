@@ -37,7 +37,6 @@ parser.add_argument('-l', '--list', required=False, dest='list', action='store_t
                     help='List all found open buckets locally')
 parser.add_argument('buckets', help='Name of text file containing buckets to check')
 
-parser.set_defaults(defaultRegion='us-west-1')
 parser.set_defaults(includeClosed=False)
 parser.set_defaults(outFile='./buckets.txt')
 parser.set_defaults(dump=False)
