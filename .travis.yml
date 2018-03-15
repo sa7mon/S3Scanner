@@ -6,6 +6,6 @@ cache: pip
 install:
   - pip install -r requirements.txt
 script:
-  - pytest
+  - pytest ./test_scanner.py -s
 notifications:
   email: false
