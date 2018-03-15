@@ -123,8 +123,7 @@ def test_checkIncludeClosed():
     f.write('yahoo.com\n')  # python will convert \n to os.linesep
     f.close()
 
-    run1 = sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile,
-                     "--include-closed", inFile)
+    sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile, "--include-closed", inFile)
 
     found = False
     with open(outFile, 'r') as g:
