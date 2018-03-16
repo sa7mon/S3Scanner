@@ -160,6 +160,8 @@ def getBucketSize(bucketName):
             return "AccessDenied"
         elif "AllAccessDisabled" in e.stderr.decode("UTF-8"):
             return "AllAccessDisabled"
+        elif "NoSuchBucket" in e.stderr.decode("UTF-8"):
+            return "NoSuchBucket"
         else:
             raise e
 

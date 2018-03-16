@@ -237,7 +237,9 @@ def test_getBucketSize():
     Scenario getBucketSize.2 - Public read enabled
         Expected: The flaws.cloud bucket returns size: 9.1KiB
     Scenario getBucketSize.3 - Public read disabled
+        Expected: app-dev bucket has public read permissions disabled
     Scenario getBucketSize.4 - Bucket doesn't exist
+        Expected: We should get back "NoSuchBucket"
     """
     test_setup()
 
@@ -245,15 +247,10 @@ def test_getBucketSize():
     assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
 
     # getBucketSize.3
+    assert s3.getBucketSize('app-dev') == "AccessDenied"
 
     # getBucketSize.4
-
-    # try:
-    #     s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
-    # except sh.ErrorReturnCode_255:
-    #     assert True
-
-    raise NotImplementedError
+    assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
 
 
 def test_getBucketSizeTimeout():
