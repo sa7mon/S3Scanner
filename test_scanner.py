@@ -154,7 +154,19 @@ def test_checkBucketWithoutCreds():
     Scenario checkBucketwc.2 - Good bucket
     Scenario checkBucketwc.3 - No public read perm
     """
-    raise NotImplementedError
+    test_setup()
+
+    if s3.awsCredsConfigured:
+        return
+
+    # checkBucketwc.1
+    assert s3.checkBucketWithoutCreds('ireallyhopethisbucketdoesntexist') is False
+
+    # checkBucketwc.2
+    assert s3.checkBucketWithoutCreds('flaws.cloud') is True
+
+    # checkBucketwc.3
+    assert s3.checkBucketWithoutCreds('amazon.com') is True
 
 
 # def test_checkIncludeClosed():
