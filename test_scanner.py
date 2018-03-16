@@ -193,10 +193,10 @@ def test_checkBucketWithoutCreds():
 def test_dumpBucket():
     """
     Scenario dumpBucket.1 - Public read permission enabled
-        Expected: Supplying the function with the arguments ("flaws.cloud", "us-west-2") should result in 6 files
-                being downloaded into the buckets folder. The expected file sizes of each file are listed in the
-                'expectedFiles' dictionary.
-    Scenario dumpBucket.2 - Public read permission disabled
+        Expected: Dumping the bucket "flaws.cloud" should result in 6 files being downloaded into the buckets folder.
+                    The expected file sizes of each file are listed in the 'expectedFiles' dictionary.
+    Scenario dumpBucket.2 - Public read objects disabled
+        Expected: The function returns false and the bucket directory doesn't exist
     Scenario dumpBucket.3 - Authenticated users read enabled, public users read disabled
     """
     test_setup()
@@ -223,11 +223,14 @@ def test_dumpBucket():
         shutil.rmtree(dumpDir)
 
     # dumpBucket.2
+    assert s3.dumpBucket('app-dev') is False
+    assert os.path.exists('./buckets/app-dev') is False
+
     # Possibly split into multiple functions
 
     # dumpBucket.3
 
-    raise NotImplementedError
+    # raise NotImplementedError
 
 
 def test_getBucketSize():
