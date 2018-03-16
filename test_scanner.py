@@ -62,28 +62,33 @@ def test_arguments():
 
 def test_checkAcl():
     """
-    Scenario checkAcl.1 -
-    Scenario checkAcl.2 -
-    Scenario checkAcl.3 - Bucket name exists, but acl listing is disabled
+    Scenario checkAcl.1 - ACL listing enabled
+    Scenario checkAcl.2 - AccessDenied for ACL listing
+    Scenario checkAcl.3 - Bucket access is disabled
         Expected:
             found = True
             acls = "AllAccessDisabled"
-    Scenario checkAcl.4 -
+    Scenario checkAcl.4 - Bucket doesn't exist
     """
     test_setup()
 
     if not s3.awsCredsConfigured:  # Don't run tests if AWS creds aren't configured
         return
 
-    # Scenario 1
+    # checkAcl.1
+
+    # checkAcl.2
+    result = s3.checkAcl('flaws.cloud')
+    assert result["found"] is True
+    assert result["acls"] == "AccessDenied"
+
+    # checkAcl.3
     result = s3.checkAcl('amazon.com')
     assert result["found"] is True
     assert result["acls"] == "AllAccessDisabled"
 
-    # Scenario 2
-    result = s3.checkAcl('flaws.cloud')
-    assert result["found"] is True
-    assert result["acls"] == "AccessDenied"
+    # checkAcl.4
+    raise NotImplementedError
 
 
 def test_checkAwsCreds():
@@ -130,37 +135,46 @@ def test_checkBucketName():
     raise NotImplementedError
 
 
-def test_checkIncludeClosed():
-    """ Verify that the '--include-closed' argument is working correctly.
-        Expected:
-            The bucket name 'yahoo.com' is expected to exist, but be closed. The bucket name
-            and region should be included in the output buckets file in the format 'bucket:region'.
+def test_checkBucketWithoutCreds():
     """
-    test_setup()
+    Scenario checkBucketwc.1 -  Non-existent bucket
+    Scenario checkBucketwc.2 - Good bucket
+    Scenario checkBucketwc.3 - No public read perm
+    """
+    raise NotImplementedError
 
-    # Create a file called testing.txt and write 'yahoo.com' to it
 
-    inFile = testingFolder + 'test_checkIncludeClosed_in.txt'
-    outFile = testingFolder + 'test_checkIncludeClosed_out.txt'
-
-    f = open(inFile, 'w')
-    f.write('yahoo.com\n')  # python will convert \n to os.linesep
-    f.close()
-
-    sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile, "--include-closed", inFile)
-
-    found = False
-    with open(outFile, 'r') as g:
-        for line in g:
-            if 'yahoo.com' in line:
-                found = True
-
-    try:
-        assert found is True
-    finally:
-        # Cleanup testing files
-        os.remove(outFile)
-        os.remove(inFile)
+# def test_checkIncludeClosed():
+#     """ Verify that the '--include-closed' argument is working correctly.
+#         Expected:
+#             The bucket name 'yahoo.com' is expected to exist, but be closed. The bucket name
+#             and region should be included in the output buckets file in the format 'bucket:region'.
+#     """
+#     test_setup()
+#
+#     # Create a file called testing.txt and write 'yahoo.com' to it
+#
+#     inFile = testingFolder + 'test_checkIncludeClosed_in.txt'
+#     outFile = testingFolder + 'test_checkIncludeClosed_out.txt'
+#
+#     f = open(inFile, 'w')
+#     f.write('yahoo.com\n')  # python will convert \n to os.linesep
+#     f.close()
+#
+#     sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile, "--include-closed", inFile)
+#
+#     found = False
+#     with open(outFile, 'r') as g:
+#         for line in g:
+#             if 'yahoo.com' in line:
+#                 found = True
+#
+#     try:
+#         assert found is True
+#     finally:
+#         # Cleanup testing files
+#         os.remove(outFile)
+#         os.remove(inFile)
 
 
 def test_dumpBucket():
@@ -250,12 +264,13 @@ def test_getBucketSizeTimeout():
 
 
 def test_listBucket():
-    test_setup()
     """
     Scenario listBucket.1 - Public read enabled
         Expected: Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
     Scenario listBucket.2 - Public read disabled
     """
+    test_setup()
+
     # listBucket.1
 
     listFile = './list-buckets/flaws.cloud.txt'
