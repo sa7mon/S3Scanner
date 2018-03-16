@@ -292,6 +292,7 @@ def test_listBucket():
     Scenario listBucket.1 - Public read enabled
         Expected: Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
     Scenario listBucket.2 - Public read disabled
+
     """
     test_setup()
 
@@ -312,9 +313,7 @@ def test_listBucket():
     assert len(lines) == 6                       # Assert number of lines in the file is correct
 
     # listBucket.2
-
-    raise NotImplementedError
-
+    assert s3.listBucket('app-dev') == "AccessDenied"
 
 # def test_outputFormat():
 #     """

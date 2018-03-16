@@ -179,6 +179,8 @@ def listBucket(bucketName):
             sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
         else:
             sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
-    except sh.ErrorReturnCode_255:
-        raise ValueError("Bucket doesn't seem open.")
-
+    except sh.ErrorReturnCode_255 as e:
+        if "AccessDenied" in e.stderr.decode("utf-8"):
+            return "AccessDenied"
+        else:
+            raise e
