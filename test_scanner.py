@@ -5,10 +5,6 @@ import sys
 import shutil
 import time
 
-# TODO
-""" 
-- Test checkBucketWithoutCreds
-"""
 
 pyVersion = sys.version_info
 # pyVersion[0] can be 2 or 3
@@ -40,9 +36,16 @@ def test_setup():
 
 
 def test_arguments():
+    """
+    Scenario mainargs.1: No args supplied
+    Scenario mainargs.2: --out-file
+    Scenario mainargs.3: --list
+    Scenario mainargs.4: --dump
+    """
+
     test_setup()
 
-    # Scenario 1: No arguments
+    # mainargs.1
 
     try:
         sh.python(s3scannerLocation + 's3scanner.py')
@@ -50,27 +53,22 @@ def test_arguments():
         assert e.stderr.decode('utf-8') == ""
         assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-d] [-l] buckets" in e.stdout.decode('utf-8')
 
+    # mainargs.2
+    # mainargs.3
+    # mainargs.4
+
+    raise NotImplementedError
+
 
 def test_checkAcl():
     """
-    Scenario 1: Bucket name exists, region is wrong
+    Scenario checkAcl.1 -
+    Scenario checkAcl.2 -
+    Scenario checkAcl.3 - Bucket name exists, but acl listing is disabled
         Expected:
-            Code: 301
-            Region: Region returned depends on the closest S3 region to the user. Since we don't know this,
-                    just assert for 2 hyphens.
-        Note:
-            Amazon should always give us a 301 to redirect to the nearest s3 endpoint.
-            Currently uses the ap-south-1 (Asia Pacific - Mumbai) region, so if you're running
-            the test near there, change to a region far from
-            you - https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
-
-    Scenario 2: Bucket exists, region correct
-        Expected:
-            Code: 200
-            Message: Contains the domain name and region
-        Note:
-            Using flaws.cloud as example by permission of owner (@0xdabbad00)
-
+            found = True
+            acls = "AllAccessDisabled"
+    Scenario checkAcl.4 -
     """
     test_setup()
 
@@ -88,32 +86,48 @@ def test_checkAcl():
     assert result["acls"] == "AccessDenied"
 
 
+def test_checkAwsCreds():
+    """
+    Scenario checkAwsCreds.1 - AWS credentials not set
+    Scenario checkAwsCreds.2 - AWS credentials set
+    """
+
+    raise NotImplementedError
+
+
 def test_checkBucketName():
     """
-    Scenario 1: Name too short - 2 characters
-        Expected: checkBucketName() should return 999
-
-    Scenario 2: Name too long - 75 characters
-        Expected: checkBucketName() should return 999
-
-    Scenario 3: Name contains bad characters
-        Expected: checkBucketName() should return 999
-
+    Scenario checkBucketName.1 - Under length requirements
+        Expected: False
+    Scenario checkBucketName.2 - Over length requirements
+        Expected: False
+    Scenario checkBucketName.3 - Contains forbidden characters
+        Expected: False
+    Scenario checkBucketName.4 - Blank name
+        Expected: False
+    Scenario checkBucketName.5 - Good name
+        Expected: True
     """
     test_setup()
 
-    # Scenario 1
+    # checkBucketName.1
     result = s3.checkBucketName('ab')
     assert result is False
 
-    # Scenario 2
+    # checkBucketName.2
     tooLong = "asdfasdf12834092834nMSdfnasjdfhu23y49u2y4jsdkfjbasdfbasdmn4asfasdf23423423423423"  # 80 characters
     result = s3.checkBucketName(tooLong)
     assert result is False
 
-    # Scenario 3
+    # checkBucketName.3
     badBucket = "mycoolbucket:dev"
     assert s3.checkBucketName(badBucket) is False
+
+    # checkBucketName.4
+
+    # checkBucketName.5
+
+    raise NotImplementedError
 
 
 def test_checkIncludeClosed():
@@ -151,19 +165,20 @@ def test_checkIncludeClosed():
 
 def test_dumpBucket():
     """
-        Verify the dumpBucket() function is working as intended.
-
+    Scenario dumpBucket.1 - Public read permission enabled
         Expected: Supplying the function with the arguments ("flaws.cloud", "us-west-2") should result in 6 files
                 being downloaded into the buckets folder. The expected file sizes of each file are listed in the
                 'expectedFiles' dictionary.
+    Scenario dumpBucket.2 - Public read permission disabled
+    Scenario dumpBucket.3 - Authenticated users read enabled, public users read disabled
     """
     test_setup()
 
-    # Dump the flaws.cloud bucket
+    # dumpBucket.1
+
     s3.dumpBucket("flaws.cloud")
 
-    # Folder to look for the files in
-    dumpDir = './buckets/flaws.cloud/'
+    dumpDir = './buckets/flaws.cloud/'  # Folder to look for the files in
 
     # Expected sizes of each file
     expectedFiles = {'hint1.html': 2575, 'hint2.html': 1707, 'hint3.html': 1101, 'index.html': 2877,
@@ -180,37 +195,43 @@ def test_dumpBucket():
         # No matter what happens with the asserts, cleanup after the test by deleting the flaws.cloud directory
         shutil.rmtree(dumpDir)
 
+    # dumpBucket.2
+    # Possibly split into multiple functions
+
+    # dumpBucket.3
+
+    raise NotImplementedError
+
 
 def test_getBucketSize():
     """
-    Scenario 1: Bucket doesn't exist
-        Expected: 255
-
-    Scenario 2: Bucket exists, listing open to public
-        Expected:
-            Size: 9.1 KiB
-        Note:
-            Using flaws.cloud as example by permission of owner (@0xdabbad00)
-
+    Scenario getBucketSize.2 - Public read enabled
+        Expected: The flaws.cloud bucket returns size: 9.1KiB
+    Scenario getBucketSize.3 - Public read disabled
+    Scenario getBucketSize.4 - Bucket doesn't exist
     """
     test_setup()
 
-    # Scenario 1
-    try:
-        s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
-    except sh.ErrorReturnCode_255:
-        assert True
-
-    # Scenario 3
+    # getBucketSize.2
     assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
+
+    # getBucketSize.3
+
+    # getBucketSize.4
+
+    # try:
+    #     s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
+    # except sh.ErrorReturnCode_255:
+    #     assert True
+
+    raise NotImplementedError
 
 
 def test_getBucketSizeTimeout():
     """
-    Verify that dumpBucket() times out after X amount of seconds on buckets with many files.
-
-    Expected:
-        Use e27.co to test with. Verify that getBucketSize returns an unknown size and doesn't take longer
+    Scenario getBucketSize.1 - Too many files to list so it times out
+        Expected: The function returns a timeout error after the specified wait time
+        Note: Use e27.co to test with. Verify that getBucketSize returns an unknown size and doesn't take longer
         than sizeCheckTimeout set in s3utils
     """
     test_setup()
@@ -229,19 +250,19 @@ def test_getBucketSizeTimeout():
 
 
 def test_listBucket():
-    """
-    Verify that listBucket() function: creates the directory, creates the list file, writes to file correctly
-
-    Expected:
-        Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
-    """
     test_setup()
+    """
+    Scenario listBucket.1 - Public read enabled
+        Expected: Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
+    Scenario listBucket.2 - Public read disabled
+    """
+    # listBucket.1
 
     listFile = './list-buckets/flaws.cloud.txt'
 
     s3.listBucket('flaws.cloud')
 
-    assert os.path.exists(listFile)                                   # Assert file was created in the correct location
+    assert os.path.exists(listFile)              # Assert file was created in the correct location
 
     lines = []
     with open(listFile, 'r') as g:
@@ -249,43 +270,47 @@ def test_listBucket():
             lines.append(line)
 
     assert lines[0][26:41] == '2575 hint1.html'  # Assert the first line is correct
-    assert len(lines) == 6                                            # Assert number of lines in the file is correct
+    assert len(lines) == 6                       # Assert number of lines in the file is correct
+
+    # listBucket.2
+
+    raise NotImplementedError
 
 
-def test_outputFormat():
-    """
-    Scenario:
-        Verify that the main script outputs found buckets in the format "bucket:region"
-    Expected:
-        The output for flaws.cloud should be the following: "flaws.cloud:us-west-2"
-    """
-    test_setup()
-
-    inFile = testingFolder + 'test_outputFormat_in.txt'
-    outFile = testingFolder + 'test_outputFormat_out.txt'
-
-    f = open(inFile, 'w')
-    f.write('flaws.cloud\n')  # python will convert \n to os.linesep
-    f.close()
-
-    try:
-        sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
-    except sh.ErrorReturnCode_1 as e:
-        if s3.awsCredsConfigured:
-            raise e
-        if "Warning: AWS credentials not configured." not in e.stderr.decode("UTF-8"):
-            raise e
-
-
-    found = False
-    with open(outFile, 'r') as g:
-        for line in g:
-            if line.strip() == 'flaws.cloud':
-                found = True
-
-        try:
-            assert found is True
-        finally:
-            # Cleanup testing files
-            os.remove(outFile)
-            os.remove(inFile)
+# def test_outputFormat():
+#     """
+#     Scenario:
+#         Verify that the main script outputs found buckets in the format "bucket:region"
+#     Expected:
+#         The output for flaws.cloud should be the following: "flaws.cloud:us-west-2"
+#     """
+#     test_setup()
+#
+#     inFile = testingFolder + 'test_outputFormat_in.txt'
+#     outFile = testingFolder + 'test_outputFormat_out.txt'
+#
+#     f = open(inFile, 'w')
+#     f.write('flaws.cloud\n')  # python will convert \n to os.linesep
+#     f.close()
+#
+#     try:
+#         sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
+#     except sh.ErrorReturnCode_1 as e:
+#         if s3.awsCredsConfigured:
+#             raise e
+#         if "Warning: AWS credentials not configured." not in e.stderr.decode("UTF-8"):
+#             raise e
+#
+#
+#     found = False
+#     with open(outFile, 'r') as g:
+#         for line in g:
+#             if line.strip() == 'flaws.cloud':
+#                 found = True
+#
+#         try:
+#             assert found is True
+#         finally:
+#             # Cleanup testing files
+#             os.remove(outFile)
+#             os.remove(inFile)
