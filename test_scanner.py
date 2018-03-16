@@ -142,10 +142,10 @@ def test_checkBucketName():
     assert s3.checkBucketName(badBucket) is False
 
     # checkBucketName.4
+    assert s3.checkBucketName('') is False
 
     # checkBucketName.5
-
-    raise NotImplementedError
+    assert s3.checkBucketName('arathergoodname') is True
 
 
 def test_checkBucketWithoutCreds():
