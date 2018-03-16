@@ -198,6 +198,7 @@ def test_dumpBucket():
     Scenario dumpBucket.2 - Public read objects disabled
         Expected: The function returns false and the bucket directory doesn't exist
     Scenario dumpBucket.3 - Authenticated users read enabled, public users read disabled
+        Expected: The function returns true and the bucket directory exists. Opposite for if no aws creds are set
     """
     test_setup()
 
@@ -226,11 +227,9 @@ def test_dumpBucket():
     assert s3.dumpBucket('app-dev') is False
     assert os.path.exists('./buckets/app-dev') is False
 
-    # Possibly split into multiple functions
-
     # dumpBucket.3
-
-    # raise NotImplementedError
+    assert s3.dumpBucket('1904') is True # These checks should both follow whether or not creds are set
+    assert os.path.exists('./buckets/1904') is True
 
 
 def test_getBucketSize():

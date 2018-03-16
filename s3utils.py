@@ -112,8 +112,10 @@ def dumpBucket(bucketName):
     try:
         if not awsCredsConfigured:
             sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, '--no-sign-request', _fg=False)
+            dumped = True
         else:
             sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, _fg=False)
+            dumped = True
     except sh.ErrorReturnCode_1 as e:
         # Loop through our list of known errors. If found, dumping failed.
         foundErr = False
@@ -124,7 +126,10 @@ def dumpBucket(bucketName):
         if not foundErr:
             raise e
         if foundErr:
-            dumped = False
+            if not os.listdir(bucketDir):
+                dumped = False
+            else:
+                dumped = True
 
     # Check if folder is empty. If it is, delete it
     if not os.listdir(bucketDir):
