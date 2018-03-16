@@ -1,10 +1,53 @@
 import sh
-import requests
 import os
-import subprocess
+import boto3
+import requests
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
+errorCodes = ['AccessDenied', 'AllAccessDisabled']
+
+client = boto3.client('s3')
+
+
+def checkAcl(bucket):
+    """
+    Attempts to retrieve a bucket's ACL. This also functions as the main 'check if bucket exists' function.
+    By trying to get the ACL, we combine 2 steps to minimize potentially slow network calls.
+
+    :param bucket: Name of bucket to try to get the ACL of
+    :return: A dictionary with 2 entries:
+        found - Boolean. True/False whether or not the bucket was found
+        acls - dictionary. If ACL was retrieved, contains 2 keys: 'allUsers' and 'authUsers'. If ACL was not
+                            retrieved,
+    """
+    allUsersGrants = []
+    authUsersGrants = []
+
+    s3 = boto3.resource('s3')
+
+    try:
+        bucket_acl = s3.BucketAcl(bucket)
+        bucket_acl.load()
+    except client.exceptions.NoSuchBucket:
+        return {"found": False, "acls": {}}
+
+    except client.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "AccessDenied":
+            return {"found": True, "acls": "AccessDenied"}
+        elif e.response['Error']['Code'] == "AllAccessDisabled":
+            return {"found": True, "acls": "AllAccessDisabled"}
+        else:
+            raise e
+
+    for grant in bucket_acl.grants:
+        if 'URI' in grant['Grantee']:
+            if grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AllUsers":
+                allUsersGrants.append(grant['Permission'])
+            elif grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers":
+                authUsersGrants.append(grant['Permission'])
+
+    return {"found": True, "acls": {"allUsers": allUsersGrants, "authUsers": authUsersGrants}}
 
 
 def checkAwsCreds():
@@ -12,7 +55,7 @@ def checkAwsCreds():
     Checks to see if the user has credentials for AWS properly configured.
     This is essentially a requirement for getting accurate results.
 
-    Returns: True if AWS credentials are properly configured. False if not.
+    :return: True if AWS credentials are properly configured. False if not.
     """
     try:
         sh.aws('sts', 'get-caller-identity', '--output', 'text', '--query', 'Account')
@@ -25,57 +68,41 @@ def checkAwsCreds():
     return True
 
 
-def checkBucket(bucketName, region):
-    """ Does a simple GET request with the Requests library and interprets the results.
-
-    site - A domain name without protocol (http[s])
-    region - An s3 region. See: https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region  """
+def checkBucketName(bucketName):
+    """ Checks to make sure bucket names input are valid according to S3 naming conventions
+    :param bucketName: Name of bucket to check
+    :return: Boolean - whether or not the name is valid
+    """
 
     if (len(bucketName) < 3) or (len(bucketName) > 63):  # Bucket names can be 3-63 (inclusively) characters long.
-        return 999, bucketName
+        return False
 
     for char in bucketName:  # Bucket names can contain letters, numbers, periods, and hyphens
         if char.lower() not in "abcdefghijklmnopqrstuvwxyz0123456789.-":
-            return 999, bucketName
+            return False
+    return True
 
-    bucketDomain = 'http://' + bucketName + '.s3-' + region + '.amazonaws.com'
 
-    try:
-        r = requests.head(bucketDomain)
-    except requests.exceptions.ConnectionError:  # Couldn't resolve the hostname. Definitely not a bucket.
-        message = "{0:>16} : {1}".format("[not found]", bucketName)
-        return 900, message
+def checkBucketWithoutCreds(bucketName):
+    """ Does a simple GET request with the Requests library and interprets the results.
+    bucketName - A domain name without protocol (http[s]) """
+
+    bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
+
+    r = requests.head(bucketUrl)
+
     if r.status_code == 200:    # Successfully found a bucket!
-        size = getBucketSize(bucketName)
-        return 200, bucketName, region, size
-
-    elif r.status_code == 301:  # We tried the wrong region. 'x-amz-bucket-region' header will give us the correct one.
-        return 301, r.headers['x-amz-bucket-region']
+        return True
     elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
-
-        # Check if we can list the bucket
-        try: 
-            output = subprocess.check_output("aws s3 ls s3://" + bucketName, shell=True, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            return 403, bucketName, region
-
-        if not "An error occured (" in str(output):
-            return 200, bucketName, region, getBucketSize(bucketName)
-
-        return 403, bucketName, region
+        return True
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
-        message = "{0:>16} : {1}".format("[not found]", bucketName)
-        return 404, message
+        return False
     else:
-        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for site: " + bucketName + ":" + region)
+        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for bucket: " + bucketName +
+                         ". Please open an issue at: https://github.com/sa7mon/s3scanner/issues and include this info.")
 
 
-def dumpBucket(bucketName, region):
-
-    # Check to make sure the bucket is open
-    b = checkBucket(bucketName, region)
-    if b[0] != 200:
-        raise ValueError("The specified bucket is not open.")
+def dumpBucket(bucketName):
 
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
@@ -101,22 +128,23 @@ def getBucketSize(bucketName):
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', 's3://' +
                        bucketName, _timeout=sizeCheckTimeout)
         else:
-            a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request', 's3://' + bucketName,
-                       _timeout=sizeCheckTimeout)
+            a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request',
+                       's3://' + bucketName, _timeout=sizeCheckTimeout)
+        # Get the last line of the output, get everything to the right of the colon, and strip whitespace
+        return a.splitlines()[len(a.splitlines()) - 1].split(":")[1].strip()
     except sh.TimeoutException:
         return "Unknown Size - timeout"
+    except sh.ErrorReturnCode_255 as e:
+        if "AccessDenied" in e.stderr.decode("UTF-8"):
+            return "AccessDenied"
+        elif "AllAccessDisabled" in e.stderr.decode("UTF-8"):
+            return "AllAccessDisabled"
+        else:
+            raise e
 
-    # Get the last line of the output, get everything to the right of the colon, and strip whitespace
-    return a.splitlines()[len(a.splitlines())-1].split(":")[1].strip()
 
-
-def listBucket(bucketName, region):
+def listBucket(bucketName):
     """ If we find an open bucket, save the contents of the bucket listing to file. """
-
-    # Check to make sure the bucket is open
-    b = checkBucket(bucketName, region)
-    if b[0] != 200:
-        raise ValueError("The specified bucket is not open.")
 
     # Dump the bucket into bucket folder
     bucketDir = './list-buckets/' + bucketName + '.txt'
@@ -129,4 +157,5 @@ def listBucket(bucketName, region):
         else:
             sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
     except sh.ErrorReturnCode_255:
-        raise ValueError("The specified bucket is not open.")
+        raise ValueError("Bucket doesn't seem open.")
+

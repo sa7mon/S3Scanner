@@ -31,15 +31,12 @@ parser.add_argument('-o', '--out-file', required=False, dest='outFile',
                     help='Name of file to save the successfully checked buckets in (Default: buckets.txt)')
 parser.add_argument('-c', '--include-closed', required=False, dest='includeClosed', action='store_true',
                     help='Include found but closed buckets in the out-file')
-parser.add_argument('-r', '--default-region', dest='',
-                    help='AWS region to default to (Default: us-west-1)')
 parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
                     help='Dump all found open buckets locally')
 parser.add_argument('-l', '--list', required=False, dest='list', action='store_true',
                     help='List all found open buckets locally')
 parser.add_argument('buckets', help='Name of text file containing buckets to check')
 
-parser.set_defaults(defaultRegion='us-west-1')
 parser.set_defaults(includeClosed=False)
 parser.set_defaults(outFile='./buckets.txt')
 parser.set_defaults(dump=False)
@@ -68,8 +65,7 @@ slog = logging.getLogger('s3scanner-screen')
 slog.setLevel(logging.INFO)
 
 # Logging levels for the screen logger:
-#   INFO  = found, open
-#   WARN  = found, closed
+#   INFO  = found
 #   ERROR = not found
 # The levels serve no other purpose than to specify the output color
 
@@ -95,7 +91,6 @@ if not s3.checkAwsCreds():
 with open(args.buckets, 'r') as f:
     for line in f:
         line = line.rstrip()            # Remove any extra whitespace
-        region = args.defaultRegion
 
         # Determine what kind of input we're given. Options:
         #   bucket name   i.e. mybucket
@@ -105,39 +100,37 @@ with open(args.buckets, 'r') as f:
 
         if ".amazonaws.com" in line:    # We were given a full s3 url
             bucket = line[:line.rfind(".s3")]
-            region = line[len(line[:line.rfind(".s3")]) + 4:line.rfind(".amazonaws.com")]
         elif ":" in line:               # We were given a bucket in 'bucket:region' format
-            region = line.split(":")[1]
             bucket = line.split(":")[0]
         else:                           # We were either given a bucket name or domain name
             bucket = line
 
-        result = s3.checkBucket(bucket, region)
+        valid = s3.checkBucketName(bucket)
 
-        if result[0] == 301:
-            result = s3.checkBucket(bucket, result[1])
-
-        if result[0] in [900, 404]:     # These are our 'bucket not found' codes
-            slog.error(result[1])
-
-        elif result[0] == 403:          # Found but closed bucket. Only log if user says to.
-            message = "{0:>15} : {1}".format("[found] [closed]", result[1] + ":" + result[2])
-            slog.warning(message)
-            if args.includeClosed:      # If user supplied '--include-closed' flag, log this bucket to file
-                flog.debug(result[1] + ":" + result[2])
-
-        elif result[0] == 200:          # The only 'bucket found and open' codes
-            message = "{0:<7}{1:>9} : {2}".format("[found]", "[open]", result[1] + ":" + result[2] + " - " + result[3])
-            slog.info(message)
-            flog.debug(result[1] + ":" + result[2])
-            if args.dump:
-                s3.dumpBucket(bucket, result[2])
-            if args.list:
-                s3.listBucket(bucket, result[2])
-
-        elif result[0] == 999:
-            message = "{0:>16} : {1}".format("[invalid]", result[1])
+        if not valid:
+            message = "{0:>11} : {1}".format("[invalid]", bucket)
             slog.error(message)
+            continue
 
+        if s3.awsCredsConfigured:
+            b = s3.checkAcl(bucket)
         else:
-            raise ValueError("Got back unknown code from checkBucket(): " + str(result[0]))
+            a = s3.checkBucketWithoutCreds(bucket)
+            b = {"found": a, "acls": "unknown - no aws creds"}
+
+        if b["found"]:
+
+            size = s3.getBucketSize(bucket)  # Try to get the size of the bucket
+
+            message = "{0:>11} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " + str(b["acls"]))
+            slog.info(message)
+            flog.debug(bucket)
+
+            if args.dump:
+                s3.dumpBucket(bucket)
+            if args.list:
+                if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
+                    s3.listBucket(bucket)
+        else:
+            message = "{0:>11} : {1}".format("[not found]", bucket)
+            slog.error(message)
