@@ -11,6 +11,16 @@ client = boto3.client('s3')
 
 
 def checkAcl(bucket):
+    """
+    Attempts to retrieve a bucket's ACL. This also functions as the main 'check if bucket exists' function.
+    By trying to get the ACL, we combine 2 steps to minimize potentially slow network calls.
+
+    :param bucket: Name of bucket to try to get the ACL of
+    :return: A dictionary with 2 entries:
+        found - Boolean. True/False whether or not the bucket was found
+        acls - dictionary. If ACL was retrieved, contains 2 keys: 'allUsers' and 'authUsers'. If ACL was not
+                            retrieved,
+    """
     allUsersGrants = []
     authUsersGrants = []
 
