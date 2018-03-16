@@ -123,13 +123,13 @@ def dumpBucket(bucketName):
             if err in e.stderr.decode('utf-8'):
                 foundErr = True
                 break
-        if not foundErr:
-            raise e
-        if foundErr:
-            if not os.listdir(bucketDir):
+        if foundErr:                       # We caught a known error while dumping
+            if not os.listdir(bucketDir):  # The bucket directory is empty. The dump didn't work
                 dumped = False
-            else:
+            else:                          # The bucket directory is not empty. At least 1 of the files was downloaded.
                 dumped = True
+        else:
+            raise e
 
     # Check if folder is empty. If it is, delete it
     if not os.listdir(bucketDir):
