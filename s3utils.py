@@ -106,15 +106,31 @@ def dumpBucket(bucketName):
 
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
-    if not os.path.exists(bucketDir):
-        os.makedirs(bucketDir)
 
-    sh.aws('s3', 'sync', 's3://'+bucketName, bucketDir, '--no-sign-request', _fg=True)
+    dumped = None
+
+    try:
+        if not awsCredsConfigured:
+            sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, '--no-sign-request', _fg=False)
+        else:
+            sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, _fg=False)
+    except sh.ErrorReturnCode_1 as e:
+        # Loop through our list of known errors. If found, dumping failed.
+        foundErr = False
+        for err in errorCodes:
+            if err in e.stderr.decode('utf-8'):
+                foundErr = True
+                break
+        if not foundErr:
+            raise e
+        if foundErr:
+            dumped = False
 
     # Check if folder is empty. If it is, delete it
     if not os.listdir(bucketDir):
-        # Delete empty folder
         os.rmdir(bucketDir)
+
+    return dumped
 
 
 def getBucketSize(bucketName):
