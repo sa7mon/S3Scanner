@@ -46,7 +46,6 @@ def test_arguments():
     test_setup()
 
     # mainargs.1
-
     try:
         sh.python(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
@@ -63,12 +62,21 @@ def test_arguments():
 def test_checkAcl():
     """
     Scenario checkAcl.1 - ACL listing enabled
+        Expected:
+            found = True
+            acls = {'allUsers': ['READ', 'READ_ACP'], 'authUsers': ['READ', 'READ_ACP']}
     Scenario checkAcl.2 - AccessDenied for ACL listing
+        Expected:
+            found = True
+            acls = 'AccessDenied'
     Scenario checkAcl.3 - Bucket access is disabled
         Expected:
             found = True
             acls = "AllAccessDisabled"
     Scenario checkAcl.4 - Bucket doesn't exist
+        Expected:
+            found = False
+            acls = {}
     """
     test_setup()
 
@@ -76,6 +84,9 @@ def test_checkAcl():
         return
 
     # checkAcl.1
+    r1 = s3.checkAcl('aneta')
+    assert r1["found"] is True
+    assert r1["acls"] == {'allUsers': ['READ', 'READ_ACP'], 'authUsers': ['READ', 'READ_ACP']}
 
     # checkAcl.2
     result = s3.checkAcl('flaws.cloud')
@@ -88,7 +99,9 @@ def test_checkAcl():
     assert result["acls"] == "AllAccessDisabled"
 
     # checkAcl.4
-    raise NotImplementedError
+    result = s3.checkAcl('hopethisdoesntexist1234asdf')
+    assert result["found"] is False
+    assert result["acls"] == {}
 
 
 def test_checkAwsCreds():
