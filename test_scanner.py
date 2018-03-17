@@ -137,8 +137,6 @@ def test_checkAwsCreds():
     keyid = vars.get("AWS_ACCESS_KEY_ID")
     key = vars.get("AWS_SECRET_ACCESS_KEY")
     credsFile = os.path.expanduser("~") + "/.aws/credentials"
-    print("access_key_id length: " + str(len(keyid)))
-    print("secret_access_key: " + str(len(key)))
 
     if keyid is not None and len(keyid) == 20:
         if key is not None and len(key) == 40:
