@@ -126,8 +126,7 @@ def test_checkAcl():
 
 def test_checkAwsCreds():
     """
-    Scenario checkAwsCreds.1 - AWS credentials not set
-    Scenario checkAwsCreds.2 - AWS credentials set
+    Scenario checkAwsCreds.1 - Output of checkAwsCreds() matches a more intense check for creds
     """
     test_setup()
 
@@ -173,8 +172,6 @@ def test_checkAwsCreds():
 
     # checkAwsCreds.1
     assert s3.checkAwsCreds() == credsActuallyConfigured
-
-    # checkAwsCreds.2
 
 
 def test_checkBucketName():
