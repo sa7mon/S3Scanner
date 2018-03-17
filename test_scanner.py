@@ -304,8 +304,8 @@ def test_dumpBucket():
     assert os.path.exists('./buckets/app-dev') is False
 
     # dumpBucket.3
-    assert s3.dumpBucket('1904') is True # These checks should both follow whether or not creds are set
-    assert os.path.exists('./buckets/1904') is True
+    assert s3.dumpBucket('1904') is s3.awsCredsConfigured  # Asserts should both follow whether or not creds are set
+    assert os.path.exists('./buckets/1904') is s3.awsCredsConfigured
 
 
 def test_getBucketSize():
