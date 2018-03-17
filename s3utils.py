@@ -83,9 +83,12 @@ def checkBucketName(bucketName):
     return True
 
 
-def checkBucketWithoutCreds(bucketName):
+def checkBucketWithoutCreds(bucketName, triesLeft=2):
     """ Does a simple GET request with the Requests library and interprets the results.
     bucketName - A domain name without protocol (http[s]) """
+
+    if triesLeft == 0:
+        return False
 
     bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
 
@@ -97,6 +100,8 @@ def checkBucketWithoutCreds(bucketName):
         return True
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
         return False
+    elif r.status_code == 503:
+        return checkBucketWithoutCreds(bucketName, triesLeft - 1)
     else:
         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for bucket: " + bucketName +
                          ". Please open an issue at: https://github.com/sa7mon/s3scanner/issues and include this info.")
@@ -106,15 +111,36 @@ def dumpBucket(bucketName):
 
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
-    if not os.path.exists(bucketDir):
-        os.makedirs(bucketDir)
 
-    sh.aws('s3', 'sync', 's3://'+bucketName, bucketDir, '--no-sign-request', _fg=True)
+    dumped = None
+
+    try:
+        if not awsCredsConfigured:
+            sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, '--no-sign-request', _fg=False)
+            dumped = True
+        else:
+            sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, _fg=False)
+            dumped = True
+    except sh.ErrorReturnCode_1 as e:
+        # Loop through our list of known errors. If found, dumping failed.
+        foundErr = False
+        for err in errorCodes:
+            if err in e.stderr.decode('utf-8'):
+                foundErr = True
+                break
+        if foundErr:                       # We caught a known error while dumping
+            if not os.listdir(bucketDir):  # The bucket directory is empty. The dump didn't work
+                dumped = False
+            else:                          # The bucket directory is not empty. At least 1 of the files was downloaded.
+                dumped = True
+        else:
+            raise e
 
     # Check if folder is empty. If it is, delete it
     if not os.listdir(bucketDir):
-        # Delete empty folder
         os.rmdir(bucketDir)
+
+    return dumped
 
 
 def getBucketSize(bucketName):
@@ -139,6 +165,8 @@ def getBucketSize(bucketName):
             return "AccessDenied"
         elif "AllAccessDisabled" in e.stderr.decode("UTF-8"):
             return "AllAccessDisabled"
+        elif "NoSuchBucket" in e.stderr.decode("UTF-8"):
+            return "NoSuchBucket"
         else:
             raise e
 
@@ -156,6 +184,8 @@ def listBucket(bucketName):
             sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
         else:
             sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
-    except sh.ErrorReturnCode_255:
-        raise ValueError("Bucket doesn't seem open.")
-
+    except sh.ErrorReturnCode_255 as e:
+        if "AccessDenied" in e.stderr.decode("utf-8"):
+            return "AccessDenied"
+        else:
+            raise e

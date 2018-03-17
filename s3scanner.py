@@ -127,7 +127,9 @@ with open(args.buckets, 'r') as f:
             flog.debug(bucket)
 
             if args.dump:
-                s3.dumpBucket(bucket)
+                if size not in ["AccessDenied", "AllAccessDisabled"]:
+                    slog.info("{0:>11} : {1} - {2}".format("[found]", bucket, "Attempting to dump...this may take a while."))
+                    s3.dumpBucket(bucket)
             if args.list:
                 if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
                     s3.listBucket(bucket)

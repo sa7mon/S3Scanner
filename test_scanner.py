@@ -46,7 +46,6 @@ def test_arguments():
     test_setup()
 
     # mainargs.1
-
     try:
         sh.python(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
@@ -54,21 +53,50 @@ def test_arguments():
         assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-d] [-l] buckets" in e.stdout.decode('utf-8')
 
     # mainargs.2
+
+    # Put one bucket into a new file
+    with open(testingFolder + "mainargs.2_input.txt", "w") as f:
+        f.write('flaws.cloud\n')
+
+    try:
+        sh.python(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
+                  testingFolder + 'mainargs.2_input.txt')
+
+        with open(testingFolder + "mainargs.2_output.txt") as f:
+            line = f.readline().strip()
+
+        assert line == 'flaws.cloud'
+
+    finally:
+        # No matter what happens with the test, clean up the test files at the end
+        try:
+            os.remove(testingFolder + 'mainargs.2_output.txt')
+            os.remove(testingFolder + 'mainargs.2_input.txt')
+        except OSError:
+            pass
+
     # mainargs.3
     # mainargs.4
-
-    raise NotImplementedError
 
 
 def test_checkAcl():
     """
     Scenario checkAcl.1 - ACL listing enabled
+        Expected:
+            found = True
+            acls = {'allUsers': ['READ', 'READ_ACP'], 'authUsers': ['READ', 'READ_ACP']}
     Scenario checkAcl.2 - AccessDenied for ACL listing
+        Expected:
+            found = True
+            acls = 'AccessDenied'
     Scenario checkAcl.3 - Bucket access is disabled
         Expected:
             found = True
             acls = "AllAccessDisabled"
     Scenario checkAcl.4 - Bucket doesn't exist
+        Expected:
+            found = False
+            acls = {}
     """
     test_setup()
 
@@ -76,6 +104,9 @@ def test_checkAcl():
         return
 
     # checkAcl.1
+    r1 = s3.checkAcl('aneta')
+    assert r1["found"] is True
+    assert r1["acls"] == {'allUsers': ['READ', 'READ_ACP'], 'authUsers': ['READ', 'READ_ACP']}
 
     # checkAcl.2
     result = s3.checkAcl('flaws.cloud')
@@ -88,16 +119,59 @@ def test_checkAcl():
     assert result["acls"] == "AllAccessDisabled"
 
     # checkAcl.4
-    raise NotImplementedError
+    result = s3.checkAcl('hopethisdoesntexist1234asdf')
+    assert result["found"] is False
+    assert result["acls"] == {}
 
 
 def test_checkAwsCreds():
     """
-    Scenario checkAwsCreds.1 - AWS credentials not set
-    Scenario checkAwsCreds.2 - AWS credentials set
+    Scenario checkAwsCreds.1 - Output of checkAwsCreds() matches a more intense check for creds
     """
+    test_setup()
 
-    raise NotImplementedError
+    # Check more thoroughly for creds being set.
+    vars = os.environ
+
+    keyid = vars.get("AWS_ACCESS_KEY_ID")
+    key = vars.get("AWS_SECRET_ACCESS_KEY")
+    credsFile = os.path.expanduser("~") + "/.aws/credentials"
+
+    if keyid is not None and len(keyid) == 20:
+        if key is not None and len(key) == 40:
+            credsActuallyConfigured = True
+        else:
+            credsActuallyConfigured = False
+    else:
+        credsActuallyConfigured = False
+
+    if os.path.exists(credsFile):
+        print("credsFile path exists")
+        if not credsActuallyConfigured:
+            keyIdSet = None
+            keySet = None
+
+            # Check the ~/.aws/credentials file
+            with open(credsFile, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line[0:17].lower() == 'aws_access_key_id':
+                        if len(line) >= 38:  # key + value = length of at least 38 if no spaces around equals
+                            keyIdSet = True
+                        else:
+                            keyIdSet = False
+
+                    if line[0:21].lower() == 'aws_secret_access_key':
+                        if len(line) >= 62:
+                            keySet = True
+                        else:
+                            keySet = False
+
+            if keyIdSet and keySet:
+                credsActuallyConfigured = True
+
+    # checkAwsCreds.1
+    assert s3.checkAwsCreds() == credsActuallyConfigured
 
 
 def test_checkBucketName():
@@ -129,10 +203,10 @@ def test_checkBucketName():
     assert s3.checkBucketName(badBucket) is False
 
     # checkBucketName.4
+    assert s3.checkBucketName('') is False
 
     # checkBucketName.5
-
-    raise NotImplementedError
+    assert s3.checkBucketName('arathergoodname') is True
 
 
 def test_checkBucketWithoutCreds():
@@ -141,7 +215,19 @@ def test_checkBucketWithoutCreds():
     Scenario checkBucketwc.2 - Good bucket
     Scenario checkBucketwc.3 - No public read perm
     """
-    raise NotImplementedError
+    test_setup()
+
+    if s3.awsCredsConfigured:
+        return
+
+    # checkBucketwc.1
+    assert s3.checkBucketWithoutCreds('ireallyhopethisbucketdoesntexist') is False
+
+    # checkBucketwc.2
+    assert s3.checkBucketWithoutCreds('flaws.cloud') is True
+
+    # checkBucketwc.3
+    assert s3.checkBucketWithoutCreds('blog') is True
 
 
 # def test_checkIncludeClosed():
@@ -180,11 +266,12 @@ def test_checkBucketWithoutCreds():
 def test_dumpBucket():
     """
     Scenario dumpBucket.1 - Public read permission enabled
-        Expected: Supplying the function with the arguments ("flaws.cloud", "us-west-2") should result in 6 files
-                being downloaded into the buckets folder. The expected file sizes of each file are listed in the
-                'expectedFiles' dictionary.
-    Scenario dumpBucket.2 - Public read permission disabled
+        Expected: Dumping the bucket "flaws.cloud" should result in 6 files being downloaded into the buckets folder.
+                    The expected file sizes of each file are listed in the 'expectedFiles' dictionary.
+    Scenario dumpBucket.2 - Public read objects disabled
+        Expected: The function returns false and the bucket directory doesn't exist
     Scenario dumpBucket.3 - Authenticated users read enabled, public users read disabled
+        Expected: The function returns true and the bucket directory exists. Opposite for if no aws creds are set
     """
     test_setup()
 
@@ -210,11 +297,12 @@ def test_dumpBucket():
         shutil.rmtree(dumpDir)
 
     # dumpBucket.2
-    # Possibly split into multiple functions
+    assert s3.dumpBucket('app-dev') is False
+    assert os.path.exists('./buckets/app-dev') is False
 
     # dumpBucket.3
-
-    raise NotImplementedError
+    assert s3.dumpBucket('1904') is s3.awsCredsConfigured  # Asserts should both follow whether or not creds are set
+    assert os.path.exists('./buckets/1904') is s3.awsCredsConfigured
 
 
 def test_getBucketSize():
@@ -222,7 +310,9 @@ def test_getBucketSize():
     Scenario getBucketSize.2 - Public read enabled
         Expected: The flaws.cloud bucket returns size: 9.1KiB
     Scenario getBucketSize.3 - Public read disabled
+        Expected: app-dev bucket has public read permissions disabled
     Scenario getBucketSize.4 - Bucket doesn't exist
+        Expected: We should get back "NoSuchBucket"
     """
     test_setup()
 
@@ -230,15 +320,10 @@ def test_getBucketSize():
     assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
 
     # getBucketSize.3
+    assert s3.getBucketSize('app-dev') == "AccessDenied"
 
     # getBucketSize.4
-
-    # try:
-    #     s3.getBucketSize('example-this-hopefully-wont-exist-123123123')
-    # except sh.ErrorReturnCode_255:
-    #     assert True
-
-    raise NotImplementedError
+    assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
 
 
 def test_getBucketSizeTimeout():
@@ -268,6 +353,7 @@ def test_listBucket():
     Scenario listBucket.1 - Public read enabled
         Expected: Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
     Scenario listBucket.2 - Public read disabled
+
     """
     test_setup()
 
@@ -288,44 +374,4 @@ def test_listBucket():
     assert len(lines) == 6                       # Assert number of lines in the file is correct
 
     # listBucket.2
-
-    raise NotImplementedError
-
-
-# def test_outputFormat():
-#     """
-#     Scenario:
-#         Verify that the main script outputs found buckets in the format "bucket:region"
-#     Expected:
-#         The output for flaws.cloud should be the following: "flaws.cloud:us-west-2"
-#     """
-#     test_setup()
-#
-#     inFile = testingFolder + 'test_outputFormat_in.txt'
-#     outFile = testingFolder + 'test_outputFormat_out.txt'
-#
-#     f = open(inFile, 'w')
-#     f.write('flaws.cloud\n')  # python will convert \n to os.linesep
-#     f.close()
-#
-#     try:
-#         sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
-#     except sh.ErrorReturnCode_1 as e:
-#         if s3.awsCredsConfigured:
-#             raise e
-#         if "Warning: AWS credentials not configured." not in e.stderr.decode("UTF-8"):
-#             raise e
-#
-#
-#     found = False
-#     with open(outFile, 'r') as g:
-#         for line in g:
-#             if line.strip() == 'flaws.cloud':
-#                 found = True
-#
-#         try:
-#             assert found is True
-#         finally:
-#             # Cleanup testing files
-#             os.remove(outFile)
-#             os.remove(inFile)
+    assert s3.listBucket('app-dev') == "AccessDenied"
