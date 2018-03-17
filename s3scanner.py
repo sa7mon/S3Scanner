@@ -14,6 +14,8 @@ import logging
 import coloredlogs
 import sys
 
+currentVersion = '0.2.0'
+
 
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -35,16 +37,23 @@ parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_t
                     help='Dump all found open buckets locally')
 parser.add_argument('-l', '--list', required=False, dest='list', action='store_true',
                     help='List all found open buckets locally')
+parser.add_argument('--version', required=False, dest='version', action='store_true',
+                    help='Display the current version of this tool')
 parser.add_argument('buckets', help='Name of text file containing buckets to check')
 
 parser.set_defaults(includeClosed=False)
 parser.set_defaults(outFile='./buckets.txt')
 parser.set_defaults(dump=False)
 
-# If there are no args supplied, print the full help text instead of the short usage text
-if len(sys.argv) == 1:
+
+if len(sys.argv) == 1:              # No args supplied, print the full help text instead of the short usage text
     parser.print_help()
-    sys.exit(1)
+    sys.exit(0)
+elif len(sys.argv) == 2:
+    if sys.argv[1] == '--version':  # Only --version arg supplied. Print the version and exit.
+        print(currentVersion)
+        sys.exit(0)
+
 
 # Parse the args
 args = parser.parse_args()
