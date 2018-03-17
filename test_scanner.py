@@ -53,10 +53,30 @@ def test_arguments():
         assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-d] [-l] buckets" in e.stdout.decode('utf-8')
 
     # mainargs.2
+
+    # Put one bucket into a new file
+    with open(testingFolder + "mainargs.2_input.txt", "w") as f:
+        f.write('flaws.cloud\n')
+
+    try:
+        sh.python(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
+                  testingFolder + 'mainargs.2_input.txt')
+
+        with open(testingFolder + "mainargs.2_output.txt") as f:
+            line = f.readline().strip()
+
+        assert line == 'flaws.cloud'
+
+    finally:
+        # No matter what happens with the test, clean up the test files at the end
+        try:
+            os.remove(testingFolder + 'mainargs.2_output.txt')
+            os.remove(testingFolder + 'mainargs.2_input.txt')
+        except OSError:
+            pass
+
     # mainargs.3
     # mainargs.4
-
-    raise NotImplementedError
 
 
 def test_checkAcl():
@@ -357,41 +377,3 @@ def test_listBucket():
 
     # listBucket.2
     assert s3.listBucket('app-dev') == "AccessDenied"
-
-# def test_outputFormat():
-#     """
-#     Scenario:
-#         Verify that the main script outputs found buckets in the format "bucket:region"
-#     Expected:
-#         The output for flaws.cloud should be the following: "flaws.cloud:us-west-2"
-#     """
-#     test_setup()
-#
-#     inFile = testingFolder + 'test_outputFormat_in.txt'
-#     outFile = testingFolder + 'test_outputFormat_out.txt'
-#
-#     f = open(inFile, 'w')
-#     f.write('flaws.cloud\n')  # python will convert \n to os.linesep
-#     f.close()
-#
-#     try:
-#         sh.python(s3scannerLocation + '/s3scanner.py', '--out-file', outFile, inFile)
-#     except sh.ErrorReturnCode_1 as e:
-#         if s3.awsCredsConfigured:
-#             raise e
-#         if "Warning: AWS credentials not configured." not in e.stderr.decode("UTF-8"):
-#             raise e
-#
-#
-#     found = False
-#     with open(outFile, 'r') as g:
-#         for line in g:
-#             if line.strip() == 'flaws.cloud':
-#                 found = True
-#
-#         try:
-#             assert found is True
-#         finally:
-#             # Cleanup testing files
-#             os.remove(outFile)
-#             os.remove(inFile)
