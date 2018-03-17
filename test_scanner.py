@@ -140,8 +140,8 @@ def test_checkAwsCreds():
     print("access_key_id length: " + str(len(keyid)))
     print("secret_access_key: " + str(len(key)))
 
-    if keyid is not None and len(keyid) == 21:
-        if key is not None and len(key) == 41:
+    if keyid is not None and len(keyid) == 20:
+        if key is not None and len(key) == 40:
             credsActuallyConfigured = True
         else:
             credsActuallyConfigured = False
