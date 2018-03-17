@@ -109,8 +109,51 @@ def test_checkAwsCreds():
     Scenario checkAwsCreds.1 - AWS credentials not set
     Scenario checkAwsCreds.2 - AWS credentials set
     """
+    test_setup()
 
-    raise NotImplementedError
+    # Check more thoroughly for creds being set.
+    vars = os.environ
+
+    keyid = vars.get("AWS_ACCESS_KEY_ID")
+    key = vars.get("AWS_SECRET_ACCESS_KEY")
+    credsFile = os.path.expanduser("~") + "/.aws/credentials"
+
+    if keyid is not None and len(keyid) == 21:
+        if key is not None and len(key) == 41:
+            credsActuallyConfigured = True
+        else:
+            credsActuallyConfigured = False
+    else:
+        credsActuallyConfigured = False
+
+    if os.path.exists(credsFile):
+        if not credsActuallyConfigured:
+            keyIdSet = None
+            keySet = None
+
+            # Check the ~/.aws/credentials file
+            with open(credsFile, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line[0:17].lower() == 'aws_access_key_id':
+                        if len(line) >= 38:  # key + value = length of at least 38 if no spaces around equals
+                            keyIdSet = True
+                        else:
+                            keyIdSet = False
+
+                    if line[0:21].lower() == 'aws_secret_access_key':
+                        if len(line) >= 62:
+                            keySet = True
+                        else:
+                            keySet = False
+
+            if keyIdSet and keySet:
+                credsActuallyConfigured = True
+
+    # checkAwsCreds.1
+    assert s3.checkAwsCreds() == credsActuallyConfigured
+
+    # checkAwsCreds.2
 
 
 def test_checkBucketName():
