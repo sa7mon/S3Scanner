@@ -83,9 +83,12 @@ def checkBucketName(bucketName):
     return True
 
 
-def checkBucketWithoutCreds(bucketName):
+def checkBucketWithoutCreds(bucketName, triesLeft=2):
     """ Does a simple GET request with the Requests library and interprets the results.
     bucketName - A domain name without protocol (http[s]) """
+
+    if triesLeft == 0:
+        return False
 
     bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
 
@@ -97,6 +100,8 @@ def checkBucketWithoutCreds(bucketName):
         return True
     elif r.status_code == 404:  # This is definitely not a valid bucket name.
         return False
+    elif r.status_code == 503:
+        return checkBucketWithoutCreds(bucketName, triesLeft - 1)
     else:
         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for bucket: " + bucketName +
                          ". Please open an issue at: https://github.com/sa7mon/s3scanner/issues and include this info.")

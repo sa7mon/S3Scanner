@@ -230,7 +230,7 @@ def test_checkBucketWithoutCreds():
     assert s3.checkBucketWithoutCreds('flaws.cloud') is True
 
     # checkBucketwc.3
-    assert s3.checkBucketWithoutCreds('amazon.com') is True
+    assert s3.checkBucketWithoutCreds('blog') is True
 
 
 # def test_checkIncludeClosed():
