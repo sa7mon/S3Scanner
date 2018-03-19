@@ -3,7 +3,7 @@
 
 A tool to find open S3 buckets and dump their contents :droplet:
 
-![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/36616997-726614a6-18ab-11e8-9dd3-c43715ef7355.png)
+![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/37576404-34e02eee-2afa-11e8-8d18-bf2a63885c82.png)
 
 ## Using
 
