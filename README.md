@@ -18,12 +18,11 @@ positional arguments:
 optional arguments:
   -h, --help              show this help message and exit
   -o, --out-file OUTFILE  Name of file to save the successfully checked buckets in (Default: buckets.txt)
-  -c, --include-closed    Include found but closed buckets in the out-file
   -d, --dump              Dump all found open buckets locally
   -l, --list              List all found open buckets locally
 </pre>
 
-The tool takes in a list of bucket names to check. Found S3 domains are output to file with their corresponding region in the format 'domain:region'. The tool will also dump the contents of 'open' buckets locally.
+The tool takes in a list of bucket names to check. Found S3 buckets are output to file. The tool will also dump or list the contents of 'open' buckets locally.
 
 ### Interpreting Results
 
