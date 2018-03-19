@@ -5,7 +5,7 @@ import requests
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
-errorCodes = ['AccessDenied', 'AllAccessDisabled']
+errorCodes = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
 
 client = boto3.client('s3')
 
