@@ -14,7 +14,7 @@ import logging
 import coloredlogs
 import sys
 
-currentVersion = '0.2.0'
+currentVersion = '1.0.0'
 
 
 # We want to use both formatter classes, so a custom class it is
