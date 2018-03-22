@@ -1,5 +1,5 @@
 # S3Scanner
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/) [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
 
 A tool to find open S3 buckets and dump their contents :droplet:
 
@@ -101,4 +101,4 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * Run individual tests like this: `pytest -q -s test_scanner.py::test_namehere`
 
 ## License
-Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International [(CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+License: MIT https://opensource.org/licenses/MIT
