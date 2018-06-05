@@ -68,6 +68,54 @@ def checkAwsCreds():
     return True
 
 
+def checkBucket(inBucket, slog, flog, argsDump, argsList):
+    # Determine what kind of input we're given. Options:
+    #   bucket name   i.e. mybucket
+    #   domain name   i.e. flaws.cloud
+    #   full S3 url   i.e. flaws.cloud.s3-us-west-2.amazonaws.com
+    #   bucket:region i.e. flaws.cloud:us-west-2
+    
+    if ".amazonaws.com" in inBucket:    # We were given a full s3 url
+        bucket = inBucket[:inBucket.rfind(".s3")]
+    elif ":" in inBucket:               # We were given a bucket in 'bucket:region' format
+        bucket = inBucket.split(":")[0]
+    else:                           # We were either given a bucket name or domain name
+        bucket = inBucket
+
+    valid = checkBucketName(bucket)
+
+    if not valid:
+        message = "{0:>11} : {1}".format("[invalid]", bucket)
+        slog.error(message)
+        # continue
+        return
+
+    if awsCredsConfigured:
+        b = checkAcl(bucket)
+    else:
+        a = checkBucketWithoutCreds(bucket)
+        b = {"found": a, "acls": "unknown - no aws creds"}
+
+    if b["found"]:
+
+        size = getBucketSize(bucket)  # Try to get the size of the bucket
+
+        message = "{0:>11} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " + str(b["acls"]))
+        slog.info(message)
+        flog.debug(bucket)
+
+        if argsDump:
+            if size not in ["AccessDenied", "AllAccessDisabled"]:
+                slog.info("{0:>11} : {1} - {2}".format("[found]", bucket, "Attempting to dump...this may take a while."))
+                dumpBucket(bucket)
+        if argsList:
+            if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
+                listBucket(bucket)
+    else:
+        message = "{0:>11} : {1}".format("[not found]", bucket)
+        slog.error(message)
+
+
 def checkBucketName(bucketName):
     """ Checks to make sure bucket names input are valid according to S3 naming conventions
     :param bucketName: Name of bucket to check
