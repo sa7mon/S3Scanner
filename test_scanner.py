@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import time
+import logging
 
 
 pyVersion = sys.version_info
@@ -173,6 +174,55 @@ def test_checkAwsCreds():
     # checkAwsCreds.1
     assert s3.checkAwsCreds() == credsActuallyConfigured
 
+def test_checkBucket():
+    """
+    checkBucket.1 - Bucket name
+    checkBucket.2 - Domain name
+    checkBucket.3 - Full s3 url
+    checkBucket.4 - bucket:region
+    """
+    
+    test_setup()
+    
+    testFile = './test/test_checkBucket.txt'
+    
+    # Create file logger
+    flog = logging.getLogger('s3scanner-file')
+    flog.setLevel(logging.DEBUG)              # Set log level for logger object
+    
+    # Create file handler which logs even debug messages
+    fh = logging.FileHandler(testFile)
+    fh.setLevel(logging.DEBUG)
+    
+    # Add the handler to logger
+    flog.addHandler(fh)
+    
+    # Create secondary logger for logging to screen
+    slog = logging.getLogger('s3scanner-screen')
+    slog.setLevel(logging.CRITICAL)
+    
+    try:
+        # checkBucket.1
+        s3.checkBucket("flaws.cloud", slog, flog, False, False)
+        
+        # checkBucket.2
+        s3.checkBucket("flaws.cloud.s3-us-west-2.amazonaws.com", slog, flog, False, False)
+        
+        # checkBucket.3
+        s3.checkBucket("flaws.cloud:us-west-2", slog, flog, False, False)
+        
+        # Read in test loggin file and assert
+        f = open(testFile, 'r')
+        results = f.readlines()
+        f.close()
+        
+        assert results[0].rstrip() == "flaws.cloud"
+        assert results[1].rstrip() == "flaws.cloud"
+        assert results[2].rstrip() == "flaws.cloud"
+        
+    finally:
+        # Delete test file
+        os.remove(testFile)
 
 def test_checkBucketName():
     """
@@ -211,7 +261,7 @@ def test_checkBucketName():
 
 def test_checkBucketWithoutCreds():
     """
-    Scenario checkBucketwc.1 -  Non-existent bucket
+    Scenario checkBucketwc.1 - Non-existent bucket
     Scenario checkBucketwc.2 - Good bucket
     Scenario checkBucketwc.3 - No public read perm
     """

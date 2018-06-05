@@ -18,52 +18,6 @@ import os.path
 currentVersion = '1.0.0'
 
 
-def checkBucket(inBucket):
-    # Determine what kind of input we're given. Options:
-    #   bucket name   i.e. mybucket
-    #   domain name   i.e. flaws.cloud
-    #   full S3 url   i.e. flaws.cloud.s3-us-west-2.amazonaws.com
-    #   bucket:region i.e. flaws.cloud:us-west-2
-    if ".amazonaws.com" in inBucket:    # We were given a full s3 url
-        bucket = inBucket[:inBucket.rfind(".s3")]
-    elif ":" in inBucket:               # We were given a bucket in 'bucket:region' format
-        bucket = inBucket.split(":")[0]
-    else:                           # We were either given a bucket name or domain name
-        bucket = inBucket
-
-    valid = s3.checkBucketName(bucket)
-
-    if not valid:
-        message = "{0:>11} : {1}".format("[invalid]", bucket)
-        slog.error(message)
-        # continue
-        return
-
-    if s3.awsCredsConfigured:
-        b = s3.checkAcl(bucket)
-    else:
-        a = s3.checkBucketWithoutCreds(bucket)
-        b = {"found": a, "acls": "unknown - no aws creds"}
-
-    if b["found"]:
-
-        size = s3.getBucketSize(bucket)  # Try to get the size of the bucket
-
-        message = "{0:>11} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " + str(b["acls"]))
-        slog.info(message)
-        flog.debug(bucket)
-
-        if args.dump:
-            if size not in ["AccessDenied", "AllAccessDisabled"]:
-                slog.info("{0:>11} : {1} - {2}".format("[found]", bucket, "Attempting to dump...this may take a while."))
-                s3.dumpBucket(bucket)
-        if args.list:
-            if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
-                s3.listBucket(bucket)
-    else:
-        message = "{0:>11} : {1}".format("[not found]", bucket)
-        slog.error(message)
-
 
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -149,7 +103,7 @@ if os.path.isfile(args.buckets):
     with open(args.buckets, 'r') as f:
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
-            checkBucket(line)
+            s3.checkBucket(line, slog, flog, args.dump, args.list)
 else:
     # It's a single bucket
-    checkBucket(args.buckets)
+    s3.checkBucket(args.buckets, slog, flog, args.dump, args.list)
