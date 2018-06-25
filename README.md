@@ -5,6 +5,11 @@ A tool to find open S3 buckets and dump their contents :droplet:
 
 ![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/37576404-34e02eee-2afa-11e8-8d18-bf2a63885c82.png)
 
+### If you've earned a bug bounty using this tool, please consider donating to support it's development
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XG5BGLQZPJ9H8)
+
+
 ## Using
 
 <pre>
