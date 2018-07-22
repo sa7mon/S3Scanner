@@ -38,7 +38,7 @@ parser.add_argument('-o', '--out-file', required=False, dest='outFile',
 parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
                     help='Dump all found open buckets locally')
 parser.add_argument('-l', '--list', required=False, dest='list', action='store_true',
-                    help='List all found open buckets locally')
+                    help='Save bucket file listing to local file: ./list-buckets/${bucket}.txt')
 parser.add_argument('--version', required=False, dest='version', action='store_true',
                     help='Display the current version of this tool')
 parser.add_argument('buckets', help='Name of text file containing buckets to check')
