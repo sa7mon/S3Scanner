@@ -332,8 +332,8 @@ def test_dumpBucket():
     dumpDir = './buckets/flaws.cloud/'  # Folder to look for the files in
 
     # Expected sizes of each file
-    expectedFiles = {'hint1.html': 2575, 'hint2.html': 1707, 'hint3.html': 1101, 'index.html': 2877,
-                     'robots.txt': 46, 'secret-dd02c7c.html': 1051}
+    expectedFiles = {'hint1.html': 2575, 'hint2.html': 1707, 'hint3.html': 1101, 'index.html': 3082,
+                     'robots.txt': 46, 'secret-dd02c7c.html': 1051, 'logo.png': 15979}
 
     try:
         # Assert number of files in the folder
@@ -367,7 +367,7 @@ def test_getBucketSize():
     test_setup()
 
     # getBucketSize.2
-    assert s3.getBucketSize('flaws.cloud') == "9.1 KiB"
+    assert s3.getBucketSize('flaws.cloud') == "24.9 KiB"
 
     # getBucketSize.3
     assert s3.getBucketSize('app-dev') == "AccessDenied"
@@ -421,7 +421,7 @@ def test_listBucket():
             lines.append(line)
 
     assert lines[0][26:41] == '2575 hint1.html'  # Assert the first line is correct
-    assert len(lines) == 6                       # Assert number of lines in the file is correct
+    assert len(lines) == 7                       # Assert number of lines in the file is correct
 
     # listBucket.2
     assert s3.listBucket('app-dev') == "AccessDenied"
