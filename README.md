@@ -10,7 +10,7 @@ A tool to find open S3 buckets and dump their contents :droplet:
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XG5BGLQZPJ9H8)
 
 
-## Using
+## Usage
 
 <pre>
 #  s3scanner - Find S3 buckets and dump!
@@ -57,6 +57,20 @@ Conversely, you may be able to list ACLs but not read/write to the bucket
 
 (Compatibility has been tested with Python 2.7 and 3.6)
 
+### Using Docker
+
+ 1. Build the [Docker](https://docs.docker.com/) image:
+
+ ```bash
+sudo docker build -t s3scanner https://github.com/sa7mon/S3Scanner.git
+```
+
+ 2. Run the Docker image:
+
+ ```bash
+sudo docker run -v /input-data-dir/:/data s3scanner --out-file /data/results.txt /data/names.txt
+```
+This command assumes that `names.txt` with domains to enumerate is in `/input-data-dir/` on host machine.
 
 ## Examples
 This tool accepts the following type of bucket formats to check:
