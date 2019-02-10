@@ -119,5 +119,10 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * This project uses **pytest-xdist** to run tests. Use `pytest -n NUM` where num is number of parallel processes.
 * Run individual tests like this: `pytest -q -s test_scanner.py::test_namehere`
 
+### Contributors
+* [Ohelig](https://github.com/Ohelig)
+* [vysecurity](https://github.com/vysecurity)
+* [janmasarik](https://github.com/janmasarik)
+
 ## License
 License: MIT https://opensource.org/licenses/MIT
