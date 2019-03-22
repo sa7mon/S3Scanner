@@ -1,13 +1,13 @@
 import sh
 import os
+
 import boto3
+from botocore.exceptions import ClientError
 import requests
 
 sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
 awsCredsConfigured = True
 errorCodes = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
-
-client = boto3.client('s3')
 
 
 def checkAcl(bucket):
@@ -29,10 +29,10 @@ def checkAcl(bucket):
     try:
         bucket_acl = s3.BucketAcl(bucket)
         bucket_acl.load()
-    except client.exceptions.NoSuchBucket:
+    except s3.meta.client.exceptions.NoSuchBucket:
         return {"found": False, "acls": {}}
 
-    except client.exceptions.ClientError as e:
+    except ClientError as e:
         if e.response['Error']['Code'] == "AccessDenied":
             return {"found": True, "acls": "AccessDenied"}
         elif e.response['Error']['Code'] == "AllAccessDisabled":
