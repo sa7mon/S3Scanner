@@ -9,11 +9,13 @@
 #########
 
 import argparse
-import s3utils as s3
 import logging
-import coloredlogs
+from os import path
 import sys
-import os.path
+
+import coloredlogs
+
+import s3utils as s3
 
 CURRENT_VERSION = '1.0.0'
 
@@ -86,7 +88,7 @@ if not s3.checkAwsCreds():
     slog.error("Warning: AWS credentials not configured. Open buckets will be shown as closed. Run:"
                " `aws configure` to fix this.\n")
 
-if os.path.isfile(args.buckets):
+if path.isfile(args.buckets):
     with open(args.buckets, 'r') as f:
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
