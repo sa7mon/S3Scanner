@@ -129,4 +129,4 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * [janmasarik](https://github.com/janmasarik)
 
 ## License
-License: MIT https://opensource.org/licenses/MIT
+License: [MIT](LICENSE.txt) https://opensource.org/licenses/MIT
