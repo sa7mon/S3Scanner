@@ -6,9 +6,9 @@ import boto3
 from botocore.exceptions import ClientError
 import requests
 
-SIZE_CHECKOUT_TIME = 8    # How long to wait for getBucketSize to return
+SIZE_CHECK_TIMEOUT = 8    # How long to wait for getBucketSize to return
 AWS_CREDS_CONFIGURED = True
-errorCodes = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
+ERROR_CODES = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
 
 
 def checkAcl(bucket):
@@ -171,8 +171,9 @@ def dumpBucket(bucketName):
     except sh.ErrorReturnCode_1 as e:
         # Loop through our list of known errors. If found, dumping failed.
         foundErr = False
-        for err in errorCodes:
-            if err in e.stderr.decode('utf-8'):
+        err_message = e.stderr.decode('utf-8')
+        for err in ERROR_CODES:
+            if err in err_message:
                 foundErr = True
                 break
         if foundErr:                       # We caught a known error while dumping
@@ -199,10 +200,10 @@ def getBucketSize(bucketName):
     try:
         if awsCredsConfigured:
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', 's3://' +
-                       bucketName, _timeout=SIZE_CHECKOUT_TIME)
+                       bucketName, _timeout=SIZE_CHECK_TIMEOUT)
         else:
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request',
-                       's3://' + bucketName, _timeout=SIZE_CHECKOUT_TIME)
+                       's3://' + bucketName, _timeout=SIZE_CHECK_TIMEOUT)
         # Get the last line of the output, get everything to the right of the colon, and strip whitespace
         return a.splitlines()[len(a.splitlines()) - 1].split(":")[1].strip()
     except sh.TimeoutException:
