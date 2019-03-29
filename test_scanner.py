@@ -280,39 +280,6 @@ def test_checkBucketWithoutCreds():
     assert s3.checkBucketWithoutCreds('blog') is True
 
 
-# def test_checkIncludeClosed():
-#     """ Verify that the '--include-closed' argument is working correctly.
-#         Expected:
-#             The bucket name 'yahoo.com' is expected to exist, but be closed. The bucket name
-#             and region should be included in the output buckets file in the format 'bucket:region'.
-#     """
-#     test_setup()
-#
-#     # Create a file called testing.txt and write 'yahoo.com' to it
-#
-#     inFile = testingFolder + 'test_checkIncludeClosed_in.txt'
-#     outFile = testingFolder + 'test_checkIncludeClosed_out.txt'
-#
-#     f = open(inFile, 'w')
-#     f.write('yahoo.com\n')  # python will convert \n to os.linesep
-#     f.close()
-#
-#     sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile, "--include-closed", inFile)
-#
-#     found = False
-#     with open(outFile, 'r') as g:
-#         for line in g:
-#             if 'yahoo.com' in line:
-#                 found = True
-#
-#     try:
-#         assert found is True
-#     finally:
-#         # Cleanup testing files
-#         os.remove(outFile)
-#         os.remove(inFile)
-
-
 def test_dumpBucket():
     """
     Scenario dumpBucket.1 - Public read permission enabled
@@ -394,7 +361,7 @@ def test_getBucketSizeTimeout():
 
     # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
     # for processing time.
-    assert duration <= s3.sizeCheckTimeout + 1
+    assert duration <= s3.SIZE_CHECK_TIMEOUT + 1
     assert output == "Unknown Size - timeout"
 
 
