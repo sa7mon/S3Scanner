@@ -123,11 +123,12 @@ def checkBucketName(bucket_name):
     :return: Boolean - whether or not the name is valid
     """
 
-    if len(bucket_name) < 3 or len(bucket_name) > 63:  # Bucket names can be 3-63 (inclusively) characters long.
-        return False
-
+    # Bucket names can be 3-63 (inclusively) characters long.
     # Bucket names may only contain lowercase letters, numbers, periods, and hyphens
-    return not bool(re.match(r'[^a-z0-9.-]', bucket_name))
+    pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
+
+    
+    return bool(re.match(pattern, bucket_name))
 
 
 def checkBucketWithoutCreds(bucketName, triesLeft=2):
