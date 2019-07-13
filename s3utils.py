@@ -109,7 +109,7 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
                 slog.info("{0:>11} : {1} - {2}".format("[found]", bucket, "Attempting to dump...this may take a while."))
                 dumpBucket(bucket)
         if argsList:
-            if str(b["acls"]) not in ["AccessDenied", "AllAccessDisabled"]:
+            if str(b["acls"]) not in ["AllAccessDisabled"]:
                 listBucket(bucket)
     else:
         message = "{0:>11} : {1}".format("[not found]", bucket)
