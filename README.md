@@ -13,18 +13,22 @@ A tool to find open S3 buckets and dump their contents :droplet:
 ## Usage
 
 <pre>
+usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets
+
 #  s3scanner - Find S3 buckets and dump!
 #
 #  Author: Dan Salmon - @bltjetpack, github.com/sa7mon
 
 positional arguments:
-  buckets                Name of text file containing buckets to check
+  buckets               Name of text file containing buckets to check
 
 optional arguments:
-  -h, --help              show this help message and exit
-  -o, --out-file OUTFILE  Name of file to save the successfully checked buckets in (Default: buckets.txt)
-  -d, --dump              Dump all found open buckets locally
-  -l, --list              List all found open buckets locally
+  -h, --help            show this help message and exit
+  -o OUTFILE, --out-file OUTFILE
+                        Name of file to save the successfully checked buckets in (Default: buckets.txt)
+  -d, --dump            Dump all found open buckets locally
+  -l, --list            Save bucket file listing to local file: ./list-buckets/${bucket}.txt
+  --version             Display the current version of this tool
 </pre>
 
 The tool takes in a list of bucket names to check. Found S3 buckets are output to file. The tool will also dump or list the contents of 'open' buckets locally.
@@ -125,4 +129,4 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * [janmasarik](https://github.com/janmasarik)
 
 ## License
-License: MIT https://opensource.org/licenses/MIT
+License: [MIT](LICENSE.txt) https://opensource.org/licenses/MIT

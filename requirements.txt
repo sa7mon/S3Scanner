@@ -1,4 +1,3 @@
-argparse
 awscli
 sh
 pytest-xdist
