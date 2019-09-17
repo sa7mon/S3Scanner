@@ -48,25 +48,25 @@ def test_arguments():
 
     # mainargs.1
     try:
-        sh.python(s3scannerLocation + 's3scanner.py')
+        sh.python3(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
-        assert e.stderr.decode('utf-8') == ""
-        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-d] [-l] buckets" in e.stdout.decode('utf-8')
+        # assert e.stderr.decode('utf-8') == ""
+        assert "usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets" in e.stderr.decode('utf-8')
 
     # mainargs.2
 
     # Put one bucket into a new file
     with open(testingFolder + "mainargs.2_input.txt", "w") as f:
-        f.write('flaws.cloud\n')
+        f.write('s3scanner-bucketsize\n')
 
     try:
-        sh.python(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
+        sh.python3(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
                   testingFolder + 'mainargs.2_input.txt')
 
         with open(testingFolder + "mainargs.2_output.txt") as f:
             line = f.readline().strip()
 
-        assert line == 'flaws.cloud'
+        assert line == 's3scanner-bucketsize'
 
     finally:
         # No matter what happens with the test, clean up the test files at the end
@@ -324,22 +324,22 @@ def test_dumpBucket():
 
 def test_getBucketSize():
     """
-    Scenario getBucketSize.2 - Public read enabled
+    Scenario getBucketSize.1 - Public read enabled
         Expected: The flaws.cloud bucket returns size: 9.1KiB
-    Scenario getBucketSize.3 - Public read disabled
+    Scenario getBucketSize.2 - Public read disabled
         Expected: app-dev bucket has public read permissions disabled
-    Scenario getBucketSize.4 - Bucket doesn't exist
+    Scenario getBucketSize.3 - Bucket doesn't exist
         Expected: We should get back "NoSuchBucket"
     """
     test_setup()
 
-    # getBucketSize.2
-    assert s3.getBucketSize('flaws.cloud') == "24.9 KiB"
+    # getBucketSize.1
+    assert s3.getBucketSize('s3scanner-bucketsize') == "43 Bytes"
 
-    # getBucketSize.3
+    # getBucketSize.2
     assert s3.getBucketSize('app-dev') == "AccessDenied"
 
-    # getBucketSize.4
+    # getBucketSize.3
     assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
 
 
@@ -356,7 +356,7 @@ def test_getBucketSizeTimeout():
 
     startTime = time.time()
 
-    output = s3.getBucketSize("e27.co")
+    output = s3.getBucketSize("flaws.cloud")
     duration = time.time() - startTime
 
     # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
@@ -376,19 +376,19 @@ def test_listBucket():
 
     # listBucket.1
 
-    listFile = './list-buckets/flaws.cloud.txt'
+    listFile = './list-buckets/s3scanner-bucketsize.txt'
 
-    s3.listBucket('flaws.cloud')
+    s3.listBucket('s3scanner-bucketsize')
 
-    assert os.path.exists(listFile)              # Assert file was created in the correct location
+    assert os.path.exists(listFile)                         # Assert file was created in the correct location
 
     lines = []
     with open(listFile, 'r') as g:
         for line in g:
             lines.append(line)
 
-    assert lines[0][26:41] == '2575 hint1.html'  # Assert the first line is correct
-    assert len(lines) == 7                       # Assert number of lines in the file is correct
+    assert lines[0].rstrip().endswith('test-file.txt')      # Assert the first line is correct
+    assert len(lines) == 1                                  # Assert number of lines in the file is correct
 
     # listBucket.2
-    assert s3.listBucket('app-dev') == "AccessDenied"
+    assert s3.listBucket('s3scanner-private') == "AccessDenied"
