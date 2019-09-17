@@ -25,9 +25,9 @@ def test_setup():
         return
 
     # Check if AWS creds are configured
-    s3.awsCredsConfigured = s3.checkAwsCreds()
+    s3.AWS_CREDS_CONFIGURED = s3.checkAwsCreds()
 
-    print("--> AWS credentials configured: " + str(s3.awsCredsConfigured))
+    print("--> AWS credentials configured: " + str(s3.AWS_CREDS_CONFIGURED))
 
     # Create testingFolder if it doesn't exist
     if not os.path.exists(testingFolder) or not os.path.isdir(testingFolder):
@@ -101,7 +101,7 @@ def test_checkAcl():
     """
     test_setup()
 
-    if not s3.awsCredsConfigured:  # Don't run tests if AWS creds aren't configured
+    if not s3.AWS_CREDS_CONFIGURED:  # Don't run tests if AWS creds aren't configured
         return
 
     # checkAcl.1
@@ -267,7 +267,7 @@ def test_checkBucketWithoutCreds():
     """
     test_setup()
 
-    if s3.awsCredsConfigured:
+    if s3.AWS_CREDS_CONFIGURED:
         return
 
     # checkBucketwc.1
@@ -318,8 +318,8 @@ def test_dumpBucket():
     assert os.path.exists('./buckets/app-dev') is False
 
     # dumpBucket.3
-    assert s3.dumpBucket('1904') is s3.awsCredsConfigured  # Asserts should both follow whether or not creds are set
-    assert os.path.exists('./buckets/1904') is s3.awsCredsConfigured
+    assert s3.dumpBucket('1904') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
+    assert os.path.exists('./buckets/1904') is s3.AWS_CREDS_CONFIGURED
 
 
 def test_getBucketSize():
@@ -352,7 +352,7 @@ def test_getBucketSizeTimeout():
     """
     test_setup()
 
-    s3.awsCredsConfigured = False
+    s3.AWS_CREDS_CONFIGURED = False
 
     startTime = time.time()
 
