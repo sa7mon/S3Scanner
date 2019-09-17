@@ -84,7 +84,7 @@ coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
                     level_styles=levelStyles, field_styles=fieldStyles)
 
 if not s3.checkAwsCreds():
-    s3.awsCredsConfigured = False
+    s3.AWS_CREDS_CONFIGURED = False
     slog.error("Warning: AWS credentials not configured. Open buckets will be shown as closed. Run:"
                " `aws configure` to fix this.\n")
 

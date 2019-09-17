@@ -199,7 +199,7 @@ def getBucketSize(bucketName):
         Function assumes the bucket exists and doesn't catch errors if it doesn't.
     """
     try:
-        if awsCredsConfigured:
+        if AWS_CREDS_CONFIGURED:
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', 's3://' +
                        bucketName, _timeout=SIZE_CHECK_TIMEOUT)
         else:
@@ -229,7 +229,7 @@ def listBucket(bucketName):
         os.makedirs('./list-buckets/')
 
     try:
-        if awsCredsConfigured:
+        if AWS_CREDS_CONFIGURED:
             sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
         else:
             sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
