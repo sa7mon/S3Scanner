@@ -127,6 +127,7 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * [Ohelig](https://github.com/Ohelig)
 * [vysecurity](https://github.com/vysecurity)
 * [janmasarik](https://github.com/janmasarik)
+* [alanyee](https://github.com/alanyee)
 
 ## License
 License: [MIT](LICENSE.txt) https://opensource.org/licenses/MIT
