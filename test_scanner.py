@@ -353,10 +353,11 @@ def test_getBucketSizeTimeout():
     test_setup()
 
     s3.AWS_CREDS_CONFIGURED = False
+    s3.SIZE_CHECK_TIMEOUT = 2  # In case we have a fast connection
 
     startTime = time.time()
 
-    output = s3.getBucketSize("flaws.cloud")
+    output = s3.getBucketSize("s3scanner-long")
     duration = time.time() - startTime
 
     # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
