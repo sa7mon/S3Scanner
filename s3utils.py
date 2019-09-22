@@ -1,13 +1,14 @@
-import sh
 import os
+import re
+import sh
+
 import boto3
+from botocore.exceptions import ClientError
 import requests
 
-sizeCheckTimeout = 8    # How long to wait for getBucketSize to return
-awsCredsConfigured = True
-errorCodes = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
-
-client = boto3.client('s3')
+SIZE_CHECK_TIMEOUT = 8    # How long to wait for getBucketSize to return
+AWS_CREDS_CONFIGURED = True
+ERROR_CODES = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
 
 
 def checkAcl(bucket):
@@ -29,10 +30,10 @@ def checkAcl(bucket):
     try:
         bucket_acl = s3.BucketAcl(bucket)
         bucket_acl.load()
-    except client.exceptions.NoSuchBucket:
+    except s3.meta.client.exceptions.NoSuchBucket:
         return {"found": False, "acls": {}}
 
-    except client.exceptions.ClientError as e:
+    except ClientError as e:
         if e.response['Error']['Code'] == "AccessDenied":
             return {"found": True, "acls": "AccessDenied"}
         elif e.response['Error']['Code'] == "AllAccessDisabled":
@@ -90,7 +91,7 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
         # continue
         return
 
-    if awsCredsConfigured:
+    if AWS_CREDS_CONFIGURED:
         b = checkAcl(bucket)
     else:
         a = checkBucketWithoutCreds(bucket)
@@ -116,19 +117,18 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
         slog.error(message)
 
 
-def checkBucketName(bucketName):
+def checkBucketName(bucket_name):
     """ Checks to make sure bucket names input are valid according to S3 naming conventions
     :param bucketName: Name of bucket to check
     :return: Boolean - whether or not the name is valid
     """
 
-    if (len(bucketName) < 3) or (len(bucketName) > 63):  # Bucket names can be 3-63 (inclusively) characters long.
-        return False
+    # Bucket names can be 3-63 (inclusively) characters long.
+    # Bucket names may only contain lowercase letters, numbers, periods, and hyphens
+    pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
 
-    for char in bucketName:  # Bucket names can contain letters, numbers, periods, and hyphens
-        if char.lower() not in "abcdefghijklmnopqrstuvwxyz0123456789.-":
-            return False
-    return True
+    
+    return bool(re.match(pattern, bucket_name))
 
 
 def checkBucketWithoutCreds(bucketName, triesLeft=2):
@@ -163,7 +163,7 @@ def dumpBucket(bucketName):
     dumped = None
 
     try:
-        if not awsCredsConfigured:
+        if not AWS_CREDS_CONFIGURED:
             sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, '--no-sign-request', _fg=False)
             dumped = True
         else:
@@ -172,8 +172,9 @@ def dumpBucket(bucketName):
     except sh.ErrorReturnCode_1 as e:
         # Loop through our list of known errors. If found, dumping failed.
         foundErr = False
-        for err in errorCodes:
-            if err in e.stderr.decode('utf-8'):
+        err_message = e.stderr.decode('utf-8')
+        for err in ERROR_CODES:
+            if err in err_message:
                 foundErr = True
                 break
         if foundErr:                       # We caught a known error while dumping
@@ -198,12 +199,12 @@ def getBucketSize(bucketName):
         Function assumes the bucket exists and doesn't catch errors if it doesn't.
     """
     try:
-        if awsCredsConfigured:
+        if AWS_CREDS_CONFIGURED:
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', 's3://' +
-                       bucketName, _timeout=sizeCheckTimeout)
+                       bucketName, _timeout=SIZE_CHECK_TIMEOUT)
         else:
             a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request',
-                       's3://' + bucketName, _timeout=sizeCheckTimeout)
+                       's3://' + bucketName, _timeout=SIZE_CHECK_TIMEOUT)
         # Get the last line of the output, get everything to the right of the colon, and strip whitespace
         return a.splitlines()[len(a.splitlines()) - 1].split(":")[1].strip()
     except sh.TimeoutException:
@@ -228,7 +229,7 @@ def listBucket(bucketName):
         os.makedirs('./list-buckets/')
 
     try:
-        if awsCredsConfigured:
+        if AWS_CREDS_CONFIGURED:
             sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
         else:
             sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)

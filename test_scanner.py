@@ -25,9 +25,9 @@ def test_setup():
         return
 
     # Check if AWS creds are configured
-    s3.awsCredsConfigured = s3.checkAwsCreds()
+    s3.AWS_CREDS_CONFIGURED = s3.checkAwsCreds()
 
-    print("--> AWS credentials configured: " + str(s3.awsCredsConfigured))
+    print("--> AWS credentials configured: " + str(s3.AWS_CREDS_CONFIGURED))
 
     # Create testingFolder if it doesn't exist
     if not os.path.exists(testingFolder) or not os.path.isdir(testingFolder):
@@ -48,25 +48,25 @@ def test_arguments():
 
     # mainargs.1
     try:
-        sh.python(s3scannerLocation + 's3scanner.py')
+        sh.python3(s3scannerLocation + 's3scanner.py')
     except sh.ErrorReturnCode as e:
-        assert e.stderr.decode('utf-8') == ""
-        assert "usage: s3scanner [-h] [-o OUTFILE] [-c] [-d] [-l] buckets" in e.stdout.decode('utf-8')
+        # assert e.stderr.decode('utf-8') == ""
+        assert "usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets" in e.stderr.decode('utf-8')
 
     # mainargs.2
 
     # Put one bucket into a new file
     with open(testingFolder + "mainargs.2_input.txt", "w") as f:
-        f.write('flaws.cloud\n')
+        f.write('s3scanner-bucketsize\n')
 
     try:
-        sh.python(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
+        sh.python3(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
                   testingFolder + 'mainargs.2_input.txt')
 
         with open(testingFolder + "mainargs.2_output.txt") as f:
             line = f.readline().strip()
 
-        assert line == 'flaws.cloud'
+        assert line == 's3scanner-bucketsize'
 
     finally:
         # No matter what happens with the test, clean up the test files at the end
@@ -101,7 +101,7 @@ def test_checkAcl():
     """
     test_setup()
 
-    if not s3.awsCredsConfigured:  # Don't run tests if AWS creds aren't configured
+    if not s3.AWS_CREDS_CONFIGURED:  # Don't run tests if AWS creds aren't configured
         return
 
     # checkAcl.1
@@ -267,7 +267,7 @@ def test_checkBucketWithoutCreds():
     """
     test_setup()
 
-    if s3.awsCredsConfigured:
+    if s3.AWS_CREDS_CONFIGURED:
         return
 
     # checkBucketwc.1
@@ -278,39 +278,6 @@ def test_checkBucketWithoutCreds():
 
     # checkBucketwc.3
     assert s3.checkBucketWithoutCreds('blog') is True
-
-
-# def test_checkIncludeClosed():
-#     """ Verify that the '--include-closed' argument is working correctly.
-#         Expected:
-#             The bucket name 'yahoo.com' is expected to exist, but be closed. The bucket name
-#             and region should be included in the output buckets file in the format 'bucket:region'.
-#     """
-#     test_setup()
-#
-#     # Create a file called testing.txt and write 'yahoo.com' to it
-#
-#     inFile = testingFolder + 'test_checkIncludeClosed_in.txt'
-#     outFile = testingFolder + 'test_checkIncludeClosed_out.txt'
-#
-#     f = open(inFile, 'w')
-#     f.write('yahoo.com\n')  # python will convert \n to os.linesep
-#     f.close()
-#
-#     sh.python(s3scannerLocation + "s3scanner.py", "--out-file", outFile, "--include-closed", inFile)
-#
-#     found = False
-#     with open(outFile, 'r') as g:
-#         for line in g:
-#             if 'yahoo.com' in line:
-#                 found = True
-#
-#     try:
-#         assert found is True
-#     finally:
-#         # Cleanup testing files
-#         os.remove(outFile)
-#         os.remove(inFile)
 
 
 def test_dumpBucket():
@@ -351,28 +318,28 @@ def test_dumpBucket():
     assert os.path.exists('./buckets/app-dev') is False
 
     # dumpBucket.3
-    assert s3.dumpBucket('1904') is s3.awsCredsConfigured  # Asserts should both follow whether or not creds are set
-    assert os.path.exists('./buckets/1904') is s3.awsCredsConfigured
+    assert s3.dumpBucket('1904') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
+    assert os.path.exists('./buckets/1904') is s3.AWS_CREDS_CONFIGURED
 
 
 def test_getBucketSize():
     """
-    Scenario getBucketSize.2 - Public read enabled
+    Scenario getBucketSize.1 - Public read enabled
         Expected: The flaws.cloud bucket returns size: 9.1KiB
-    Scenario getBucketSize.3 - Public read disabled
+    Scenario getBucketSize.2 - Public read disabled
         Expected: app-dev bucket has public read permissions disabled
-    Scenario getBucketSize.4 - Bucket doesn't exist
+    Scenario getBucketSize.3 - Bucket doesn't exist
         Expected: We should get back "NoSuchBucket"
     """
     test_setup()
 
-    # getBucketSize.2
-    assert s3.getBucketSize('flaws.cloud') == "24.9 KiB"
+    # getBucketSize.1
+    assert s3.getBucketSize('s3scanner-bucketsize') == "43 Bytes"
 
-    # getBucketSize.3
+    # getBucketSize.2
     assert s3.getBucketSize('app-dev') == "AccessDenied"
 
-    # getBucketSize.4
+    # getBucketSize.3
     assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
 
 
@@ -385,16 +352,17 @@ def test_getBucketSizeTimeout():
     """
     test_setup()
 
-    s3.awsCredsConfigured = False
+    s3.AWS_CREDS_CONFIGURED = False
+    s3.SIZE_CHECK_TIMEOUT = 2  # In case we have a fast connection
 
     startTime = time.time()
 
-    output = s3.getBucketSize("e27.co")
+    output = s3.getBucketSize("s3scanner-long")
     duration = time.time() - startTime
 
     # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
     # for processing time.
-    assert duration <= s3.sizeCheckTimeout + 1
+    assert duration <= s3.SIZE_CHECK_TIMEOUT + 1
     assert output == "Unknown Size - timeout"
 
 
@@ -409,19 +377,19 @@ def test_listBucket():
 
     # listBucket.1
 
-    listFile = './list-buckets/flaws.cloud.txt'
+    listFile = './list-buckets/s3scanner-bucketsize.txt'
 
-    s3.listBucket('flaws.cloud')
+    s3.listBucket('s3scanner-bucketsize')
 
-    assert os.path.exists(listFile)              # Assert file was created in the correct location
+    assert os.path.exists(listFile)                         # Assert file was created in the correct location
 
     lines = []
     with open(listFile, 'r') as g:
         for line in g:
             lines.append(line)
 
-    assert lines[0][26:41] == '2575 hint1.html'  # Assert the first line is correct
-    assert len(lines) == 7                       # Assert number of lines in the file is correct
+    assert lines[0].rstrip().endswith('test-file.txt')      # Assert the first line is correct
+    assert len(lines) == 1                                  # Assert number of lines in the file is correct
 
     # listBucket.2
-    assert s3.listBucket('app-dev') == "AccessDenied"
+    assert s3.listBucket('s3scanner-private') == "AccessDenied"

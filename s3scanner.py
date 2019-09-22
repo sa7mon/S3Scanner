@@ -9,13 +9,15 @@
 #########
 
 import argparse
-import s3utils as s3
 import logging
-import coloredlogs
+from os import path
 import sys
-import os.path
 
-currentVersion = '1.0.0'
+import coloredlogs
+
+import s3utils as s3
+
+CURRENT_VERSION = '1.0.0'
 
 
 
@@ -31,30 +33,17 @@ parser = argparse.ArgumentParser(description='#  s3scanner - Find S3 buckets and
                                  prog='s3scanner', formatter_class=CustomFormatter)
 
 # Declare arguments
-parser.add_argument('-o', '--out-file', required=False, dest='outFile',
+parser.add_argument('-o', '--out-file', dest='outFile', default='./buckets.txt',
                     help='Name of file to save the successfully checked buckets in (Default: buckets.txt)')
-# parser.add_argument('-c', '--include-closed', required=False, dest='includeClosed', action='store_true',
+# parser.add_argument('-c', '--include-closed', dest='includeClosed', action='store_true', default=False,
 #                     help='Include found but closed buckets in the out-file')
-parser.add_argument('-d', '--dump', required=False, dest='dump', action='store_true',
+parser.add_argument('-d', '--dump', dest='dump', action='store_true', default=False,
                     help='Dump all found open buckets locally')
-parser.add_argument('-l', '--list', required=False, dest='list', action='store_true',
+parser.add_argument('-l', '--list', dest='list', action='store_true',
                     help='Save bucket file listing to local file: ./list-buckets/${bucket}.txt')
-parser.add_argument('--version', required=False, dest='version', action='store_true',
+parser.add_argument('--version', action='version', version=CURRENT_VERSION,
                     help='Display the current version of this tool')
 parser.add_argument('buckets', help='Name of text file containing buckets to check')
-
-# parser.set_defaults(includeClosed=False)
-parser.set_defaults(outFile='./buckets.txt')
-parser.set_defaults(dump=False)
-
-
-if len(sys.argv) == 1:              # No args supplied, print the full help text instead of the short usage text
-    parser.print_help()
-    sys.exit(0)
-elif len(sys.argv) == 2:
-    if sys.argv[1] == '--version':  # Only --version arg supplied. Print the version and exit.
-        print(currentVersion)
-        sys.exit(0)
 
 
 # Parse the args
@@ -95,11 +84,11 @@ coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
                     level_styles=levelStyles, field_styles=fieldStyles)
 
 if not s3.checkAwsCreds():
-    s3.awsCredsConfigured = False
+    s3.AWS_CREDS_CONFIGURED = False
     slog.error("Warning: AWS credentials not configured. Open buckets will be shown as closed. Run:"
                " `aws configure` to fix this.\n")
 
-if os.path.isfile(args.buckets):
+if path.isfile(args.buckets):
     with open(args.buckets, 'r') as f:
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
