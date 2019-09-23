@@ -3,7 +3,7 @@ import re
 import sh
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 import requests
 
 SIZE_CHECK_TIMEOUT = 8    # How long to wait for getBucketSize to return
@@ -58,14 +58,14 @@ def checkAwsCreds():
 
     :return: True if AWS credentials are properly configured. False if not.
     """
-    try:
-        sh.aws('sts', 'get-caller-identity', '--output', 'text', '--query', 'Account')
-    except sh.ErrorReturnCode_255 as e:
-        if "Unable to locate credentials" in e.stderr.decode("utf-8"):
-            return False
-        else:
-            raise e
 
+    sts = boto3.client('sts')
+    try:
+        # sh.aws('sts', 'get-caller-identity', '--output', 'text', '--query', 'Account')
+        response = sts.get_caller_identity()
+    except NoCredentialsError as e:
+            return False
+            
     return True
 
 
