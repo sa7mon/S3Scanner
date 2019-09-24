@@ -325,11 +325,13 @@ def test_dumpBucket():
 def test_getBucketSize():
     """
     Scenario getBucketSize.1 - Public read enabled
-        Expected: The flaws.cloud bucket returns size: 9.1KiB
+        Expected: The s3scanner-bucketsize bucket returns size: 43 bytes
     Scenario getBucketSize.2 - Public read disabled
         Expected: app-dev bucket has public read permissions disabled
     Scenario getBucketSize.3 - Bucket doesn't exist
         Expected: We should get back "NoSuchBucket"
+    Scenario getBucketSize.4 - Public read enabled, more than 1,000 objects
+        Expected: The s3scanner-long bucket returns size: 3900 bytes
     """
     test_setup()
 
@@ -341,6 +343,9 @@ def test_getBucketSize():
 
     # getBucketSize.3
     assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
+
+    # getBucketSize.4
+    assert s3.getBucketSize('s3scanner-long') == 4000
 
 
 def test_getBucketSizeTimeout():

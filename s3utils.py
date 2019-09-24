@@ -101,7 +101,7 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
 
         size = getBucketSize(bucket)  # Try to get the size of the bucket
 
-        message = "{0:>11} : {1}".format("[found]", bucket + " | " + size + " | ACLs: " + str(b["acls"]))
+        message = "{0:>11} : {1}".format("[found]", bucket + " | " + str(size) + " Bytes | ACLs: " + str(b["acls"]))
         slog.info(message)
         flog.debug(bucket)
 
