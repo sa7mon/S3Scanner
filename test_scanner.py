@@ -336,7 +336,7 @@ def test_getBucketSize():
     test_setup()
 
     # getBucketSize.1
-    assert s3.getBucketSize('s3scanner-bucketsize') == 43
+    assert s3.getBucketSize('s3scanner-bucketsize') == "43 bytes"
 
     # getBucketSize.2
     assert s3.getBucketSize('app-dev') == "AccessDenied"
@@ -345,14 +345,14 @@ def test_getBucketSize():
     assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
 
     # getBucketSize.4
-    assert s3.getBucketSize('s3scanner-long') == 4000
+    assert s3.getBucketSize('s3scanner-long') == "4000 bytes"
 
 
 def test_getBucketSizeTimeout():
     """
     Scenario getBucketSize.1 - Too many files to list so it times out
         Expected: The function returns a timeout error after the specified wait time
-        Note: Use e27.co to test with. Verify that getBucketSize returns an unknown size and doesn't take longer
+        Note: Verify that getBucketSize returns an unknown size and doesn't take longer
         than sizeCheckTimeout set in s3utils
     """
     test_setup()
@@ -360,14 +360,9 @@ def test_getBucketSizeTimeout():
     s3.AWS_CREDS_CONFIGURED = False
     s3.SIZE_CHECK_TIMEOUT = 2  # In case we have a fast connection
 
-    startTime = time.time()
-
     output = s3.getBucketSize("s3scanner-long")
-    duration = time.time() - startTime
 
-    # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
-    # for processing time.
-    assert duration <= s3.SIZE_CHECK_TIMEOUT + 1
+    # Assert that the size check timed out
     assert output == "Unknown Size - timeout"
 
 

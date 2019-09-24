@@ -1,15 +1,33 @@
 import os
 import re
 import sh
+import signal
+from contextlib import contextmanager
 
 import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.exceptions import ClientError, NoCredentialsError, HTTPClientError
 from botocore.handlers import disable_signing
 import requests
+
 
 SIZE_CHECK_TIMEOUT = 8    # How long to wait for getBucketSize to return
 AWS_CREDS_CONFIGURED = True
 ERROR_CODES = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
+
+
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
 
 
 def checkAcl(bucket):
@@ -101,7 +119,7 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
 
         size = getBucketSize(bucket)  # Try to get the size of the bucket
 
-        message = "{0:>11} : {1}".format("[found]", bucket + " | " + str(size) + " Bytes | ACLs: " + str(b["acls"]))
+        message = "{0:>11} : {1}".format("[found]", bucket + " | " + str(size) + " | ACLs: " + str(b["acls"]))
         slog.info(message)
         flog.debug(bucket)
 
@@ -204,12 +222,16 @@ def getBucketSize(bucketName):
             s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
         bucket = s3.Bucket(bucketName)
         size_bytes = 0
-        for item in bucket.objects.all():  # Note: Only does a max of 1000 items
-            size_bytes += item.size
-        return size_bytes
+        with time_limit(SIZE_CHECK_TIMEOUT):
+            for item in bucket.objects.all():  # Note: Only does a max of 1000 items
+                size_bytes += item.size
+        return str(size_bytes) + " bytes"
 
-    except sh.TimeoutException:
-        return "Unknown Size - timeout"
+    except HTTPClientError as e:
+        if "Timed out!" in str(e):
+            return "Unknown Size - timeout"
+        else:
+            raise e
     except ClientError as e:
         if e.response['Error']['Code'] == 'AccessDenied':
             return "AccessDenied"
@@ -219,6 +241,7 @@ def getBucketSize(bucketName):
             return "NoSuchBucket"
         else:
             raise e
+
 
 
 def listBucket(bucketName):
