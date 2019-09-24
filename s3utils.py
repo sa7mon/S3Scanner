@@ -4,6 +4,7 @@ import sh
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
+from botocore.handlers import disable_signing
 import requests
 
 SIZE_CHECK_TIMEOUT = 8    # How long to wait for getBucketSize to return
@@ -61,11 +62,10 @@ def checkAwsCreds():
 
     sts = boto3.client('sts')
     try:
-        # sh.aws('sts', 'get-caller-identity', '--output', 'text', '--query', 'Account')
         response = sts.get_caller_identity()
     except NoCredentialsError as e:
             return False
-            
+
     return True
 
 
@@ -198,23 +198,24 @@ def getBucketSize(bucketName):
     NOTE:
         Function assumes the bucket exists and doesn't catch errors if it doesn't.
     """
+    s3 = boto3.resource('s3')
     try:
-        if AWS_CREDS_CONFIGURED:
-            a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', 's3://' +
-                       bucketName, _timeout=SIZE_CHECK_TIMEOUT)
-        else:
-            a = sh.aws('s3', 'ls', '--summarize', '--human-readable', '--recursive', '--no-sign-request',
-                       's3://' + bucketName, _timeout=SIZE_CHECK_TIMEOUT)
-        # Get the last line of the output, get everything to the right of the colon, and strip whitespace
-        return a.splitlines()[len(a.splitlines()) - 1].split(":")[1].strip()
+        if AWS_CREDS_CONFIGURED is False:
+            s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+        bucket = s3.Bucket(bucketName)
+        size_bytes = 0
+        for item in bucket.objects.all():  # Note: Only does a max of 1000 items
+            size_bytes += item.size
+        return size_bytes
+
     except sh.TimeoutException:
         return "Unknown Size - timeout"
-    except sh.ErrorReturnCode_255 as e:
-        if "AccessDenied" in e.stderr.decode("UTF-8"):
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'AccessDenied':
             return "AccessDenied"
-        elif "AllAccessDisabled" in e.stderr.decode("UTF-8"):
+        elif e.response['Error']['Code'] == 'AllAccessDisabled':
             return "AllAccessDisabled"
-        elif "NoSuchBucket" in e.stderr.decode("UTF-8"):
+        elif e.response['Error']['Code'] == 'NoSuchBucket':
             return "NoSuchBucket"
         else:
             raise e

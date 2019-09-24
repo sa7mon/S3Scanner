@@ -334,7 +334,7 @@ def test_getBucketSize():
     test_setup()
 
     # getBucketSize.1
-    assert s3.getBucketSize('s3scanner-bucketsize') == "43 Bytes"
+    assert s3.getBucketSize('s3scanner-bucketsize') == 43
 
     # getBucketSize.2
     assert s3.getBucketSize('app-dev') == "AccessDenied"
