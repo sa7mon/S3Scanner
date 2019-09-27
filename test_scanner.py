@@ -310,12 +310,12 @@ def test_dumpBucket():
         shutil.rmtree(dumpDir)
 
     # dumpBucket.2
-    assert s3.dumpBucket('app-dev') is False
-    assert os.path.exists('./buckets/app-dev') is False
+    assert s3.dumpBucket('s3scanner-private') is False
+    assert os.path.exists('./buckets/s3scanner-private') is False
 
     # dumpBucket.3
-    assert s3.dumpBucket('1904') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
-    assert os.path.exists('./buckets/1904') is s3.AWS_CREDS_CONFIGURED
+    assert s3.dumpBucket('s3scanner-auth') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
+    assert os.path.exists('./buckets/s3scanner-auth') is s3.AWS_CREDS_CONFIGURED
 
 
 def test_getBucketSize():
