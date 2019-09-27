@@ -371,6 +371,7 @@ def test_listBucket():
     Scenario listBucket.1 - Public read enabled
         Expected: Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
     Scenario listBucket.2 - Public read disabled
+    Scenario listBucket.3 - Public read enabled, long listing
 
     """
     test_setup()
@@ -393,3 +394,14 @@ def test_listBucket():
 
     # listBucket.2
     assert s3.listBucket('s3scanner-private') == "AccessDenied"
+
+    # listBucket.3
+    longFile = './list-buckets/s3scanner-long.txt'
+    s3.listBucket('s3scanner-long')
+    assert os.path.exists(longFile)
+
+    lines = []
+    with open(longFile, 'r') as f:
+        for line in f:
+            lines.append(f)
+    assert len(lines) == 3501
