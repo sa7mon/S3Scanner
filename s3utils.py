@@ -219,15 +219,15 @@ def getBucketSize(bucketName):
     NOTE:
         Function assumes the bucket exists and doesn't catch errors if it doesn't.
     """
-    s3 = boto3.resource('s3')
+    s3 = boto3.client('s3')
     try:
         if AWS_CREDS_CONFIGURED is False:
-            s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-        bucket = s3.Bucket(bucketName)
+            s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         size_bytes = 0
         with time_limit(SIZE_CHECK_TIMEOUT):
-            for item in bucket.objects.all():  # Note: Only does a max of 1000 items
-                size_bytes += item.size
+            for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
+                for item in page['Contents']:
+                   size_bytes += item['Size']
         return str(size_bytes) + " bytes"
 
     except HTTPClientError as e:
@@ -244,7 +244,6 @@ def getBucketSize(bucketName):
             return "NoSuchBucket"
         else:
             raise e
-
 
 
 def listBucket(bucketName):
