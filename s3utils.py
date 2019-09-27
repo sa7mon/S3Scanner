@@ -3,10 +3,13 @@ import re
 import sh
 import signal
 from contextlib import contextmanager
+import datetime
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError, HTTPClientError
 from botocore.handlers import disable_signing
+from botocore import UNSIGNED
+from botocore.client import Config
 import requests
 
 
@@ -252,13 +255,24 @@ def listBucket(bucketName):
     if not os.path.exists('./list-buckets/'):
         os.makedirs('./list-buckets/')
 
+    s3 = boto3.client('s3')
+    objects = []
+
     try:
-        if AWS_CREDS_CONFIGURED:
-            sh.aws('s3', 'ls', '--recursive', 's3://' + bucketName, _out=bucketDir)
-        else:
-            sh.aws('s3', 'ls', '--recursive', '--no-sign-request', 's3://' + bucketName, _out=bucketDir)
-    except sh.ErrorReturnCode_255 as e:
-        if "AccessDenied" in e.stderr.decode("utf-8"):
+        if AWS_CREDS_CONFIGURED is False:
+            s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+        
+        for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
+            for item in page['Contents']:
+                o = item['LastModified'].strftime('%Y-%m-%d %H:%M:%S') + " " + str(item['Size']) + " " + item['Key']
+                objects.append(o)
+
+        with open(bucketDir, 'w') as f:
+            for o in objects:
+                f.write(o + "\n")
+
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'AccessDenied':
             return "AccessDenied"
         else:
             raise e
