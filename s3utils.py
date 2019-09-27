@@ -1,6 +1,5 @@
 import os
 import re
-import sh
 import signal
 from contextlib import contextmanager
 import datetime
@@ -177,40 +176,34 @@ def checkBucketWithoutCreds(bucketName, triesLeft=2):
 
 
 def dumpBucket(bucketName):
-
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
 
+    if not os.path.exists(bucketDir):
+        os.makedirs(bucketDir)
+
     dumped = None
+    s3 = boto3.client('s3')
 
     try:
-        if not AWS_CREDS_CONFIGURED:
-            sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, '--no-sign-request', _fg=False)
-            dumped = True
-        else:
-            sh.aws('s3', 'sync', 's3://' + bucketName, bucketDir, _fg=False)
-            dumped = True
-    except sh.ErrorReturnCode_1 as e:
-        # Loop through our list of known errors. If found, dumping failed.
-        foundErr = False
-        err_message = e.stderr.decode('utf-8')
-        for err in ERROR_CODES:
-            if err in err_message:
-                foundErr = True
-                break
-        if foundErr:                       # We caught a known error while dumping
-            if not os.listdir(bucketDir):  # The bucket directory is empty. The dump didn't work
-                dumped = False
-            else:                          # The bucket directory is not empty. At least 1 of the files was downloaded.
-                dumped = True
-        else:
-            raise e
+        if AWS_CREDS_CONFIGURED is False:
+            s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
+        
+        for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
+            for item in page['Contents']:
+                key = item['Key']
+                s3.download_file(bucketName, key, bucketDir+"/"+key)
 
-    # Check if folder is empty. If it is, delete it
-    if not os.listdir(bucketDir):
-        os.rmdir(bucketDir)
-
-    return dumped
+        dumped = True
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'AccessDenied':
+            pass  # TODO: Do something with the fact that we were denied
+        dumped = False
+        # Check if folder is empty. If it is, delete it
+        if not os.listdir(bucketDir):
+            os.rmdir(bucketDir)
+    finally:
+        return dumped
 
 
 def getBucketSize(bucketName):
