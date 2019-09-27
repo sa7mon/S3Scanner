@@ -1,14 +1,13 @@
 import s3utils as s3
-import sh
 import os
 import sys
 import shutil
 import time
 import logging
+import subprocess
 
 
-pyVersion = sys.version_info
-# pyVersion[0] can be 2 or 3
+pyVersion = sys.version_info  # pyVersion[0] can be 2 or 3
 
 
 s3scannerLocation = "./"
@@ -47,11 +46,8 @@ def test_arguments():
     test_setup()
 
     # mainargs.1
-    try:
-        sh.python3(s3scannerLocation + 's3scanner.py')
-    except sh.ErrorReturnCode as e:
-        # assert e.stderr.decode('utf-8') == ""
-        assert "usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets" in e.stderr.decode('utf-8')
+    a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert a.stderr == b'usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets\ns3scanner: error: the following arguments are required: buckets\n'
 
     # mainargs.2
 
@@ -60,8 +56,8 @@ def test_arguments():
         f.write('s3scanner-bucketsize\n')
 
     try:
-        sh.python3(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
-                  testingFolder + 'mainargs.2_input.txt')
+        a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
+                        testingFolder + 'mainargs.2_input.txt'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         with open(testingFolder + "mainargs.2_output.txt") as f:
             line = f.readline().strip()
