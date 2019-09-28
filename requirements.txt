@@ -1,5 +1,4 @@
 awscli
-sh
 pytest-xdist
 coloredlogs
 boto3

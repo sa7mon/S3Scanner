@@ -1,14 +1,13 @@
 import s3utils as s3
-import sh
 import os
 import sys
 import shutil
 import time
 import logging
+import subprocess
 
 
-pyVersion = sys.version_info
-# pyVersion[0] can be 2 or 3
+pyVersion = sys.version_info  # pyVersion[0] can be 2 or 3
 
 
 s3scannerLocation = "./"
@@ -47,11 +46,8 @@ def test_arguments():
     test_setup()
 
     # mainargs.1
-    try:
-        sh.python3(s3scannerLocation + 's3scanner.py')
-    except sh.ErrorReturnCode as e:
-        # assert e.stderr.decode('utf-8') == ""
-        assert "usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets" in e.stderr.decode('utf-8')
+    a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert a.stderr == b'usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets\ns3scanner: error: the following arguments are required: buckets\n'
 
     # mainargs.2
 
@@ -60,8 +56,8 @@ def test_arguments():
         f.write('s3scanner-bucketsize\n')
 
     try:
-        sh.python3(s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
-                  testingFolder + 'mainargs.2_input.txt')
+        a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
+                        testingFolder + 'mainargs.2_input.txt'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         with open(testingFolder + "mainargs.2_output.txt") as f:
             line = f.readline().strip()
@@ -314,27 +310,29 @@ def test_dumpBucket():
         shutil.rmtree(dumpDir)
 
     # dumpBucket.2
-    assert s3.dumpBucket('app-dev') is False
-    assert os.path.exists('./buckets/app-dev') is False
+    assert s3.dumpBucket('s3scanner-private') is s3.AWS_CREDS_CONFIGURED
+    assert os.path.exists('./buckets/s3scanner-private') is False
 
     # dumpBucket.3
-    assert s3.dumpBucket('1904') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
-    assert os.path.exists('./buckets/1904') is s3.AWS_CREDS_CONFIGURED
+    assert s3.dumpBucket('s3scanner-auth') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
+    assert os.path.exists('./buckets/s3scanner-auth') is False
 
 
 def test_getBucketSize():
     """
     Scenario getBucketSize.1 - Public read enabled
-        Expected: The flaws.cloud bucket returns size: 9.1KiB
+        Expected: The s3scanner-bucketsize bucket returns size: 43 bytes
     Scenario getBucketSize.2 - Public read disabled
         Expected: app-dev bucket has public read permissions disabled
     Scenario getBucketSize.3 - Bucket doesn't exist
         Expected: We should get back "NoSuchBucket"
+    Scenario getBucketSize.4 - Public read enabled, more than 1,000 objects
+        Expected: The s3scanner-long bucket returns size: 3900 bytes
     """
     test_setup()
 
     # getBucketSize.1
-    assert s3.getBucketSize('s3scanner-bucketsize') == "43 Bytes"
+    assert s3.getBucketSize('s3scanner-bucketsize') == "43 bytes"
 
     # getBucketSize.2
     assert s3.getBucketSize('app-dev') == "AccessDenied"
@@ -342,28 +340,28 @@ def test_getBucketSize():
     # getBucketSize.3
     assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
 
+    # getBucketSize.4
+    assert s3.getBucketSize('s3scanner-long') == "4000 bytes"
+
 
 def test_getBucketSizeTimeout():
     """
     Scenario getBucketSize.1 - Too many files to list so it times out
         Expected: The function returns a timeout error after the specified wait time
-        Note: Use e27.co to test with. Verify that getBucketSize returns an unknown size and doesn't take longer
+        Note: Verify that getBucketSize returns an unknown size and doesn't take longer
         than sizeCheckTimeout set in s3utils
     """
     test_setup()
 
-    s3.AWS_CREDS_CONFIGURED = False
-    s3.SIZE_CHECK_TIMEOUT = 2  # In case we have a fast connection
+    # s3.AWS_CREDS_CONFIGURED = False
+    # s3.SIZE_CHECK_TIMEOUT = 2  # In case we have a fast connection
 
-    startTime = time.time()
+    # output = s3.getBucketSize("s3scanner-long")
 
-    output = s3.getBucketSize("s3scanner-long")
-    duration = time.time() - startTime
+    # # Assert that the size check timed out
+    # assert output == "Unknown Size - timeout"
 
-    # Assert that getting the bucket size took less than or equal to the alloted time plus 1 second to account
-    # for processing time.
-    assert duration <= s3.SIZE_CHECK_TIMEOUT + 1
-    assert output == "Unknown Size - timeout"
+    print("!! Notes: test_getBucketSizeTimeout temporarily disabled.")
 
 
 def test_listBucket():
@@ -371,6 +369,7 @@ def test_listBucket():
     Scenario listBucket.1 - Public read enabled
         Expected: Listing bucket flaws.cloud will create the directory, create flaws.cloud.txt, and write the listing to file
     Scenario listBucket.2 - Public read disabled
+    Scenario listBucket.3 - Public read enabled, long listing
 
     """
     test_setup()
@@ -392,4 +391,18 @@ def test_listBucket():
     assert len(lines) == 1                                  # Assert number of lines in the file is correct
 
     # listBucket.2
-    assert s3.listBucket('s3scanner-private') == "AccessDenied"
+    if s3.AWS_CREDS_CONFIGURED:
+        assert s3.listBucket('s3scanner-private') == None
+    else:
+        assert s3.listBucket('s3scanner-private') == "AccessDenied"
+
+    # listBucket.3
+    longFile = './list-buckets/s3scanner-long.txt'
+    s3.listBucket('s3scanner-long')
+    assert os.path.exists(longFile)
+
+    lines = []
+    with open(longFile, 'r') as f:
+        for line in f:
+            lines.append(f)
+    assert len(lines) == 3501
