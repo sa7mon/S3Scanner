@@ -12,7 +12,7 @@ from botocore.client import Config
 import requests
 
 
-SIZE_CHECK_TIMEOUT = 8    # How long to wait for getBucketSize to return
+SIZE_CHECK_TIMEOUT = 30    # How long to wait for getBucketSize to return
 AWS_CREDS_CONFIGURED = True
 ERROR_CODES = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
 
@@ -176,13 +176,15 @@ def checkBucketWithoutCreds(bucketName, triesLeft=2):
 
 
 def dumpBucket(bucketName):
+    global dumped
     # Dump the bucket into bucket folder
     bucketDir = './buckets/' + bucketName
 
     if not os.path.exists(bucketDir):
         os.makedirs(bucketDir)
 
-    dumped = None
+    dumped = True
+    
     s3 = boto3.client('s3')
 
     try:
@@ -193,16 +195,16 @@ def dumpBucket(bucketName):
             for item in page['Contents']:
                 key = item['Key']
                 s3.download_file(bucketName, key, bucketDir+"/"+key)
-
         dumped = True
     except ClientError as e:
+        # global dumped
         if e.response['Error']['Code'] == 'AccessDenied':
             pass  # TODO: Do something with the fact that we were denied
         dumped = False
+    finally:
         # Check if folder is empty. If it is, delete it
         if not os.listdir(bucketDir):
             os.rmdir(bucketDir)
-    finally:
         return dumped
 
 
@@ -240,7 +242,11 @@ def getBucketSize(bucketName):
 
 
 def listBucket(bucketName):
-    """ If we find an open bucket, save the contents of the bucket listing to file. """
+    """ 
+        If we find an open bucket, save the contents of the bucket listing to file. 
+        Returns:
+            None if no errors were encountered
+    """
 
     # Dump the bucket into bucket folder
     bucketDir = './list-buckets/' + bucketName + '.txt'
@@ -255,9 +261,10 @@ def listBucket(bucketName):
             s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         
         for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
-            for item in page['Contents']:
-                o = item['LastModified'].strftime('%Y-%m-%d %H:%M:%S') + " " + str(item['Size']) + " " + item['Key']
-                objects.append(o)
+            if 'Contents' in page:
+                for item in page['Contents']:
+                    o = item['LastModified'].strftime('%Y-%m-%d %H:%M:%S') + " " + str(item['Size']) + " " + item['Key']
+                    objects.append(o)
 
         with open(bucketDir, 'w') as f:
             for o in objects:
