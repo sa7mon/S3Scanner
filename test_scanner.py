@@ -310,12 +310,12 @@ def test_dumpBucket():
         shutil.rmtree(dumpDir)
 
     # dumpBucket.2
-    assert s3.dumpBucket('s3scanner-private') is False
+    assert s3.dumpBucket('s3scanner-private') is s3.AWS_CREDS_CONFIGURED
     assert os.path.exists('./buckets/s3scanner-private') is False
 
     # dumpBucket.3
     assert s3.dumpBucket('s3scanner-auth') is s3.AWS_CREDS_CONFIGURED  # Asserts should both follow whether or not creds are set
-    assert os.path.exists('./buckets/s3scanner-auth') is s3.AWS_CREDS_CONFIGURED
+    assert os.path.exists('./buckets/s3scanner-auth') is False
 
 
 def test_getBucketSize():
@@ -391,7 +391,10 @@ def test_listBucket():
     assert len(lines) == 1                                  # Assert number of lines in the file is correct
 
     # listBucket.2
-    assert s3.listBucket('s3scanner-private') == "AccessDenied"
+    if s3.AWS_CREDS_CONFIGURED:
+        assert s3.listBucket('s3scanner-private') == None
+    else:
+        assert s3.listBucket('s3scanner-private') == "AccessDenied"
 
     # listBucket.3
     longFile = './list-buckets/s3scanner-long.txt'
