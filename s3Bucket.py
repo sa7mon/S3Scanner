@@ -39,20 +39,24 @@ class s3Bucket:
     bucketSize = 0
 
     def __init__(self, name):
-        valid = self.__checkBucketName(name)
-        if not valid:
+        check = self.__checkBucketName(name)
+        if not check['valid']:
             raise ValueError("Invalid bucket name")
+        
+        self.name = check['name']
 
-            self.ListBucket = Permission.UNKNOWN
-            # self.GetBucketAcl = Permission.UNKNOWN
-            # self.HeadBucket = Permission.UNKNOWN
-            # self.PutObject = Permission.UNKNOWN
-            # self.PutBucketAcl = Permission.UNKNOWN
+        self.ListBucket = Permission.UNKNOWN
+        # self.GetBucketAcl = Permission.UNKNOWN
+        # self.HeadBucket = Permission.UNKNOWN
+        # self.PutObject = Permission.UNKNOWN
+        # self.PutBucketAcl = Permission.UNKNOWN
 
     def __checkBucketName(self, name):
         """ Checks to make sure bucket names input are valid according to S3 naming conventions
         :param name: Name of bucket to check
-        :return: Boolean - whether or not the name is valid
+        :return: Dict
+                ['valid'] - Boolean - whether or not the name is valid
+                ['name'] - string - Bucket name extracted from the input
         """
 
         bucket_name = ""
@@ -67,11 +71,15 @@ class s3Bucket:
         # Bucket names can be 3-63 (inclusively) characters long.
         # Bucket names may only contain lowercase letters, numbers, periods, and hyphens
         pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
-        return bool(re.match(pattern, bucket_name))
+        return {'valid': bool(re.match(pattern, bucket_name)), 'name': bucket_name}
 
-        def addObject(obj):
-            self.objects.append(obj)
-            bucketSize += obj.size
 
-        def getHumanReadableSize(self):
-            return bytesToHumanReadable(self.bucketSize)
+    def checkBucketExists(self):
+        pass
+
+    def addObject(obj):
+        self.objects.append(obj)
+        bucketSize += obj.size
+
+    def getHumanReadableSize(self):
+        return bytesToHumanReadable(self.bucketSize)
