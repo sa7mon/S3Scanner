@@ -16,7 +16,7 @@ import sys
 import coloredlogs
 
 import s3utils as s3
-from s3bucket import s3bucket
+from s3Bucket import s3Bucket
 
 CURRENT_VERSION = '1.0.0'
 
@@ -94,7 +94,7 @@ if path.isfile(args.buckets):
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
             # s3.checkBucket(line, slog, flog, args.dump, args.list)
-            b = s3bucket(line)
+            b = s3Bucket(line)
 
             # Check if bucket exists first
 
@@ -102,5 +102,5 @@ if path.isfile(args.buckets):
 else:
     # It's a single bucket
     # s3.checkBucket(args.buckets, slog, flog, args.dump, args.list)
-    b = s3bucket(args.buckets)
+    b = s3Bucket(args.buckets)
     
