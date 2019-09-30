@@ -93,11 +93,18 @@ if path.isfile(args.buckets):
     with open(args.buckets, 'r') as f:
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
-            # s3.checkBucket(line, slog, flog, args.dump, args.list)
-            b = s3Bucket(line)
+            try:
+                b = s3Bucket(line)
+            except ValueError as ve:
+                # TODO: Check if it's because "Invalid bucket name"
+                pass
 
             # Check if bucket exists first
+            b.checkBucketExists()
 
+            if b.exists = BucketExists.NO:
+                # Bucket doesn't exist
+                pass
 
 else:
     # It's a single bucket
