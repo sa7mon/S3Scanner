@@ -9,12 +9,17 @@ from botocore.exceptions import ClientError, NoCredentialsError, HTTPClientError
 from botocore.handlers import disable_signing
 from botocore import UNSIGNED
 from botocore.client import Config
+import botocore.session
 import requests
 
 
 SIZE_CHECK_TIMEOUT = 30    # How long to wait for getBucketSize to return
 AWS_CREDS_CONFIGURED = True
 ERROR_CODES = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
+
+
+def enumerate_bucket_objects(bucket):
+    pass
 
 
 class TimeoutException(Exception): pass
@@ -80,13 +85,11 @@ def checkAwsCreds():
     :return: True if AWS credentials are properly configured. False if not.
     """
 
-    sts = boto3.client('sts')
-    try:
-        response = sts.get_caller_identity()
-    except NoCredentialsError as e:
-            return False
-
-    return True
+    session = botocore.session.get_session()
+    if session.get_credentials() is None or session.get_credentials().access_key is None:
+        return False
+    else:
+        return True
 
 
 def checkBucket(inBucket, slog, flog, argsDump, argsList):
