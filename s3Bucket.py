@@ -14,8 +14,15 @@ class BucketExists(Enum):
     UNKNOWN = -1
 
 
-def bytesToHumanReadable(bytes_size):
-    pass
+def bytes_to_human_readable(bytes_size, suffix='B'):
+    """
+        Shamelessly copied from: https://stackoverflow.com/a/1094933/2307994
+    """
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+        if abs(bytes_size) < 1024.0:
+            return "%3.1f%s%s" % (bytes_size, unit, suffix)
+        bytes_size /= 1024.0
+    return "%.1f%s%s" % (bytes_size, 'Yi', suffix)
 
 
 class s3BucketObject:
@@ -35,7 +42,7 @@ class s3BucketObject:
         return hash(self.key)
 
     def getHumanReadableSize(self):
-        return bytesToHumanReadable(self.size)
+        return bytes_to_human_readable(self.size)
 
 
 class s3Bucket:
@@ -88,4 +95,4 @@ class s3Bucket:
         self.bucketSize += obj.size
 
     def getHumanReadableSize(self):
-        return bytesToHumanReadable(self.bucketSize)
+        return bytes_to_human_readable(self.bucketSize)

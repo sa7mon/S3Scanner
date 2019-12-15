@@ -484,3 +484,4 @@ def test_enumerate_bucket_objects():
     s.enumerate_bucket_objects(b2)
     assert b2.objects_enumerated is True
     assert b2.bucketSize == 4143
+    assert b2.getHumanReadableSize() == "4.0KB"
