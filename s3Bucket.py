@@ -46,6 +46,7 @@ class s3Bucket:
     exists = BucketExists.UNKNOWN
     objects = set()
     bucketSize = 0
+    objects_enumerated = False
 
     def __init__(self, name):
         check = self.__checkBucketName(name)
@@ -83,7 +84,7 @@ class s3Bucket:
         return {'valid': bool(re.match(pattern, bucket_name)), 'name': bucket_name}
 
     def addObject(self, obj):
-        self.objects.append(obj)
+        self.objects.add(obj)
         self.bucketSize += obj.size
 
     def getHumanReadableSize(self):

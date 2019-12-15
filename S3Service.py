@@ -54,7 +54,9 @@ class S3Service:
     def enumerate_bucket_objects(self, bucket):
         for page in self.s3_client.get_paginator("list_objects_v2").paginate(Bucket=bucket.name):
             if 'Contents' not in page:  # No items in this bucket
+                bucket.objects_enumerated = True
                 return
             for item in page['Contents']:
                 obj = s3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
                 bucket.addObject(obj)
+        bucket.objects_enumerated = True

@@ -185,6 +185,7 @@ def test_checkAwsCreds():
     # checkAwsCreds.1
     assert s3.checkAwsCreds() == credsActuallyConfigured
 
+
 def test_checkBucket():
     """
     checkBucket.1 - Bucket name
@@ -234,6 +235,7 @@ def test_checkBucket():
     finally:
         # Delete test file
         os.remove(testFile)
+
 
 def test_checkBucketName():
     """
@@ -463,4 +465,22 @@ def test_check_perm_list_bucket():
 
 
 def test_enumerate_bucket_objects():
-    pass
+    test_setup_new()
+
+    s = S3Service()
+
+    # Empty bucket
+    b1 = s3Bucket.s3Bucket('s3scanner-empty')
+    s.check_perm_list_bucket(b1)
+    assert b1.PermListBucket == Permission.ALLOWED
+    s.enumerate_bucket_objects(b1)
+    assert b1.objects_enumerated is True
+    assert b1.bucketSize == 0
+
+    # Bucket with > 1000 items
+    b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+    s.check_perm_list_bucket(b2)
+    assert b2.PermListBucket == Permission.ALLOWED
+    s.enumerate_bucket_objects(b2)
+    assert b2.objects_enumerated is True
+    assert b2.bucketSize == 4143
