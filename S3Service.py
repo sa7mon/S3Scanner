@@ -3,7 +3,7 @@
     passing buckets
 """
 import boto3
-from s3Bucket import s3Bucket, BucketExists
+from s3Bucket import s3Bucket, BucketExists, Permission
 from botocore.exceptions import ClientError
 import botocore.session
 
@@ -36,3 +36,17 @@ class S3Service:
         else:
             raise NotImplementedError("check_bucket_exists not implement for no aws creds")
             # TODO add checking method if no aws creds
+
+    def check_perm_list_bucket(self, bucket):
+        list_bucket_perm_allowed = True
+        try:
+            self.s3_client.list_objects_v2(Bucket=bucket.name, MaxKeys=0)
+        except ClientError as e:
+            if e.response['Error']['Code'] == "AccessDenied":
+                list_bucket_perm_allowed = False
+            else:
+                raise e
+        bucket.PermListBucket = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+
+    def enumerate_bucket_objects(self, bucket):
+        pass

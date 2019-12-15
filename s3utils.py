@@ -18,10 +18,6 @@ AWS_CREDS_CONFIGURED = True
 ERROR_CODES = ['AccessDenied', 'AllAccessDisabled', '[Errno 21] Is a directory:']
 
 
-def enumerate_bucket_objects(bucket):
-    pass
-
-
 class TimeoutException(Exception): pass
 
 @contextmanager
@@ -34,7 +30,6 @@ def time_limit(seconds):
         yield
     finally:
         signal.alarm(0)
-
 
 
 def checkAcl(bucket):

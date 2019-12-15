@@ -7,7 +7,7 @@ import logging
 import subprocess
 import s3Bucket
 from S3Service import S3Service
-from s3Bucket import BucketExists
+from s3Bucket import BucketExists, Permission
 
 pyVersion = sys.version_info  # pyVersion[0] can be 2 or 3
 
@@ -439,4 +439,19 @@ def test_bucket_exists():
     s.check_bucket_exists(b2)
     assert b2.exists is BucketExists.NO
 
+
+def test_check_perm_list_bucket():
+    test_setup_new()
+
+    s = S3Service()
+
+    # Bucket that no one can list
+    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    s.check_perm_list_bucket(b1)
+    assert b1.PermListBucket == Permission.DENIED
+
+    # Bucket that world can list
+    b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+    s.check_perm_list_bucket(b2)
+    assert b2.PermListBucket == Permission.ALLOWED
 
