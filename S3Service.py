@@ -6,41 +6,36 @@ import boto3
 from s3Bucket import s3Bucket, BucketExists, Permission, s3BucketObject
 from botocore.exceptions import ClientError
 import botocore.session
+from botocore import UNSIGNED
+from botocore.client import Config
 
 
 class S3Service:
     def __init__(self):
-        self.s3_client = boto3.client('s3')
-
         # Check for AWS credentials
         session = botocore.session.get_session()
         if session.get_credentials() is None or session.get_credentials().access_key is None:
             self.aws_creds_configured = False
+            self.s3_client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         else:
             self.aws_creds_configured = True
+            self.s3_client = boto3.client('s3')
 
     def check_bucket_exists(self, bucket):
-        if self.aws_creds_configured:
-            if not isinstance(bucket, s3Bucket):
-                raise ValueError("Passed object was not type s3Bucket")
+        if not isinstance(bucket, s3Bucket):
+            raise ValueError("Passed object was not type s3Bucket")
 
-            bucket_exists = True
+        bucket_exists = True
 
-            try:
-                self.s3_client.head_bucket(Bucket=bucket.name)
-            except ClientError as e:
-                if e.response['Error']['Code'] == '404':
-                    bucket_exists = False
+        try:
+            self.s3_client.head_bucket(Bucket=bucket.name)
+        except ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                bucket_exists = False
 
-            bucket.exists = BucketExists.YES if bucket_exists else BucketExists.NO
-        else:
-            raise NotImplementedError("check_bucket_exists not implemented for no aws creds")
-            # TODO add checking method if no aws creds
+        bucket.exists = BucketExists.YES if bucket_exists else BucketExists.NO
 
     def check_perm_read_acl(self, bucket):
-        if not self.aws_creds_configured:
-            raise NotImplementedError("check_perm_list_bucket not implemented for no aws creds")
-            # TODO add method if no aws creds
         if bucket.exists == BucketExists.UNKNOWN:
             self.check_bucket_exists(bucket)
         if bucket.exists == BucketExists.NO:
@@ -58,9 +53,6 @@ class S3Service:
         bucket.PermGetBucketAcl = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
 
     def check_perm_list_bucket(self, bucket):
-        if not self.aws_creds_configured:
-            raise NotImplementedError("check_perm_list_bucket not implemented for no aws creds")
-            # TODO add method if no aws creds
         if bucket.exists == BucketExists.UNKNOWN:
             self.check_bucket_exists(bucket)
         if bucket.exists == BucketExists.NO:

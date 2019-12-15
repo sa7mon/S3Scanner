@@ -453,12 +453,12 @@ def test_check_perm_list_bucket():
     assert b1.PermListBucket == Permission.DENIED
 
     # Bucket that AuthenticatedUsers can list
-    b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
-    s.check_perm_list_bucket(b2)
-    assert b2.PermListBucket == Permission.ALLOWED
+    if s.aws_creds_configured:
+        b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+        s.check_perm_list_bucket(b2)
+        assert b2.PermListBucket == Permission.ALLOWED
 
     # Bucket that Everyone can list
-    # TODO: Add bucket here
     b3 = s3Bucket.s3Bucket('s3scanner-long')
     s.check_perm_list_bucket(b3)
     assert b3.PermListBucket == Permission.ALLOWED
@@ -478,13 +478,14 @@ def test_enumerate_bucket_objects():
     assert b1.bucketSize == 0
 
     # Bucket with > 1000 items
-    b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
-    s.check_perm_list_bucket(b2)
-    assert b2.PermListBucket == Permission.ALLOWED
-    s.enumerate_bucket_objects(b2)
-    assert b2.objects_enumerated is True
-    assert b2.bucketSize == 4143
-    assert b2.getHumanReadableSize() == "4.0KB"
+    if s.aws_creds_configured:
+        b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+        s.check_perm_list_bucket(b2)
+        assert b2.PermListBucket == Permission.ALLOWED
+        s.enumerate_bucket_objects(b2)
+        assert b2.objects_enumerated is True
+        assert b2.bucketSize == 4143
+        assert b2.getHumanReadableSize() == "4.0KB"
 
 
 def test_check_perm_read_acl():
@@ -497,6 +498,7 @@ def test_check_perm_read_acl():
     assert b1.PermGetBucketAcl == Permission.DENIED
 
     # Bucket that allows AuthenticatedUsers to read ACL
-    b2 = s3Bucket.s3Bucket('s3scanner-auth-read-acl')
-    s.check_perm_read_acl(b2)
-    assert b2.PermGetBucketAcl == Permission.ALLOWED
+    if s.aws_creds_configured:
+        b2 = s3Bucket.s3Bucket('s3scanner-auth-read-acl')
+        s.check_perm_read_acl(b2)
+        assert b2.PermGetBucketAcl == Permission.ALLOWED
