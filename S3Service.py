@@ -3,7 +3,7 @@
     passing buckets
 """
 import boto3
-from s3Bucket import s3Bucket
+from s3Bucket import s3Bucket, BucketExists
 from botocore.exceptions import ClientError
 
 
@@ -24,4 +24,4 @@ class S3Service:
             if e.response['Error']['Code'] == '404':
                 bucket_exists = False
 
-        return bucket_exists
+        bucket.exists = BucketExists.YES if bucket_exists else BucketExists.NO

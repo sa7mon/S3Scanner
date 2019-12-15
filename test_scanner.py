@@ -7,6 +7,7 @@ import logging
 import subprocess
 import s3Bucket
 from S3Service import S3Service
+from s3Bucket import BucketExists
 
 pyVersion = sys.version_info  # pyVersion[0] can be 2 or 3
 
@@ -417,11 +418,12 @@ def test_bucket_exists():
     # Bucket that does exist
 
     b1 = s3Bucket.s3Bucket('s3scanner-private')
-    assert s.check_bucket_exists(b1) is True
+    s.check_bucket_exists(b1)
+    assert b1.exists is BucketExists.YES
 
     # Bucket that doesn't exist (hopefully)
     b2 = s3Bucket.s3Bucket('asfasfasdfasdfasdf')
-    assert s.check_bucket_exists(b2) is False
-
+    s.check_bucket_exists(b2)
+    assert b2.exists is BucketExists.NO
 
 
