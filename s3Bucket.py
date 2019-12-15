@@ -73,13 +73,9 @@ class s3Bucket:
         pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
         return {'valid': bool(re.match(pattern, bucket_name)), 'name': bucket_name}
 
-
-    def checkBucketExists(self):
-        pass
-
-    def addObject(obj):
+    def addObject(self, obj):
         self.objects.append(obj)
-        bucketSize += obj.size
+        self.bucketSize += obj.size
 
     def getHumanReadableSize(self):
         return bytesToHumanReadable(self.bucketSize)
