@@ -41,6 +41,11 @@ class S3Service:
         if not self.aws_creds_configured:
             raise NotImplementedError("check_perm_list_bucket not implemented for no aws creds")
             # TODO add method if no aws creds
+        if bucket.exists == BucketExists.UNKNOWN:
+            self.check_bucket_exists(bucket)
+        if bucket.exists == BucketExists.NO:
+            raise Exception("Bucket doesn't exist")
+
         read_acl_perm_allowed = True
         try:
             self.s3_client.get_bucket_acl(Bucket=bucket.name)
@@ -56,6 +61,11 @@ class S3Service:
         if not self.aws_creds_configured:
             raise NotImplementedError("check_perm_list_bucket not implemented for no aws creds")
             # TODO add method if no aws creds
+        if bucket.exists == BucketExists.UNKNOWN:
+            self.check_bucket_exists(bucket)
+        if bucket.exists == BucketExists.NO:
+            raise Exception("Bucket doesn't exist")
+
         list_bucket_perm_allowed = True
         try:
             self.s3_client.list_objects_v2(Bucket=bucket.name, MaxKeys=0)
@@ -67,6 +77,11 @@ class S3Service:
         bucket.PermListBucket = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
     def enumerate_bucket_objects(self, bucket):
+        if bucket.exists == BucketExists.UNKNOWN:
+            self.check_bucket_exists(bucket)
+        if bucket.exists == BucketExists.NO:
+            raise Exception("Bucket doesn't exist")
+
         for page in self.s3_client.get_paginator("list_objects_v2").paginate(Bucket=bucket.name):
             if 'Contents' not in page:  # No items in this bucket
                 bucket.objects_enumerated = True
