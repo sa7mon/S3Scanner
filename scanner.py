@@ -16,8 +16,8 @@ import sys
 import coloredlogs
 
 import s3utils as s3
-from s3Bucket import s3Bucket
-from s3Bucket import BucketExists
+from s3Bucket import s3Bucket, BucketExists, Permission
+from S3Service import S3Service
 
 CURRENT_VERSION = '1.0.0'
 
@@ -84,8 +84,9 @@ fieldStyles = {
 coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
                     level_styles=levelStyles, field_styles=fieldStyles)
 
-if not s3.checkAwsCreds():
-    s3.AWS_CREDS_CONFIGURED = False
+s3service = S3Service()
+
+if s3service.aws_creds_configured is False:
     slog.error("Warning: AWS credentials not configured. Open buckets will be shown as closed. Run:"
                " `aws configure` to fix this.\n")
 
@@ -100,14 +101,20 @@ if path.isfile(args.buckets):
                 pass
 
             # Check if bucket exists first
-            b.checkBucketExists()
+            s3service.check_bucket_exists(b)
 
             if b.exists == BucketExists.NO:
                 # Bucket doesn't exist
-                pass
+                slog.info("["+b.name+"] Bucket doesn't exist")
+                continue
+
+            slog.info("["+b.name+"] Bucket exists")
+            s3service.check_perm_list_bucket(b)
+            slog.info("["+b.name+"] " + ("ListBucket Enabled!" if b.PermListBucket == Permission.ALLOWED
+                      else "ListBucket disabled."))
+
 
 else:
     # It's a single bucket
     # s3.checkBucket(args.buckets, slog, flog, args.dump, args.list)
     b = s3Bucket(args.buckets)
-    

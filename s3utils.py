@@ -32,59 +32,59 @@ def time_limit(seconds):
         signal.alarm(0)
 
 
-def checkAcl(bucket):
-    """
-    Attempts to retrieve a bucket's ACL. This also functions as the main 'check if bucket exists' function.
-    By trying to get the ACL, we combine 2 steps to minimize potentially slow network calls.
+# def checkAcl(bucket):
+#     """
+#     Attempts to retrieve a bucket's ACL. This also functions as the main 'check if bucket exists' function.
+#     By trying to get the ACL, we combine 2 steps to minimize potentially slow network calls.
+#
+#     :param bucket: Name of bucket to try to get the ACL of
+#     :return: A dictionary with 2 entries:
+#         found - Boolean. True/False whether or not the bucket was found
+#         acls - dictionary. If ACL was retrieved, contains 2 keys: 'allUsers' and 'authUsers'. If ACL was not
+#                             retrieved,
+#     """
+#     allUsersGrants = []
+#     authUsersGrants = []
+#
+#     s3 = boto3.resource('s3')
+#
+#     try:
+#         bucket_acl = s3.BucketAcl(bucket)
+#         bucket_acl.load()
+#     except s3.meta.client.exceptions.NoSuchBucket:
+#         return {"found": False, "acls": {}}
+#
+#     except ClientError as e:
+#         if e.response['Error']['Code'] == "AccessDenied":
+#             return {"found": True, "acls": "AccessDenied"}
+#         elif e.response['Error']['Code'] == "AllAccessDisabled":
+#             return {"found": True, "acls": "AllAccessDisabled"}
+#         else:
+#             raise e
+#
+#     for grant in bucket_acl.grants:
+#         if 'URI' in grant['Grantee']:
+#             if grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AllUsers":
+#                 allUsersGrants.append(grant['Permission'])
+#             elif grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers":
+#                 authUsersGrants.append(grant['Permission'])
+#
+#     return {"found": True, "acls": {"allUsers": allUsersGrants, "authUsers": authUsersGrants}}
 
-    :param bucket: Name of bucket to try to get the ACL of
-    :return: A dictionary with 2 entries:
-        found - Boolean. True/False whether or not the bucket was found
-        acls - dictionary. If ACL was retrieved, contains 2 keys: 'allUsers' and 'authUsers'. If ACL was not
-                            retrieved,
-    """
-    allUsersGrants = []
-    authUsersGrants = []
 
-    s3 = boto3.resource('s3')
-
-    try:
-        bucket_acl = s3.BucketAcl(bucket)
-        bucket_acl.load()
-    except s3.meta.client.exceptions.NoSuchBucket:
-        return {"found": False, "acls": {}}
-
-    except ClientError as e:
-        if e.response['Error']['Code'] == "AccessDenied":
-            return {"found": True, "acls": "AccessDenied"}
-        elif e.response['Error']['Code'] == "AllAccessDisabled":
-            return {"found": True, "acls": "AllAccessDisabled"}
-        else:
-            raise e
-
-    for grant in bucket_acl.grants:
-        if 'URI' in grant['Grantee']:
-            if grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AllUsers":
-                allUsersGrants.append(grant['Permission'])
-            elif grant['Grantee']['URI'] == "http://acs.amazonaws.com/groups/global/AuthenticatedUsers":
-                authUsersGrants.append(grant['Permission'])
-
-    return {"found": True, "acls": {"allUsers": allUsersGrants, "authUsers": authUsersGrants}}
-
-
-def checkAwsCreds():
-    """
-    Checks to see if the user has credentials for AWS properly configured.
-    This is essentially a requirement for getting accurate results.
-
-    :return: True if AWS credentials are properly configured. False if not.
-    """
-
-    session = botocore.session.get_session()
-    if session.get_credentials() is None or session.get_credentials().access_key is None:
-        return False
-    else:
-        return True
+# def checkAwsCreds():
+#     """
+#     Checks to see if the user has credentials for AWS properly configured.
+#     This is essentially a requirement for getting accurate results.
+#
+#     :return: True if AWS credentials are properly configured. False if not.
+#     """
+#
+#     session = botocore.session.get_session()
+#     if session.get_credentials() is None or session.get_credentials().access_key is None:
+#         return False
+#     else:
+#         return True
 
 
 def checkBucket(inBucket, slog, flog, argsDump, argsList):
@@ -135,42 +135,42 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
         slog.error(message)
 
 
-def checkBucketName(bucket_name):
-    """ Checks to make sure bucket names input are valid according to S3 naming conventions
-    :param bucketName: Name of bucket to check
-    :return: Boolean - whether or not the name is valid
-    """
+# def checkBucketName(bucket_name):
+#     """ Checks to make sure bucket names input are valid according to S3 naming conventions
+#     :param bucketName: Name of bucket to check
+#     :return: Boolean - whether or not the name is valid
+#     """
+#
+#     # Bucket names can be 3-63 (inclusively) characters long.
+#     # Bucket names may only contain lowercase letters, numbers, periods, and hyphens
+#     pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
+#
+#
+#     return bool(re.match(pattern, bucket_name))
 
-    # Bucket names can be 3-63 (inclusively) characters long.
-    # Bucket names may only contain lowercase letters, numbers, periods, and hyphens
-    pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
 
-    
-    return bool(re.match(pattern, bucket_name))
-
-
-def checkBucketWithoutCreds(bucketName, triesLeft=2):
-    """ Does a simple GET request with the Requests library and interprets the results.
-    bucketName - A domain name without protocol (http[s]) """
-
-    if triesLeft == 0:
-        return False
-
-    bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
-
-    r = requests.head(bucketUrl)
-
-    if r.status_code == 200:    # Successfully found a bucket!
-        return True
-    elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
-        return True
-    elif r.status_code == 404:  # This is definitely not a valid bucket name.
-        return False
-    elif r.status_code == 503:
-        return checkBucketWithoutCreds(bucketName, triesLeft - 1)
-    else:
-        raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for bucket: " + bucketName +
-                         ". Please open an issue at: https://github.com/sa7mon/s3scanner/issues and include this info.")
+# def checkBucketWithoutCreds(bucketName, triesLeft=2):
+#     """ Does a simple GET request with the Requests library and interprets the results.
+#     bucketName - A domain name without protocol (http[s]) """
+#
+#     if triesLeft == 0:
+#         return False
+#
+#     bucketUrl = 'http://' + bucketName + '.s3.amazonaws.com'
+#
+#     r = requests.head(bucketUrl)
+#
+#     if r.status_code == 200:    # Successfully found a bucket!
+#         return True
+#     elif r.status_code == 403:  # Bucket exists, but we're not allowed to LIST it.
+#         return True
+#     elif r.status_code == 404:  # This is definitely not a valid bucket name.
+#         return False
+#     elif r.status_code == 503:
+#         return checkBucketWithoutCreds(bucketName, triesLeft - 1)
+#     else:
+#         raise ValueError("Got an unhandled status code back: " + str(r.status_code) + " for bucket: " + bucketName +
+#                          ". Please open an issue at: https://github.com/sa7mon/s3scanner/issues and include this info.")
 
 
 def dumpBucket(bucketName):

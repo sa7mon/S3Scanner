@@ -21,6 +21,8 @@ class S3Service:
             self.aws_creds_configured = True
             self.s3_client = boto3.client('s3')
 
+        del session  # No longer needed
+
     def check_bucket_exists(self, bucket):
         if not isinstance(bucket, s3Bucket):
             raise ValueError("Passed object was not type s3Bucket")
