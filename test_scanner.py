@@ -37,6 +37,19 @@ def test_setup():
     setupRan = True
 
 
+def test_setup_new():
+    global setupRan
+
+    if setupRan:    # We only need to run this once per test-run
+        return
+
+    # Create testingFolder if it doesn't exist
+    if not os.path.exists(testingFolder) or not os.path.isdir(testingFolder):
+        os.makedirs(testingFolder)
+
+    setupRan = True
+
+
 def test_arguments():
     """
     Scenario mainargs.1: No args supplied
@@ -411,7 +424,7 @@ def test_listBucket():
 
 
 def test_bucket_exists():
-    test_setup()
+    test_setup_new()
 
     s = S3Service()
 
