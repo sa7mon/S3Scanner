@@ -63,8 +63,8 @@ class s3Bucket:
         self.name = check['name']
 
         self.PermListBucket = Permission.UNKNOWN
-        # self.HeadBucket = Permission.UNKNOWN
-        # self.GetBucketAcl = Permission.UNKNOWN
+        # self.PermHeadBucket = Permission.UNKNOWN -- part of "deep-dive". Unlikely to be different than listBucket
+        self.PermGetBucketAcl = Permission.UNKNOWN
         # self.PutObject = Permission.UNKNOWN
         # self.PutBucketAcl = Permission.UNKNOWN
 

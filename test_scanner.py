@@ -485,3 +485,18 @@ def test_enumerate_bucket_objects():
     assert b2.objects_enumerated is True
     assert b2.bucketSize == 4143
     assert b2.getHumanReadableSize() == "4.0KB"
+
+
+def test_check_perm_read_acl():
+    test_setup_new()
+    s = S3Service()
+
+    # Bucket with no read ACL perms
+    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    s.check_perm_read_acl(b1)
+    assert b1.PermGetBucketAcl == Permission.DENIED
+
+    # Bucket that allows AuthenticatedUsers to read ACL
+    b2 = s3Bucket.s3Bucket('s3scanner-auth-read-acl')
+    s.check_perm_read_acl(b2)
+    assert b2.PermGetBucketAcl == Permission.ALLOWED

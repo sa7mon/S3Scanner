@@ -37,6 +37,21 @@ class S3Service:
             raise NotImplementedError("check_bucket_exists not implemented for no aws creds")
             # TODO add checking method if no aws creds
 
+    def check_perm_read_acl(self, bucket):
+        if not self.aws_creds_configured:
+            raise NotImplementedError("check_perm_list_bucket not implemented for no aws creds")
+            # TODO add method if no aws creds
+        read_acl_perm_allowed = True
+        try:
+            self.s3_client.get_bucket_acl(Bucket=bucket.name)
+        except ClientError as e:
+            if e.response['Error']['Code'] == "AccessDenied":
+                read_acl_perm_allowed = False
+            else:
+                raise e
+        # TODO: If we can read ACLs, we know the rest of the permissions
+        bucket.PermGetBucketAcl = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
+
     def check_perm_list_bucket(self, bucket):
         if not self.aws_creds_configured:
             raise NotImplementedError("check_perm_list_bucket not implemented for no aws creds")
