@@ -17,9 +17,9 @@ import coloredlogs
 
 import s3utils as s3
 from s3Bucket import s3Bucket
+from s3Bucket import BucketExists
 
 CURRENT_VERSION = '1.0.0'
-
 
 
 # We want to use both formatter classes, so a custom class it is
@@ -102,7 +102,7 @@ if path.isfile(args.buckets):
             # Check if bucket exists first
             b.checkBucketExists()
 
-            if b.exists = BucketExists.NO:
+            if b.exists == BucketExists.NO:
                 # Bucket doesn't exist
                 pass
 
