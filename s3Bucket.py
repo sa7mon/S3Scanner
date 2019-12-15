@@ -1,6 +1,5 @@
 import re
 from enum import Enum
-import s3utils as s3
 
 
 class Permission(Enum):
@@ -20,10 +19,20 @@ def bytesToHumanReadable(bytes_size):
 
 
 class s3BucketObject:
+    """
+        Represents a file stored in a bucket.
+        __eq__ and __hash__ are implemented to take full advantage of the set() deduplication.
+    """
     def __init__(self, size, last_modified, key):
         self.size = size
         self.last_modified = last_modified
         self.key = key
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __hash__(self):
+        return hash(self.key)
 
     def getHumanReadableSize(self):
         return bytesToHumanReadable(self.size)

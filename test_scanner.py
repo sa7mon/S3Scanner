@@ -450,8 +450,17 @@ def test_check_perm_list_bucket():
     s.check_perm_list_bucket(b1)
     assert b1.PermListBucket == Permission.DENIED
 
-    # Bucket that world can list
+    # Bucket that AuthenticatedUsers can list
     b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
     s.check_perm_list_bucket(b2)
     assert b2.PermListBucket == Permission.ALLOWED
 
+    # Bucket that Everyone can list
+    # TODO: Add bucket here
+    b3 = s3Bucket.s3Bucket('s3scanner-long')
+    s.check_perm_list_bucket(b3)
+    assert b3.PermListBucket == Permission.ALLOWED
+
+
+def test_enumerate_bucket_objects():
+    pass
