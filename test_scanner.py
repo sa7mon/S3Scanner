@@ -5,7 +5,8 @@ import shutil
 import time
 import logging
 import subprocess
-
+import s3Bucket
+from S3Service import S3Service
 
 pyVersion = sys.version_info  # pyVersion[0] can be 2 or 3
 
@@ -335,7 +336,7 @@ def test_getBucketSize():
     assert s3.getBucketSize('s3scanner-bucketsize') == "43 bytes"
 
     # getBucketSize.2
-    assert s3.getBucketSize('app-dev') == "AccessDenied"
+    assert s3.getBucketSize('s3scanner-private') == "AccessDenied"
 
     # getBucketSize.3
     assert s3.getBucketSize('thiswillprobablynotexistihope') == "NoSuchBucket"
@@ -406,3 +407,21 @@ def test_listBucket():
         for line in f:
             lines.append(f)
     assert len(lines) == 3501
+
+
+def test_bucket_exists():
+    test_setup()
+
+    s = S3Service()
+
+    # Bucket that does exist
+
+    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    assert s.check_bucket_exists(b1) is True
+
+    # Bucket that doesn't exist (hopefully)
+    b2 = s3Bucket.s3Bucket('asfasfasdfasdfasdf')
+    assert s.check_bucket_exists(b2) is False
+
+
+
