@@ -38,10 +38,15 @@ class S3Service:
         bucket.exists = BucketExists.YES if bucket_exists else BucketExists.NO
 
     def check_perm_read_acl(self, bucket):
-        if bucket.exists == BucketExists.UNKNOWN:
-            self.check_bucket_exists(bucket)
-        if bucket.exists == BucketExists.NO:
-            raise Exception("Bucket doesn't exist")
+        """
+            Check for the READACP permission on the bucket by trying to get the bucket ACL.
+
+            Exceptions:
+                ValueError
+                ClientError
+        """
+        if bucket.exists != BucketExists.YES:
+            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
 
         read_acl_perm_allowed = True
         try:
