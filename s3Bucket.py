@@ -62,11 +62,23 @@ class s3Bucket:
         
         self.name = check['name']
 
-        self.PermListBucket = Permission.UNKNOWN
-        # self.PermHeadBucket = Permission.UNKNOWN -- part of "deep-dive". Unlikely to be different than listBucket
-        self.PermGetBucketAcl = Permission.UNKNOWN
+        # self.PermListBucket = Permission.UNKNOWN
+        # self.PermHeadBucket = Permission.UNKNOWN
+        # self.PermGetBucketAcl = Permission.UNKNOWN
         # self.PutObject = Permission.UNKNOWN
         # self.PutBucketAcl = Permission.UNKNOWN
+
+        self.AllUsersRead = Permission.UNKNOWN
+        self.AllUsersWrite = Permission.UNKNOWN
+        self.AllUsersReadACP = Permission.UNKNOWN
+        self.AllUsersWriteACP = Permission.UNKNOWN
+        self.AllUsersFullControl = Permission.UNKNOWN
+
+        self.AnonUsersRead = Permission.UNKNOWN
+        self.AnonUsersWrite = Permission.UNKNOWN
+        self.AnonUsersReadACP = Permission.UNKNOWN
+        self.AnonUsersWriteACP = Permission.UNKNOWN
+        self.AnonUsersFullControl = Permission.UNKNOWN
 
     def __checkBucketName(self, name):
         """ Checks to make sure bucket names input are valid according to S3 naming conventions

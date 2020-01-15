@@ -495,10 +495,16 @@ def test_check_perm_read_acl():
     # Bucket with no read ACL perms
     b1 = s3Bucket.s3Bucket('s3scanner-private')
     s.check_perm_read_acl(b1)
-    assert b1.PermGetBucketAcl == Permission.DENIED
+    if s.aws_creds_configured:
+        assert b1.AllUsersReadACP == Permission.DENIED
+    else:
+        assert b1.AnonUsersReadACP == Permission.DENIED
 
     # Bucket that allows AuthenticatedUsers to read ACL
     if s.aws_creds_configured:
         b2 = s3Bucket.s3Bucket('s3scanner-auth-read-acl')
         s.check_perm_read_acl(b2)
-        assert b2.PermGetBucketAcl == Permission.ALLOWED
+        if s.aws_creds_configured:
+            assert b2.AllUsersReadACP == Permission.ALLOWED
+        else:
+            assert b2.AnonUsersReadACP == Permission.DENIED

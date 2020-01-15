@@ -51,8 +51,12 @@ class S3Service:
                 read_acl_perm_allowed = False
             else:
                 raise e
+
         # TODO: If we can read ACLs, we know the rest of the permissions
-        bucket.PermGetBucketAcl = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
+        if self.aws_creds_configured:
+            bucket.AllUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
+        else:
+            bucket.AnonUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
 
     def check_perm_list_bucket(self, bucket):
         if bucket.exists == BucketExists.UNKNOWN:
