@@ -72,7 +72,10 @@ class S3Service:
                 list_bucket_perm_allowed = False
             else:
                 raise e
-        bucket.PermListBucket = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+        if self.aws_creds_configured:
+            bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+        else:
+            bucket.AnonUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
     def enumerate_bucket_objects(self, bucket):
         if bucket.exists == BucketExists.UNKNOWN:

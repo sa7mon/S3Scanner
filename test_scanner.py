@@ -431,7 +431,6 @@ def test_bucket_exists():
     s = S3Service()
 
     # Bucket that does exist
-
     b1 = s3Bucket.s3Bucket('s3scanner-private')
     s.check_bucket_exists(b1)
     assert b1.exists is BucketExists.YES
@@ -450,18 +449,26 @@ def test_check_perm_list_bucket():
     # Bucket that no one can list
     b1 = s3Bucket.s3Bucket('s3scanner-private')
     s.check_perm_list_bucket(b1)
-    assert b1.PermListBucket == Permission.DENIED
-
-    # Bucket that AuthenticatedUsers can list
     if s.aws_creds_configured:
-        b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
-        s.check_perm_list_bucket(b2)
-        assert b2.PermListBucket == Permission.ALLOWED
+        assert b1.AllUsersRead == Permission.DENIED
+    else:
+        assert b1.AnonUsersRead == Permission.DENIED
+
+    # Bucket that only AuthenticatedUsers can list
+    b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+    s.check_perm_list_bucket(b2)
+    if s.aws_creds_configured:
+        assert b2.AllUsersRead == Permission.ALLOWED
+    else:
+        assert b2.AnonUsersRead == Permission.DENIED
 
     # Bucket that Everyone can list
     b3 = s3Bucket.s3Bucket('s3scanner-long')
     s.check_perm_list_bucket(b3)
-    assert b3.PermListBucket == Permission.ALLOWED
+    if s.aws_creds_configured:
+        assert b3.AllUsersRead == Permission.ALLOWED
+    else:
+        assert b3.AnonUsersRead == Permission.ALLOWED
 
 
 def test_enumerate_bucket_objects():
@@ -472,7 +479,10 @@ def test_enumerate_bucket_objects():
     # Empty bucket
     b1 = s3Bucket.s3Bucket('s3scanner-empty')
     s.check_perm_list_bucket(b1)
-    assert b1.PermListBucket == Permission.ALLOWED
+    if s.aws_creds_configured:
+        assert b1.AllUsersRead == Permission.ALLOWED
+    else:
+        assert b1.AnonUsersRead == Permission.ALLOWED
     s.enumerate_bucket_objects(b1)
     assert b1.objects_enumerated is True
     assert b1.bucketSize == 0
@@ -481,7 +491,7 @@ def test_enumerate_bucket_objects():
     if s.aws_creds_configured:
         b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
         s.check_perm_list_bucket(b2)
-        assert b2.PermListBucket == Permission.ALLOWED
+        assert b2.AllUsersRead == Permission.ALLOWED
         s.enumerate_bucket_objects(b2)
         assert b2.objects_enumerated is True
         assert b2.bucketSize == 4143
