@@ -2,7 +2,7 @@
     This will be a service that the client program will instantiate to then call methods
     passing buckets
 """
-import boto3
+import boto3 # TODO: Limit import to just boto3.client, probably
 from s3Bucket import s3Bucket, BucketExists, Permission, s3BucketObject
 from botocore.exceptions import ClientError
 import botocore.session
@@ -58,15 +58,20 @@ class S3Service:
         else:
             bucket.AnonUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
 
-    def check_perm_list_bucket(self, bucket):
-        if bucket.exists == BucketExists.UNKNOWN:
-            self.check_bucket_exists(bucket)
-        if bucket.exists == BucketExists.NO:
-            raise Exception("Bucket doesn't exist")
+    def check_perm_read(self, bucket):
+        """
+            Checks for the READ permission on the bucket by attempting to list the objects.
+
+            Exceptions:
+                ValueError
+                ClientError
+        """
+        if bucket.exists != BucketExists.YES:
+            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
 
         list_bucket_perm_allowed = True
         try:
-            self.s3_client.list_objects_v2(Bucket=bucket.name, MaxKeys=0)
+            self.s3_client.list_objects_v2(Bucket=bucket.name, MaxKeys=0)  # TODO: Compare this to doing a HeadBucket
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied":
                 list_bucket_perm_allowed = False

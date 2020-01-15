@@ -109,7 +109,7 @@ if path.isfile(args.buckets):
                 continue
 
             slog.info("["+b.name+"] Bucket exists")
-            s3service.check_perm_list_bucket(b)
+            s3service.check_perm_read(b)
             slog.info("["+b.name+"] " + ("ListBucket Enabled!" if b.PermListBucket == Permission.ALLOWED
                       else "ListBucket disabled."))
 
