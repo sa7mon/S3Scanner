@@ -552,7 +552,11 @@ def test_check_perm_read_acl():
     b3.exists = BucketExists.YES
     s.check_perm_read_acl(b3)
     assert b3.AllUsersReadACP == Permission.ALLOWED
+    assert b3.AllUsersWrite == Permission.DENIED
+    assert b3.AllUsersWriteACP == Permission.DENIED
     assert b3.AuthUsersReadACP == Permission.DENIED
+    assert b3.AuthUsersWriteACP == Permission.DENIED
+    assert b3.AuthUsersWrite == Permission.DENIED
 
 
 def test_check_perm_write():
@@ -586,7 +590,6 @@ def test_parsing_found_acl():
     assert b1.AllUsersFullControl == Permission.DENIED
 
     assert b1.AuthUsersReadACP == Permission.DENIED
-
     assert b1.AuthUsersRead == Permission.DENIED
     assert b1.AuthUsersWrite == Permission.DENIED
     assert b1.AuthUsersWriteACP == Permission.DENIED

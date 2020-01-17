@@ -49,12 +49,10 @@ class S3Service:
         if bucket.exists != BucketExists.YES:
             raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
 
-        # read_acl_perm_allowed = True
         try:
             bucket.foundACL = self.s3_client.get_bucket_acl(Bucket=bucket.name)
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied":
-                # read_acl_perm_allowed = False
                 if self.aws_creds_configured:
                     bucket.AuthUsersReadACP = Permission.DENIED
                 else:
@@ -64,10 +62,6 @@ class S3Service:
 
         self.parse_found_acl(bucket)  # If we can read ACLs, we know the rest of the permissions
 
-        # if self.aws_creds_configured:
-        #     bucket.AuthUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
-        # else:
-        #     bucket.AnonUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
 
     def check_perm_read(self, bucket):
         """
