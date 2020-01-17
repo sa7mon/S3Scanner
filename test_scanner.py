@@ -555,3 +555,17 @@ def test_check_perm_read_acl():
         assert b3.AllUsersReadACP == Permission.ALLOWED
     else:
         assert b3.AnonUsersReadACP == Permission.ALLOWED
+
+def test_check_perm_write():
+    test_setup_new()
+    s = S3Service()
+
+    # Bucket with no read ACL perms
+    b1 = s3Bucket.s3Bucket('s3scanner-auth')
+    b1.exists = BucketExists.YES
+    s.check_perm_write(b1)
+
+    if s.aws_creds_configured:
+        assert b1.AllUsersWrite == Permission.ALLOWED
+    else:
+        assert b1.AnonUsersWrite == Permission.ALLOWED

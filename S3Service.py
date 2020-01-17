@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 import botocore.session
 from botocore import UNSIGNED
 from botocore.client import Config
+import datetime
 
 
 class S3Service:
@@ -86,6 +87,34 @@ class S3Service:
             bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
         else:
             bucket.AnonUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+
+    def check_perm_write(self, bucket):
+        if bucket.exists != BucketExists.YES:
+            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
+
+        perm_write = Permission.UNKNOWN
+        timestamp_file = str(datetime.datetime.now().timestamp()) + '.txt'
+
+        try:
+            # Try to create a new empty file with a key of the timestamp
+            self.s3_client.put_object(Bucket=bucket.name, Key=timestamp_file, Body=b'')
+            perm_write = Permission.ALLOWED
+
+            # Delete the temporary file
+            self.s3_client.delete_object(Bucket=bucket.name, Key=timestamp_file)
+        except ClientError as e:
+            if e.response['Error']['Code'] == "AccessDenied":
+                perm_write = Permission.DENIED
+            else:
+                raise e
+        finally:
+            pass
+
+        if self.aws_creds_configured:
+            bucket.AllUsersWrite = perm_write
+        else:
+            bucket.AnonUserWrite = perm_write
+
 
     def enumerate_bucket_objects(self, bucket):
         if bucket.exists == BucketExists.UNKNOWN:
