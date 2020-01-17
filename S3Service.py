@@ -49,20 +49,25 @@ class S3Service:
         if bucket.exists != BucketExists.YES:
             raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
 
-        read_acl_perm_allowed = True
+        # read_acl_perm_allowed = True
         try:
             bucket.foundACL = self.s3_client.get_bucket_acl(Bucket=bucket.name)
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied":
-                read_acl_perm_allowed = False
+                # read_acl_perm_allowed = False
+                if self.aws_creds_configured:
+                    bucket.AuthUsersReadACP = Permission.DENIED
+                else:
+                    bucket.AllUsersReadACP = Permission.DENIED
             else:
                 raise e
 
-        # TODO: If we can read ACLs, we know the rest of the permissions
-        if self.aws_creds_configured:
-            bucket.AuthUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
-        else:
-            bucket.AnonUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
+        self.parse_found_acl(bucket)  # If we can read ACLs, we know the rest of the permissions
+
+        # if self.aws_creds_configured:
+        #     bucket.AuthUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
+        # else:
+        #     bucket.AnonUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
 
     def check_perm_read(self, bucket):
         """
@@ -168,19 +173,19 @@ class S3Service:
                         grant['Grantee']['URI'] == 'http://acs.amazonaws.com/groups/global/AllUsers':
                             # Permissions have been given to the AllUsers group
                             if grant['Permission'] == 'FULL_CONTROL':
-                                bucket.AnonUsersRead = Permission.ALLOWED
-                                bucket.AnonUsersWrite = Permission.ALLOWED
-                                bucket.AnonUsersReadACP = Permission.ALLOWED
-                                bucket.AnonUsersWriteACP = Permission.ALLOWED
-                                bucket.AnonUsersFullControl = Permission.ALLOWED
+                                bucket.AllUsersRead = Permission.ALLOWED
+                                bucket.AllUsersWrite = Permission.ALLOWED
+                                bucket.AllUsersReadACP = Permission.ALLOWED
+                                bucket.AllUsersWriteACP = Permission.ALLOWED
+                                bucket.AllUsersFullControl = Permission.ALLOWED
                             elif grant['Permission'] == 'READ':
-                                bucket.AnonUsersRead = Permission.ALLOWED
+                                bucket.AllUsersRead = Permission.ALLOWED
                             elif grant['Permission'] == 'READ_ACP':
-                                bucket.AnonUsersReadACP = Permission.ALLOWED
+                                bucket.AllUsersReadACP = Permission.ALLOWED
                             elif grant['Permission'] == 'WRITE':
-                                bucket.AnonUsersWrite = Permission.ALLOWED
+                                bucket.AllUsersWrite = Permission.ALLOWED
                             elif grant['Permission'] == 'WRITE_ACP':
-                                bucket.AnonUsersWriteACP = Permission.ALLOWED
+                                bucket.AllUsersWriteACP = Permission.ALLOWED
 
             # All permissions not explicitly granted in the ACL are denied
             # TODO: Simplify this
@@ -199,17 +204,17 @@ class S3Service:
             if bucket.AuthUsersFullControl == Permission.UNKNOWN:
                 bucket.AuthUsersFullControl = Permission.DENIED
 
-            if bucket.AnonUsersRead == Permission.UNKNOWN:
-                bucket.AnonUsersRead = Permission.DENIED
+            if bucket.AllUsersRead == Permission.UNKNOWN:
+                bucket.AllUsersRead = Permission.DENIED
 
-            if bucket.AnonUsersWrite == Permission.UNKNOWN:
-                bucket.AnonUsersWrite = Permission.DENIED
+            if bucket.AllUsersWrite == Permission.UNKNOWN:
+                bucket.AllUsersWrite = Permission.DENIED
 
-            if bucket.AnonUsersReadACP == Permission.UNKNOWN:
-                bucket.AnonUsersReadACP = Permission.DENIED
+            if bucket.AllUsersReadACP == Permission.UNKNOWN:
+                bucket.AllUsersReadACP = Permission.DENIED
 
-            if bucket.AnonUsersWriteACP == Permission.UNKNOWN:
-                bucket.AnonUsersWriteACP = Permission.DENIED
+            if bucket.AllUsersWriteACP == Permission.UNKNOWN:
+                bucket.AllUsersWriteACP = Permission.DENIED
 
-            if bucket.AnonUsersFullControl == Permission.UNKNOWN:
-                bucket.AnonUsersFullControl = Permission.DENIED
+            if bucket.AllUsersFullControl == Permission.UNKNOWN:
+                bucket.AllUsersFullControl = Permission.DENIED

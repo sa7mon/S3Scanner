@@ -474,7 +474,7 @@ def test_check_perm_read():
     if s.aws_creds_configured:
         assert b1.AuthUsersRead == Permission.DENIED
     else:
-        assert b1.AnonUsersRead == Permission.DENIED
+        assert b1.AllUsersRead == Permission.DENIED
 
     # Bucket that only AuthenticatedUsers can list
     b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
@@ -483,7 +483,7 @@ def test_check_perm_read():
     if s.aws_creds_configured:
         assert b2.AuthUsersRead == Permission.ALLOWED
     else:
-        assert b2.AnonUsersRead == Permission.DENIED
+        assert b2.AllUsersRead == Permission.DENIED
 
     # Bucket that Everyone can list
     b3 = s3Bucket.s3Bucket('s3scanner-long')
@@ -492,7 +492,7 @@ def test_check_perm_read():
     if s.aws_creds_configured:
         assert b3.AuthUsersRead == Permission.ALLOWED
     else:
-        assert b3.AnonUsersRead == Permission.ALLOWED
+        assert b3.AllUsersRead == Permission.ALLOWED
 
 
 def test_enumerate_bucket_objects():
@@ -507,7 +507,7 @@ def test_enumerate_bucket_objects():
     if s.aws_creds_configured:
         assert b1.AuthUsersRead == Permission.ALLOWED
     else:
-        assert b1.AnonUsersRead == Permission.ALLOWED
+        assert b1.AllUsersRead == Permission.ALLOWED
     s.enumerate_bucket_objects(b1)
     assert b1.objects_enumerated is True
     assert b1.bucketSize == 0
@@ -535,7 +535,7 @@ def test_check_perm_read_acl():
     if s.aws_creds_configured:
         assert b1.AuthUsersReadACP == Permission.DENIED
     else:
-        assert b1.AnonUsersReadACP == Permission.DENIED
+        assert b1.AllUsersReadACP == Permission.DENIED
 
     # Bucket that allows AuthenticatedUsers to read ACL
     if s.aws_creds_configured:
@@ -545,16 +545,15 @@ def test_check_perm_read_acl():
         if s.aws_creds_configured:
             assert b2.AuthUsersReadACP == Permission.ALLOWED
         else:
-            assert b2.AnonUsersReadACP == Permission.DENIED
+            assert b2.AllUsersReadACP == Permission.DENIED
 
     # Bucket that allows AllUsers to read ACL
     b3 = s3Bucket.s3Bucket('s3scanner-all-readacp')
     b3.exists = BucketExists.YES
     s.check_perm_read_acl(b3)
-    if s.aws_creds_configured:
-        assert b3.AuthUsersReadACP == Permission.ALLOWED
-    else:
-        assert b3.AnonUsersReadACP == Permission.ALLOWED
+    assert b3.AllUsersReadACP == Permission.ALLOWED
+    assert b3.AuthUsersReadACP == Permission.DENIED
+
 
 def test_check_perm_write():
     test_setup_new()
@@ -568,7 +567,7 @@ def test_check_perm_write():
     if s.aws_creds_configured:
         assert b1.AuthUsersWrite == Permission.DENIED
     else:
-        assert b1.AnonUsersWrite == Permission.ALLOWED
+        assert b1.AllUsersWrite == Permission.ALLOWED
 
 def test_parsing_found_acl():
     test_setup_new()
@@ -577,17 +576,18 @@ def test_parsing_found_acl():
     b1 = s3Bucket.s3Bucket('s3scanner-all-read-readacl')
     b1.exists = BucketExists.YES
     s.check_perm_read_acl(b1)
-    print(b1.foundACL)
     s.parse_found_acl(b1)
 
     assert b1.foundACL is not None
-    assert b1.AnonUsersRead == Permission.ALLOWED
-    assert b1.AnonUsersReadACP == Permission.ALLOWED
-    assert b1.AnonUsersWrite == Permission.DENIED
-    assert b1.AnonUsersWriteACP == Permission.DENIED
-    assert b1.AnonUsersFullControl == Permission.DENIED
-    assert b1.AuthUsersRead == Permission.DENIED
+    assert b1.AllUsersRead == Permission.ALLOWED
+    assert b1.AllUsersReadACP == Permission.ALLOWED
+    assert b1.AllUsersWrite == Permission.DENIED
+    assert b1.AllUsersWriteACP == Permission.DENIED
+    assert b1.AllUsersFullControl == Permission.DENIED
+
     assert b1.AuthUsersReadACP == Permission.DENIED
+
+    assert b1.AuthUsersRead == Permission.DENIED
     assert b1.AuthUsersWrite == Permission.DENIED
     assert b1.AuthUsersWriteACP == Permission.DENIED
     assert b1.AuthUsersFullControl == Permission.DENIED

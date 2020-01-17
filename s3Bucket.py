@@ -70,11 +70,11 @@ class s3Bucket:
         self.AuthUsersWriteACP = Permission.UNKNOWN
         self.AuthUsersFullControl = Permission.UNKNOWN
 
-        self.AnonUsersRead = Permission.UNKNOWN
-        self.AnonUsersWrite = Permission.UNKNOWN
-        self.AnonUsersReadACP = Permission.UNKNOWN
-        self.AnonUsersWriteACP = Permission.UNKNOWN
-        self.AnonUsersFullControl = Permission.UNKNOWN
+        self.AllUsersRead = Permission.UNKNOWN
+        self.AllUsersWrite = Permission.UNKNOWN
+        self.AllUsersReadACP = Permission.UNKNOWN
+        self.AllUsersWriteACP = Permission.UNKNOWN
+        self.AllUsersFullControl = Permission.UNKNOWN
 
     def __checkBucketName(self, name):
         """ Checks to make sure bucket names input are valid according to S3 naming conventions
