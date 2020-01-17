@@ -60,7 +60,7 @@ class S3Service:
 
         # TODO: If we can read ACLs, we know the rest of the permissions
         if self.aws_creds_configured:
-            bucket.AllUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
+            bucket.AuthUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
         else:
             bucket.AnonUsersReadACP = Permission.ALLOWED if read_acl_perm_allowed is True else Permission.DENIED
 
@@ -84,7 +84,7 @@ class S3Service:
             else:
                 raise e
         if self.aws_creds_configured:
-            bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+            bucket.AuthUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
         else:
             bucket.AnonUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
@@ -110,7 +110,7 @@ class S3Service:
             pass
 
         if self.aws_creds_configured:
-            bucket.AllUsersWrite = perm_write
+            bucket.AuthUsersWrite = perm_write
         else:
             bucket.AnonUserWrite = perm_write
 
@@ -150,19 +150,19 @@ class S3Service:
                         grant['Grantee']['URI'] == 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers':
                             # Permissions have been given to the AuthUsers group
                             if grant['Permission'] == 'FULL_CONTROL':
-                                bucket.AllUsersRead = Permission.ALLOWED
-                                bucket.AllUsersWrite = Permission.ALLOWED
-                                bucket.AllUsersReadACP = Permission.ALLOWED
-                                bucket.AllUsersWriteACP = Permission.ALLOWED
-                                bucket.AllUsersFullControl = Permission.ALLOWED
+                                bucket.AuthUsersRead = Permission.ALLOWED
+                                bucket.AuthUsersWrite = Permission.ALLOWED
+                                bucket.AuthUsersReadACP = Permission.ALLOWED
+                                bucket.AuthUsersWriteACP = Permission.ALLOWED
+                                bucket.AuthUsersFullControl = Permission.ALLOWED
                             elif grant['Permission'] == 'READ':
-                                bucket.AllUsersRead = Permission.ALLOWED
+                                bucket.AuthUsersRead = Permission.ALLOWED
                             elif grant['Permission'] == 'READ_ACP':
-                                bucket.AllUsersReadACP = Permission.ALLOWED
+                                bucket.AuthUsersReadACP = Permission.ALLOWED
                             elif grant['Permission'] == 'WRITE':
-                                bucket.AllUsersWrite = Permission.ALLOWED
+                                bucket.AuthUsersWrite = Permission.ALLOWED
                             elif grant['Permission'] == 'WRITE_ACP':
-                                bucket.AllUsersWriteACP = Permission.ALLOWED
+                                bucket.AuthUsersWriteACP = Permission.ALLOWED
 
                     elif 'URI' in grant['Grantee'] and \
                         grant['Grantee']['URI'] == 'http://acs.amazonaws.com/groups/global/AllUsers':
@@ -184,20 +184,20 @@ class S3Service:
 
             # All permissions not explicitly granted in the ACL are denied
             # TODO: Simplify this
-            if bucket.AllUsersRead == Permission.UNKNOWN:
-                bucket.AllUsersRead = Permission.DENIED
+            if bucket.AuthUsersRead == Permission.UNKNOWN:
+                bucket.AuthUsersRead = Permission.DENIED
 
-            if bucket.AllUsersWrite == Permission.UNKNOWN:
-                bucket.AllUsersWrite = Permission.DENIED
+            if bucket.AuthUsersWrite == Permission.UNKNOWN:
+                bucket.AuthUsersWrite = Permission.DENIED
 
-            if bucket.AllUsersReadACP == Permission.UNKNOWN:
-                bucket.AllUsersReadACP = Permission.DENIED
+            if bucket.AuthUsersReadACP == Permission.UNKNOWN:
+                bucket.AuthUsersReadACP = Permission.DENIED
 
-            if bucket.AllUsersWriteACP == Permission.UNKNOWN:
-                bucket.AllUsersWriteACP = Permission.DENIED
+            if bucket.AuthUsersWriteACP == Permission.UNKNOWN:
+                bucket.AuthUsersWriteACP = Permission.DENIED
 
-            if bucket.AllUsersFullControl == Permission.UNKNOWN:
-                bucket.AllUsersFullControl = Permission.DENIED
+            if bucket.AuthUsersFullControl == Permission.UNKNOWN:
+                bucket.AuthUsersFullControl = Permission.DENIED
 
             if bucket.AnonUsersRead == Permission.UNKNOWN:
                 bucket.AnonUsersRead = Permission.DENIED

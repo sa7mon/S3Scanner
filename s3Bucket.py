@@ -65,10 +65,10 @@ class s3Bucket:
 
         # TODO: Probably change "allUsers" to "AuthUsers" to align with AWS terminology
         self.AuthUsersRead = Permission.UNKNOWN
-        self.AllUsersWrite = Permission.UNKNOWN
-        self.AllUsersReadACP = Permission.UNKNOWN
-        self.AllUsersWriteACP = Permission.UNKNOWN
-        self.AllUsersFullControl = Permission.UNKNOWN
+        self.AuthUsersWrite = Permission.UNKNOWN
+        self.AuthUsersReadACP = Permission.UNKNOWN
+        self.AuthUsersWriteACP = Permission.UNKNOWN
+        self.AuthUsersFullControl = Permission.UNKNOWN
 
         self.AnonUsersRead = Permission.UNKNOWN
         self.AnonUsersWrite = Permission.UNKNOWN
