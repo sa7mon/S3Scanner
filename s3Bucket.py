@@ -54,6 +54,7 @@ class s3Bucket:
     objects = set()
     bucketSize = 0
     objects_enumerated = False
+    foundACL = None
 
     def __init__(self, name):
         check = self.__checkBucketName(name)
@@ -62,7 +63,8 @@ class s3Bucket:
         
         self.name = check['name']
 
-        self.AllUsersRead = Permission.UNKNOWN
+        # TODO: Probably change "allUsers" to "AuthUsers" to align with AWS terminology
+        self.AuthUsersRead = Permission.UNKNOWN
         self.AllUsersWrite = Permission.UNKNOWN
         self.AllUsersReadACP = Permission.UNKNOWN
         self.AllUsersWriteACP = Permission.UNKNOWN

@@ -472,7 +472,7 @@ def test_check_perm_read():
     b1.exists = BucketExists.YES
     s.check_perm_read(b1)
     if s.aws_creds_configured:
-        assert b1.AllUsersRead == Permission.DENIED
+        assert b1.AuthUsersRead == Permission.DENIED
     else:
         assert b1.AnonUsersRead == Permission.DENIED
 
@@ -481,7 +481,7 @@ def test_check_perm_read():
     b2.exists = BucketExists.YES
     s.check_perm_read(b2)
     if s.aws_creds_configured:
-        assert b2.AllUsersRead == Permission.ALLOWED
+        assert b2.AuthUsersRead == Permission.ALLOWED
     else:
         assert b2.AnonUsersRead == Permission.DENIED
 
@@ -490,7 +490,7 @@ def test_check_perm_read():
     b3.exists = BucketExists.YES
     s.check_perm_read(b3)
     if s.aws_creds_configured:
-        assert b3.AllUsersRead == Permission.ALLOWED
+        assert b3.AuthUsersRead == Permission.ALLOWED
     else:
         assert b3.AnonUsersRead == Permission.ALLOWED
 
@@ -505,7 +505,7 @@ def test_enumerate_bucket_objects():
     b1.exists = BucketExists.YES
     s.check_perm_read(b1)
     if s.aws_creds_configured:
-        assert b1.AllUsersRead == Permission.ALLOWED
+        assert b1.AuthUsersRead == Permission.ALLOWED
     else:
         assert b1.AnonUsersRead == Permission.ALLOWED
     s.enumerate_bucket_objects(b1)
@@ -517,7 +517,7 @@ def test_enumerate_bucket_objects():
         b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
         b2.exists = BucketExists.YES
         s.check_perm_read(b2)
-        assert b2.AllUsersRead == Permission.ALLOWED
+        assert b2.AuthUsersRead == Permission.ALLOWED
         s.enumerate_bucket_objects(b2)
         assert b2.objects_enumerated is True
         assert b2.bucketSize == 4143
@@ -569,3 +569,25 @@ def test_check_perm_write():
         assert b1.AllUsersWrite == Permission.ALLOWED
     else:
         assert b1.AnonUsersWrite == Permission.ALLOWED
+
+def test_parsing_found_acl():
+    test_setup_new()
+    s = S3Service()
+
+    b1 = s3Bucket.s3Bucket('s3scanner-all-read-readacl')
+    b1.exists = BucketExists.YES
+    s.check_perm_read_acl(b1)
+    print(b1.foundACL)
+    s.parse_found_acl(b1)
+
+    assert b1.foundACL is not None
+    assert b1.AnonUsersRead == Permission.ALLOWED
+    assert b1.AnonUsersReadACP == Permission.ALLOWED
+    assert b1.AnonUsersWrite == Permission.DENIED
+    assert b1.AnonUsersWriteACP == Permission.DENIED
+    assert b1.AnonUsersFullControl == Permission.DENIED
+    assert b1.AuthUsersRead == Permission.DENIED
+    assert b1.AllUsersReadACP == Permission.DENIED
+    assert b1.AllUsersWrite == Permission.DENIED
+    assert b1.AllUsersWriteACP == Permission.DENIED
+    assert b1.AllUsersFullControl == Permission.DENIED

@@ -51,7 +51,7 @@ class S3Service:
 
         read_acl_perm_allowed = True
         try:
-            self.s3_client.get_bucket_acl(Bucket=bucket.name)
+            bucket.foundACL = self.s3_client.get_bucket_acl(Bucket=bucket.name)
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied":
                 read_acl_perm_allowed = False
@@ -92,7 +92,6 @@ class S3Service:
         if bucket.exists != BucketExists.YES:
             raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
 
-        perm_write = Permission.UNKNOWN
         timestamp_file = str(datetime.datetime.now().timestamp()) + '.txt'
 
         try:
@@ -115,6 +114,8 @@ class S3Service:
         else:
             bucket.AnonUserWrite = perm_write
 
+    def check_perm_write_acl(self, bucket):
+        pass
 
     def enumerate_bucket_objects(self, bucket):
         if bucket.exists == BucketExists.UNKNOWN:
@@ -130,3 +131,85 @@ class S3Service:
                 obj = s3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
                 bucket.addObject(obj)
         bucket.objects_enumerated = True
+
+    def parse_found_acl(self, bucket):
+        """
+        If we were able to read the ACL's, we should be able to skip manually checking most permissions
+
+        :param bucket:
+        :return:
+        """
+
+        if bucket.foundACL is None:
+            return
+
+        if 'Grants' in bucket.foundACL:
+            for grant in bucket.foundACL['Grants']:
+                if grant['Grantee']['Type'] == 'Group':
+                    if 'URI' in grant['Grantee'] and \
+                        grant['Grantee']['URI'] == 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers':
+                            # Permissions have been given to the AuthUsers group
+                            if grant['Permission'] == 'FULL_CONTROL':
+                                bucket.AllUsersRead = Permission.ALLOWED
+                                bucket.AllUsersWrite = Permission.ALLOWED
+                                bucket.AllUsersReadACP = Permission.ALLOWED
+                                bucket.AllUsersWriteACP = Permission.ALLOWED
+                                bucket.AllUsersFullControl = Permission.ALLOWED
+                            elif grant['Permission'] == 'READ':
+                                bucket.AllUsersRead = Permission.ALLOWED
+                            elif grant['Permission'] == 'READ_ACP':
+                                bucket.AllUsersReadACP = Permission.ALLOWED
+                            elif grant['Permission'] == 'WRITE':
+                                bucket.AllUsersWrite = Permission.ALLOWED
+                            elif grant['Permission'] == 'WRITE_ACP':
+                                bucket.AllUsersWriteACP = Permission.ALLOWED
+
+                    elif 'URI' in grant['Grantee'] and \
+                        grant['Grantee']['URI'] == 'http://acs.amazonaws.com/groups/global/AllUsers':
+                            # Permissions have been given to the AllUsers group
+                            if grant['Permission'] == 'FULL_CONTROL':
+                                bucket.AnonUsersRead = Permission.ALLOWED
+                                bucket.AnonUsersWrite = Permission.ALLOWED
+                                bucket.AnonUsersReadACP = Permission.ALLOWED
+                                bucket.AnonUsersWriteACP = Permission.ALLOWED
+                                bucket.AnonUsersFullControl = Permission.ALLOWED
+                            elif grant['Permission'] == 'READ':
+                                bucket.AnonUsersRead = Permission.ALLOWED
+                            elif grant['Permission'] == 'READ_ACP':
+                                bucket.AnonUsersReadACP = Permission.ALLOWED
+                            elif grant['Permission'] == 'WRITE':
+                                bucket.AnonUsersWrite = Permission.ALLOWED
+                            elif grant['Permission'] == 'WRITE_ACP':
+                                bucket.AnonUsersWriteACP = Permission.ALLOWED
+
+            # All permissions not explicitly granted in the ACL are denied
+            # TODO: Simplify this
+            if bucket.AllUsersRead == Permission.UNKNOWN:
+                bucket.AllUsersRead = Permission.DENIED
+
+            if bucket.AllUsersWrite == Permission.UNKNOWN:
+                bucket.AllUsersWrite = Permission.DENIED
+
+            if bucket.AllUsersReadACP == Permission.UNKNOWN:
+                bucket.AllUsersReadACP = Permission.DENIED
+
+            if bucket.AllUsersWriteACP == Permission.UNKNOWN:
+                bucket.AllUsersWriteACP = Permission.DENIED
+
+            if bucket.AllUsersFullControl == Permission.UNKNOWN:
+                bucket.AllUsersFullControl = Permission.DENIED
+
+            if bucket.AnonUsersRead == Permission.UNKNOWN:
+                bucket.AnonUsersRead = Permission.DENIED
+
+            if bucket.AnonUsersWrite == Permission.UNKNOWN:
+                bucket.AnonUsersWrite = Permission.DENIED
+
+            if bucket.AnonUsersReadACP == Permission.UNKNOWN:
+                bucket.AnonUsersReadACP = Permission.DENIED
+
+            if bucket.AnonUsersWriteACP == Permission.UNKNOWN:
+                bucket.AnonUsersWriteACP = Permission.DENIED
+
+            if bucket.AnonUsersFullControl == Permission.UNKNOWN:
+                bucket.AnonUsersFullControl = Permission.DENIED
