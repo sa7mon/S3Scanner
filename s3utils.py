@@ -192,6 +192,9 @@ def dumpBucket(bucketName):
             s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         
         for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
+            if 'Contents' not in page:
+                continue
+            
             for item in page['Contents']:
                 key = item['Key']
                 s3.download_file(bucketName, key, bucketDir+"/"+key)
