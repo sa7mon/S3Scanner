@@ -93,6 +93,10 @@ class S3Service:
             bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
     def check_perm_write(self, bucket):
+        """ Check for WRITE permission by trying to upload an empty file to the bucket.
+
+            File is named the current timestamp to ensure we're not overwriting an existing file in the bucket.
+        """
         if bucket.exists != BucketExists.YES:
             raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
 
