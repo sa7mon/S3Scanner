@@ -12,10 +12,15 @@ import datetime
 
 
 class S3Service:
-    def __init__(self):
+    def __init__(self, forceNoCreds=False):
+        """Service constructor
+
+        Arguments:
+            forceNoCreds {boolean} - Setting to true forces the client to make requests as if we don't have AWS credentials
+        """
         # Check for AWS credentials
         session = botocore.session.get_session()
-        if session.get_credentials() is None or session.get_credentials().access_key is None:
+        if forceNoCreds or session.get_credentials() is None or session.get_credentials().access_key is None:
             self.aws_creds_configured = False
             self.s3_client = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         else:
@@ -85,7 +90,7 @@ class S3Service:
         if self.aws_creds_configured:
             bucket.AuthUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
         else:
-            bucket.AnonUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+            bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
     def check_perm_write(self, bucket):
         if bucket.exists != BucketExists.YES:
@@ -111,7 +116,7 @@ class S3Service:
         if self.aws_creds_configured:
             bucket.AuthUsersWrite = perm_write
         else:
-            bucket.AnonUserWrite = perm_write
+            bucket.AllUsersWrite = perm_write
 
     def check_perm_write_acl(self, bucket):
         pass

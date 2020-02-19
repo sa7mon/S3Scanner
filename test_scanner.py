@@ -584,6 +584,16 @@ def test_check_perm_write():
     else:
         print("[test_check_perm_write] No danger_bucket_1 found. Skipping test...")
 
+    # Bucket with AllUser Write, WriteACP permissions
+    if 'danger_bucket_2' in os.environ:
+        s2 = S3Service(forceNoCreds=True)
+        b3 = s3Bucket.s3Bucket(os.environ['danger_bucket_2'])
+        b3.exists = BucketExists.YES
+        s2.check_perm_write(b3)
+        assert b3.AllUsersWrite == Permission.ALLOWED
+    else:
+        print("[test_check_perm_write] No danger_bucket_2 found. Skipping test...")
+
 
 def test_parsing_found_acl():
     test_setup_new()
