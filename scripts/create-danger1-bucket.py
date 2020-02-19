@@ -27,8 +27,8 @@ s3_client = session.client('s3')
 print("Creating bucket: " + bucket_name)
 
 # Create bucket
-s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers',
-                        GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
+s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
+s3_client.put_bucket_acl(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers', GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
 
 os.environ['bucket_danger_1'] = bucket_name
 
