@@ -9,12 +9,9 @@ import s3Bucket
 from S3Service import S3Service
 from s3Bucket import BucketExists, Permission
 
-pyVersion = sys.version_info  # pyVersion[0] can be 2 or 3
-
-
 s3scannerLocation = "./"
 testingFolder = "./test/"
-
+# danger_buckets = {}
 setupRan = False
 
 
@@ -47,6 +44,10 @@ def test_setup_new():
     # Create testingFolder if it doesn't exist
     if not os.path.exists(testingFolder) or not os.path.isdir(testingFolder):
         os.makedirs(testingFolder)
+
+    # Check for danger bucket names in environment variables
+    # if 'bucket_danger_1' in os.environ:
+    #     danger_buckets['bucket_danger_1'] = os.environ['bucket_danger_1']
 
     setupRan = True
 
@@ -563,7 +564,7 @@ def test_check_perm_write():
     test_setup_new()
     s = S3Service()
 
-    # Bucket with no read ACL perms
+    # Bucket with no write ACL perms
     b1 = s3Bucket.s3Bucket('s3scanner-auth')
     b1.exists = BucketExists.YES
     s.check_perm_write(b1)
@@ -572,6 +573,17 @@ def test_check_perm_write():
         assert b1.AuthUsersWrite == Permission.DENIED
     else:
         assert b1.AllUsersWrite == Permission.ALLOWED
+
+    # Bucket with AuthUser Write, WriteACP permissions
+    if 'danger_bucket_1' in os.environ:
+        b2 = s3Bucket.s3Bucket(os.environ['danger_bucket_1'])
+        b2.exists = BucketExists.YES
+        s.check_perm_write(b2)
+        if s.aws_creds_configured:
+            assert b2.AuthUsersWrite == Permission.ALLOWED
+    else:
+        print("[test_check_perm_write] No danger_bucket_1 found. Skipping test...")
+
 
 def test_parsing_found_acl():
     test_setup_new()
