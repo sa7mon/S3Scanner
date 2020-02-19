@@ -11,7 +11,6 @@ from s3Bucket import BucketExists, Permission
 
 s3scannerLocation = "./"
 testingFolder = "./test/"
-# danger_buckets = {}
 setupRan = False
 
 
@@ -593,6 +592,31 @@ def test_check_perm_write():
         assert b3.AllUsersWrite == Permission.ALLOWED
     else:
         print("[test_check_perm_write] No danger_bucket_2 found. Skipping test...")
+
+def test_check_perm_write_acl():
+    test_setup_new()
+    s = S3Service()
+
+    # Bucket with no permissions
+    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    b1.exists = BucketExists.YES
+    s.check_perm_write_acl(b1)
+    if s.aws_creds_configured:
+        assert b1.AuthUsersWriteACP == Permission.DENIED
+    else:
+        assert b1.AllUsersWriteACP == Permission.DENIED
+    
+    # Bucket with WRITE_ACP enabled for AuthUsers
+    if 'danger_bucket_1' in os.environ:
+        b2 = s3Bucket.s3Bucket(os.environ['danger_bucket_1'])
+        b2.exists = BucketExists.YES
+        s.check_perm_write_acl(b2)
+        if s.aws_creds_configured:
+            assert b2.AuthUsersWriteACP == Permission.ALLOWED
+            assert b2.AllUsersWriteACP == Permission.UNKNOWN
+        else:
+            assert b2.AllUsersWriteACP == Permission.DENIED
+            assert b2.AuthUsersWriteACP == Permission.UNKNOWN
 
 
 def test_parsing_found_acl():
