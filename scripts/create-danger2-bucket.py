@@ -17,7 +17,7 @@ def delete_bucket():
     global s3_client
     s3_client.delete_bucket(Bucket=bucket_name)
     print("Bucket "+bucket_name+" deleted.")
-    os.environ.pop(bucket_danger_1)
+    os.environ.pop(bucket_name)
 
 
 bucket_name = generate_random_bucket_name(50)
@@ -27,12 +27,12 @@ s3_client = session.client('s3')
 print("Creating bucket: " + bucket_name)
 
 # Create bucket
-s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers',
-                        GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
+s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AllUsers',
+                        GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AllUsers')
 
-os.environ['bucket_danger_1'] = bucket_name
+os.environ['bucket_danger_2'] = bucket_name
 
-print("Environment variable 'bucket_danger_1' set.")
+print("Environment variable 'bucket_danger_2' set.")
 print("Waiting " + str(TIMEOUT) + " seconds to delete the bucket. Hit Ctrl-C to delete now:")
 sleep(TIMEOUT)
 delete_bucket()
