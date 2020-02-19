@@ -67,7 +67,6 @@ class S3Service:
 
         self.parse_found_acl(bucket)  # If we can read ACLs, we know the rest of the permissions
 
-
     def check_perm_read(self, bucket):
         """
             Checks for the READ permission on the bucket by attempting to list the objects.
@@ -123,7 +122,31 @@ class S3Service:
             bucket.AllUsersWrite = perm_write
 
     def check_perm_write_acl(self, bucket):
-        pass
+        """ Checks for WRITE_ACP permission by attempting to set an ACL on the bucket. WARNING: Potentially destructive """
+        if bucket.exists != BucketExists.YES:
+            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
+        
+        if self.aws_creds_configured:
+            readURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+            bucketPerm = bucket.AuthUsersWriteACP
+        else:
+            readURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
+            bucketPerm = bucket.AllUsersWriteACP
+
+        try:
+            # TODO: Putting an ACL undoes all the other ACLs set, so set all the permissions we know about when checking this.
+            self.s3_client.put_bucket_acl(Bucket=bucket.name, GrantWriteACP=readURI)
+            bucketPerm = Permission.ALLOWED
+        except ClientError as e:
+            if e.response['Error']['Code'] == "AccessDenied":
+                print("DEBUG: AccessDenied writing ACL")
+                if self.aws_creds_configured:
+                    bucket.AuthUsersWriteACP = Permission.DENIED
+                else:
+                    bucket.AllUsersWriteACP = Permission.DENIED
+            else:
+                raise e
+
 
     def enumerate_bucket_objects(self, bucket):
         if bucket.exists == BucketExists.UNKNOWN:
