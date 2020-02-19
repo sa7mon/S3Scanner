@@ -17,7 +17,7 @@ def delete_bucket():
     global s3_client
     s3_client.delete_bucket(Bucket=bucket_name)
     print("Bucket "+bucket_name+" deleted.")
-    os.environ.pop(bucket_danger_1)
+    os.environ.pop(bucket_name)
 
 
 bucket_name = generate_random_bucket_name(50)
