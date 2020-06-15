@@ -560,39 +560,43 @@ def test_check_perm_read_acl():
     assert b3.AuthUsersWrite == Permission.DENIED
 
 
-def test_check_perm_write():
+def test_check_perm_write(do_dangerous_test):
     test_setup_new()
     s = S3Service()
 
-    # Bucket with no write ACL perms
-    b1 = s3Bucket.s3Bucket('s3scanner-auth')
+    # Bucket with no write perms
+    b1 = s3Bucket.s3Bucket('flaws.cloud')
     b1.exists = BucketExists.YES
     s.check_perm_write(b1)
 
     if s.aws_creds_configured:
         assert b1.AuthUsersWrite == Permission.DENIED
     else:
-        assert b1.AllUsersWrite == Permission.ALLOWED
+        assert b1.AllUsersWrite == Permission.DENIED
 
-    # Bucket with AuthUser Write, WriteACP permissions
-    if 'danger_bucket_1' in os.environ:
-        b2 = s3Bucket.s3Bucket(os.environ['danger_bucket_1'])
-        b2.exists = BucketExists.YES
-        s.check_perm_write(b2)
-        if s.aws_creds_configured:
-            assert b2.AuthUsersWrite == Permission.ALLOWED
+    if do_dangerous_test:
+        print("[test_check_perm_write] Doing dangerous test")
+        ts = TestBucketService()
+        try:
+            danger_bucket_1 = ts.create_bucket(1)  # Bucket with AuthUser Write, WriteACP permissions
+            b2 = s3Bucket.s3Bucket(danger_bucket_1)
+            b2.exists = BucketExists.YES
+            s.check_perm_write(b2)
+            if s.aws_creds_configured:
+                assert b2.AuthUsersWrite == Permission.ALLOWED    
+        finally:
+            ts.delete_bucket(danger_bucket_1)
+        try:
+            danger_bucket_2 = ts.create_bucket(2)  # Bucket with AllUser Write, WriteACP permissions
+            s2 = S3Service(forceNoCreds=True)
+            b3 = s3Bucket.s3Bucket(danger_bucket_2)
+            b3.exists = BucketExists.YES
+            s2.check_perm_write(b3)
+            assert b3.AllUsersWrite == Permission.ALLOWED
+        finally:
+            ts.delete_bucket(danger_bucket_2)
     else:
-        print("[test_check_perm_write] No danger_bucket_1 found. Skipping test...")
-
-    # Bucket with AllUser Write, WriteACP permissions
-    if 'danger_bucket_2' in os.environ:
-        s2 = S3Service(forceNoCreds=True)
-        b3 = s3Bucket.s3Bucket(os.environ['danger_bucket_2'])
-        b3.exists = BucketExists.YES
-        s2.check_perm_write(b3)
-        assert b3.AllUsersWrite == Permission.ALLOWED
-    else:
-        print("[test_check_perm_write] No danger_bucket_2 found. Skipping test...")
+        print("[test_check_perm_write] Skipping dangerous test")
 
 def test_check_perm_write_acl(do_dangerous_test):
     test_setup_new()
@@ -628,7 +632,6 @@ def test_check_perm_write_acl(do_dangerous_test):
             ts.delete_bucket(danger_bucket_1)
     else:
         print("[test_check_perm_write_acl] Skipping dangerous test...")
-
 
 def test_parsing_found_acl():
     test_setup_new()

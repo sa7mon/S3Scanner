@@ -4,7 +4,7 @@ import boto3
 
 class TestBucketService:
     def __init__(self):
-        self.session = boto3.Session()
+        self.session = boto3.Session(profile_name='privileged')
         self.s3_client = self.session.client('s3')
 
     @staticmethod
@@ -23,7 +23,7 @@ class TestBucketService:
             self.s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
             self.s3_client.put_bucket_acl(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers', GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
         elif danger_bucket == 2:
-            pass
+            self.s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AllUsers', GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AllUsers')
         else:
             raise Exception("Unknown danger bucket type")
 
