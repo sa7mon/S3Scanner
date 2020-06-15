@@ -136,17 +136,18 @@ class S3Service:
         try:
             # TODO: Putting an ACL undoes all the other ACLs set, so set all the permissions we know about when checking this.
             self.s3_client.put_bucket_acl(Bucket=bucket.name, GrantWriteACP=readURI)
-            bucketPerm = Permission.ALLOWED
+            if self.aws_creds_configured:
+                bucket.AuthUsersWriteACP = Permission.ALLOWED
+            else:
+                bucket.AllUsersWriteACP = Permission.ALLOWED
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied":
-                print("DEBUG: AccessDenied writing ACL")
                 if self.aws_creds_configured:
                     bucket.AuthUsersWriteACP = Permission.DENIED
                 else:
                     bucket.AllUsersWriteACP = Permission.DENIED
             else:
                 raise e
-
 
     def enumerate_bucket_objects(self, bucket):
         if bucket.exists == BucketExists.UNKNOWN:
