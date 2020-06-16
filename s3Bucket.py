@@ -104,3 +104,36 @@ class s3Bucket:
 
     def getHumanReadableSize(self):
         return bytes_to_human_readable(self.bucketSize)
+
+    def getHumanReadablePermissions(self):
+        """
+            Returns a human-readable string of allowed permissions for this bucket
+            Ex:  AuthUsers: [Read | WriteACP], AllUsers: [FullControl]
+        """
+        # Add AuthUsers permissions
+        authUsersPermissions = []
+        if self.AuthUsersFullControl == Permission.ALLOWED:
+            authUsersPermissions.append("FullControl")
+        else:
+            if self.AuthUsersRead == Permission.ALLOWED:
+                authUsersPermissions.append("Read")
+            if self.AuthUsersWrite == Permission.ALLOWED:
+                authUsersPermissions.append("Write")
+            if self.AuthUsersReadACP == Permission.ALLOWED:
+                authUsersPermissions.append("ReadACP")
+            if self.AuthUsersWriteACP == Permission.ALLOWED:
+                authUsersPermissions.append("WriteACP")
+        # Add AllUsers permissions
+        allUsersPermissions = []
+        if self.AllUsersFullControl == Permission.ALLOWED:
+            allUsersPermissions.append("FullControl")
+        else:
+            if self.AllUsersRead == Permission.ALLOWED:
+                allUsersPermissions.append("Read")
+            if self.AllUsersWrite == Permission.ALLOWED:
+                allUsersPermissions.append("Write")
+            if self.AllUsersReadACP == Permission.ALLOWED:
+                allUsersPermissions.append("ReadACP")
+            if self.AllUsersWriteACP == Permission.ALLOWED:
+                allUsersPermissions.append("WriteACP")
+        return "AuthUsers: [%s], AllUsers: [%s]" % (' | '.join(authUsersPermissions),' | '.join(allUsersPermissions))
