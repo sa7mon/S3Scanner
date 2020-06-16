@@ -4,7 +4,7 @@
 # 
 # Author:  Dan Salmon (twitter.com/bltjetpack, github.com/sa7mon)
 # Created: 6/19/17
-# License: Creative Commons (CC BY-NC-SA 4.0))
+# License: MIT
 #
 #########
 
@@ -34,87 +34,56 @@ parser = argparse.ArgumentParser(description='#  s3scanner - Find S3 buckets and
                                  prog='s3scanner', formatter_class=CustomFormatter)
 
 # Declare arguments
-# parser.add_argument('-o', '--out-file', dest='outFile', default='./buckets.txt',
-#                     help='Name of file to save the successfully checked buckets in (Default: buckets.txt)')
-# parser.add_argument('-c', '--include-closed', dest='includeClosed', action='store_true', default=False,
-#                     help='Include found but closed buckets in the out-file')
-# parser.add_argument('-d', '--dump', dest='dump', action='store_true', default=False,
-#                     help='Dump all found open buckets locally')
-# parser.add_argument('-l', '--list', dest='list', action='store_true',
-#                     help='Save bucket file listing to local file: ./list-buckets/${bucket}.txt')
 parser.add_argument('--version', action='version', version=CURRENT_VERSION,
                     help='Display the current version of this tool')
-parser.add_argument('buckets', help='Name of text file containing buckets to check')
+parser.add_argument('buckets_file', help='Name of text file containing buckets to check')
 
 
 # Parse the args
 args = parser.parse_args()
 
-# Create file logger
-# flog = logging.getLogger('s3scanner-file')
-# flog.setLevel(logging.DEBUG)              # Set log level for logger object
-
-# # Create file handler which logs even debug messages
-# fh = logging.FileHandler(args.outFile)
-# fh.setLevel(logging.DEBUG)
-
-# Add the handler to logger
-# flog.addHandler(fh)
-
-# Create secondary logger for logging to screen
-slog = logging.getLogger('s3scanner-screen')
-slog.setLevel(logging.INFO)
-
-# Logging levels for the screen logger:
-#   INFO  = found
-#   ERROR = not found
-# The levels serve no other purpose than to specify the output color
-
-levelStyles = {
-        'info': {'color': 'blue'},
-        'warning': {'color': 'yellow'},
-        'error': {'color': 'red'}
-        }
-
-fieldStyles = {
-        'asctime': {'color': 'white'}
-        }
-
-# Use coloredlogs to add color to screen logger. Define format and styles.
-coloredlogs.install(level='DEBUG', logger=slog, fmt='%(asctime)s   %(message)s',
-                    level_styles=levelStyles, field_styles=fieldStyles)
-
 s3service = S3Service()
+anonS3Service = S3Service(forceNoCreds=True)
 
 if s3service.aws_creds_configured is False:
-    slog.error("Warning: AWS credentials not configured. Open buckets will be shown as closed. Run:"
+    print("Warning: AWS credentials not configured - functionality will be limited. Run:"
                " `aws configure` to fix this.\n")
 
-if path.isfile(args.buckets):
-    with open(args.buckets, 'r') as f:
+bucketsIn = set()
+
+if path.isfile(args.buckets_file):
+    with open(args.buckets_file, 'r') as f:
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
-            try:
-                b = s3Bucket(line)
-            except ValueError as ve:
-                # TODO: Check if it's because "Invalid bucket name"
-                pass
+            bucketsIn.add(line)
 
-            # Check if bucket exists first
-            s3service.check_bucket_exists(b)
+for bucketName in bucketsIn:
+    try:
+        b = s3Bucket(bucketName)
+    except ValueError as ve:
+        if str(ve) == "Invalid bucket name":
+            print("[%s] Invalid bucket name" % bucketName)
+            continue
+        else:
+            print("[%s] %s" % (bucketName, str(ve)))
+            continue
 
-            if b.exists == BucketExists.NO:
-                # Bucket doesn't exist
-                slog.info("["+b.name+"] Bucket doesn't exist")
-                continue
+    # Check if bucket exists first
+    s3service.check_bucket_exists(b)
 
-            slog.info("["+b.name+"] Bucket exists")
-            s3service.check_perm_read(b)
-            slog.info("["+b.name+"] " + ("ListBucket Enabled!" if b.PermListBucket == Permission.ALLOWED
-                      else "ListBucket disabled."))
+    if b.exists == BucketExists.NO:
+        print("[%s] Bucket doesn't exist" % b.name)
+        continue
 
+    # 1. Check for ReadACP
+    anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
+    if s3service.aws_creds_configured:
+        s3service.check_perm_read_acl(b)  # Check for AuthUsers
 
-else:
-    # It's a single bucket
-    # s3.checkBucket(args.buckets, slog, flog, args.dump, args.list)
-    b = s3Bucket(args.buckets)
+    # TODO: If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests    
+    
+    # 2. Check for Read
+    anonS3Service.check_perm_read(b)
+    if s3service.aws_creds_configured:
+        s3service.check_perm_read(b)
+    print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))
