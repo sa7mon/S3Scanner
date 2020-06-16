@@ -75,15 +75,23 @@ for bucketName in bucketsIn:
         print("[%s] Bucket doesn't exist" % b.name)
         continue
 
+    checkAllUsersPerms = True
+    checkAuthUsersPerms = True
+
     # 1. Check for ReadACP
     anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
     if s3service.aws_creds_configured:
         s3service.check_perm_read_acl(b)  # Check for AuthUsers
 
-    # TODO: If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests    
-    
+    # If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests    
+    if b.AuthUsersFullControl == Permission.ALLOWED:
+        checkAuthUsersPerms = False
+    if b.AllUsersFullControl == Permission.ALLOWED:
+        checkAllUsersPerms = False
+
     # 2. Check for Read
-    anonS3Service.check_perm_read(b)
-    if s3service.aws_creds_configured:
+    if checkAllUsersPerms:
+        anonS3Service.check_perm_read(b)
+    if s3service.aws_creds_configured and checkAuthUsersPerms:
         s3service.check_perm_read(b)
     print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))

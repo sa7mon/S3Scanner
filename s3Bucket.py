@@ -136,4 +136,4 @@ class s3Bucket:
                 allUsersPermissions.append("ReadACP")
             if self.AllUsersWriteACP == Permission.ALLOWED:
                 allUsersPermissions.append("WriteACP")
-        return "AuthUsers: [%s], AllUsers: [%s]" % (' | '.join(authUsersPermissions),' | '.join(allUsersPermissions))
+        return "AuthUsers: (%s), AllUsers: (%s)" % (' | '.join(authUsersPermissions),' | '.join(allUsersPermissions))
