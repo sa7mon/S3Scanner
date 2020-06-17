@@ -142,7 +142,7 @@ class S3Service:
             else:
                 bucket.AllUsersWriteACP = Permission.ALLOWED
         except ClientError as e:
-            if e.response['Error']['Code'] == "AccessDenied":
+            if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 if self.aws_creds_configured:
                     bucket.AuthUsersWriteACP = Permission.DENIED
                 else:
