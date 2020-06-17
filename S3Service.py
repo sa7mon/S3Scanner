@@ -57,7 +57,7 @@ class S3Service:
         try:
             bucket.foundACL = self.s3_client.get_bucket_acl(Bucket=bucket.name)
         except ClientError as e:
-            if e.response['Error']['Code'] == "AccessDenied":
+            if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 if self.aws_creds_configured:
                     bucket.AuthUsersReadACP = Permission.DENIED
                 else:
@@ -82,9 +82,10 @@ class S3Service:
         try:
             self.s3_client.list_objects_v2(Bucket=bucket.name, MaxKeys=0)  # TODO: Compare this to doing a HeadBucket
         except ClientError as e:
-            if e.response['Error']['Code'] == "AccessDenied":
+            if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 list_bucket_perm_allowed = False
             else:
+                print("ERROR: Error while checking bucket {b}".format(b=bucket.name))
                 raise e
         if self.aws_creds_configured:
             bucket.AuthUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
@@ -109,7 +110,7 @@ class S3Service:
             # Delete the temporary file
             self.s3_client.delete_object(Bucket=bucket.name, Key=timestamp_file)
         except ClientError as e:
-            if e.response['Error']['Code'] == "AccessDenied":
+            if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 perm_write = Permission.DENIED
             else:
                 raise e
