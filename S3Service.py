@@ -167,7 +167,7 @@ class S3Service:
 
     def parse_found_acl(self, bucket):
         """
-        If we were able to read the ACL's, we should be able to skip manually checking most permissions
+        If we were able to read the ACLs, we should be able to skip manually checking most permissions
 
         :param bucket:
         :return:
