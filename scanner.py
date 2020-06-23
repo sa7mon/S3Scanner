@@ -34,8 +34,9 @@ parser = argparse.ArgumentParser(description='#  s3scanner - Find S3 buckets and
                                  prog='s3scanner', formatter_class=CustomFormatter)
 
 # Declare arguments
-parser.add_argument('--version', action='version', version=CURRENT_VERSION,
-                    help='Display the current version of this tool')
+parser.add_argument('--dangerous', action='store_true', help='Include Write and WriteACP permissions checks')
+# parser.add_argument('--version', action='version', version=CURRENT_VERSION,
+#                    help='Display the current version of this tool')
 parser.add_argument('buckets_file', help='Name of text file containing buckets to check')
 
 
@@ -56,6 +57,9 @@ if path.isfile(args.buckets_file):
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
             bucketsIn.add(line)
+
+if args.dangerous:
+    print("INFO: Including dangeous checks. WARNING: This may change bucket ACL destructively")
 
 for bucketName in bucketsIn:
     try:
@@ -94,4 +98,19 @@ for bucketName in bucketsIn:
         anonS3Service.check_perm_read(b)
     if s3service.aws_creds_configured and checkAuthUsersPerms:
         s3service.check_perm_read(b)
+
+    # 3. Do dangerous/destructive checks
+    if args.dangerous:
+        # 3. Check for Write
+        if checkAllUsersPerms:
+            anonS3Service.check_perm_write(b)
+        if s3service.aws_creds_configured and checkAuthUsersPerms:
+            s3service.check_perm_write(b)
+
+        # 4. Check for WriteACP
+        if checkAllUsersPerms:
+            pass
+        if s3service.aws_creds_configured and checkAuthUsersPerms:
+            pass
+
     print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))
