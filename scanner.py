@@ -99,7 +99,7 @@ for bucketName in bucketsIn:
     if s3service.aws_creds_configured and checkAuthUsersPerms:
         s3service.check_perm_read(b)
 
-    # 3. Do dangerous/destructive checks
+    # Do dangerous/destructive checks
     if args.dangerous:
         # 3. Check for Write
         if checkAllUsersPerms:
