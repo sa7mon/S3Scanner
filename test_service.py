@@ -25,6 +25,9 @@ S3Service.py methods to test:
     - Test against one that doesn't
     - Test previous scenarios with no creds   
 - check_perm_read_acl()
+    - Test against bucket with AllUsers allowed
+    - Test against bucket with AuthUsers allowed
+    - Test against bucket with all denied 
 - check_perm_read()
 - check_perm_write()
 - check_perm_write_acl()
@@ -34,7 +37,10 @@ S3Service.py methods to test:
     - ✔️ Test against bucket with no groups allowed
 - enumerate_bucket_objects()
 - parse_found_acl()
-
+    - Test against JSON with FULL_CONTROL for AllUsers
+    - Test against JSON with FULL_CONTROL for AuthUsers
+    - Test against empty JSON
+    - Test against JSON with ReadACP for AuthUsers and Write for AllUsers
 """
 
 
