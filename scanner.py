@@ -57,6 +57,8 @@ if path.isfile(args.buckets_file):
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
             bucketsIn.add(line)
+else:
+    bucketsIn.add(args.buckets_file)
 
 if args.dangerous:
     print("INFO: Including dangeous checks. WARNING: This may change bucket ACL destructively")
