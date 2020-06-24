@@ -10,6 +10,9 @@ from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
 
+allUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
+authUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+
 
 class S3Service:
     def __init__(self, forceNoCreds=False):
@@ -88,7 +91,10 @@ class S3Service:
                 print("ERROR: Error while checking bucket {b}".format(b=bucket.name))
                 raise e
         if self.aws_creds_configured:
-            bucket.AuthUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
+            # Don't mark AuthUsersRead as Allowed if it's only implicitly allowed due to AllUsersRead being allowed
+            # We only want to make AuthUsersRead as Allowed if that permission is explicitly set for AuthUsers
+            if bucket.AllUsersRead != Permission.ALLOWED:
+                bucket.AuthUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
         else:
             bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
@@ -105,40 +111,88 @@ class S3Service:
         try:
             # Try to create a new empty file with a key of the timestamp
             self.s3_client.put_object(Bucket=bucket.name, Key=timestamp_file, Body=b'')
-            perm_write = Permission.ALLOWED
+
+            if self.aws_creds_configured:
+                # Only set AuthUsersWrite to Allowed if it's explicitly set for AuthUsers
+                # Don't set AuthUsersWrite to Allowed if it's implicitly allowed through AllUsers being Allowed
+                if bucket.AllUsersWrite != Permission.ALLOWED:
+                    bucket.AuthUsersWrite = Permission.ALLOWED
+            else:
+                bucket.AllUsersWrite = Permission.ALLOWED
 
             # Delete the temporary file
             self.s3_client.delete_object(Bucket=bucket.name, Key=timestamp_file)
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
-                perm_write = Permission.DENIED
+                if self.aws_creds_configured:
+                    bucket.AuthUsersWrite = Permission.DENIED
+                else:
+                    bucket.AllUsersWrite = Permission.DENIED
             else:
                 raise e
         finally:
             pass
 
-        if self.aws_creds_configured:
-            bucket.AuthUsersWrite = perm_write
-        else:
-            bucket.AllUsersWrite = perm_write
-
     def check_perm_write_acl(self, bucket):
-        """ Checks for WRITE_ACP permission by attempting to set an ACL on the bucket. WARNING: Potentially destructive """
+        """
+        Checks for WRITE_ACP permission by attempting to set an ACL on the bucket. WARNING: Potentially destructive
+        Make sure to run this check last as it will include all discovered permissions in the ACL it tries to set,
+            thus ensuring minimal disruption for the bucket owner.
+        """
         if bucket.exists != BucketExists.YES:
             raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
-        
-        if self.aws_creds_configured:
-            readURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
-            bucketPerm = bucket.AuthUsersWriteACP
-        else:
-            readURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
-            bucketPerm = bucket.AllUsersWriteACP
 
+        # TODO: See if there's a way to simplify this section
+        readURIs = []
+        writeURIs = []
+        readAcpURIs = []
+        writeAcpURIs = []
+        fullControlURIs = []
+
+        if bucket.AuthUsersRead == Permission.ALLOWED:
+            readURIs.append(authUsersURI)
+        if bucket.AuthUsersWrite == Permission.ALLOWED:
+            writeURIs.append(authUsersURI)
+        if bucket.AuthUsersReadACP == Permission.ALLOWED:
+            readAcpURIs.append(authUsersURI)
+        if bucket.AuthUsersWriteACP == Permission.ALLOWED:
+            writeAcpURIs.append(authUsersURI)
+        if bucket.AuthUsersFullControl == Permission.ALLOWED:
+            fullControlURIs.append(authUsersURI)
+
+        if bucket.AllUsersRead == Permission.ALLOWED:
+            readURIs.append(allUsersURI)
+        if bucket.AllUsersWrite == Permission.ALLOWED:
+            writeURIs.append(allUsersURI)
+        if bucket.AllUsersReadACP == Permission.ALLOWED:
+            readAcpURIs.append(allUsersURI)
+        if bucket.AllUsersWriteACP == Permission.ALLOWED:
+            writeAcpURIs.append(allUsersURI)
+        if bucket.AllUsersFullControl == Permission.ALLOWED:
+            fullControlURIs.append(allUsersURI)
+
+        if self.aws_creds_configured:   # Otherwise AWS will return "Request was missing a required header"
+            writeAcpURIs.append(authUsersURI)
+        else:
+            writeAcpURIs.append(allUsersURI)
+        args = {'Bucket': bucket.name}
+        if len(readURIs) > 0:
+            args['GrantRead'] = ','.join(readURIs)
+        if len(writeURIs) > 0:
+            args['GrantWrite'] = ','.join(writeURIs)
+        if len(readAcpURIs) > 0:
+            args['GrantReadACP'] = ','.join(readAcpURIs)
+        if len(writeAcpURIs) > 0:
+            args['GrantWriteACP'] = ','.join(writeAcpURIs)
+        if len(fullControlURIs) > 0:
+            args['GrantFullControl'] = ','.join(fullControlURIs)
         try:
-            # TODO: Putting an ACL undoes all the other ACLs set, so set all the permissions we know about when checking this.
-            self.s3_client.put_bucket_acl(Bucket=bucket.name, GrantWriteACP=readURI)
+            self.s3_client.put_bucket_acl(**args)
             if self.aws_creds_configured:
-                bucket.AuthUsersWriteACP = Permission.ALLOWED
+                # Don't mark AuthUsersWriteACP as Allowed if it's due to implicit permission via AllUsersWriteACP
+                # Only mark it as allowed if the AuthUsers group is explicitly allowed
+                if bucket.AllUsersWriteACP != Permission.ALLOWED:
+                    bucket.AuthUsersWriteACP = Permission.ALLOWED
             else:
                 bucket.AllUsersWriteACP = Permission.ALLOWED
         except ClientError as e:

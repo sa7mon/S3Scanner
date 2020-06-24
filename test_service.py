@@ -25,6 +25,10 @@ S3Service.py methods to test:
 - check_perm_read()
 - check_perm_write()
 - check_perm_write_acl()
+    - Test against bucket with AllUsers allowed
+    - Test against bucket with AuthUsers allowed
+    - Test against bucket with both AllUsers allowed
+    - Test against bucket with no groups allowed
 - enumerate_bucket_objects()
 - parse_found_acl()
 
@@ -577,7 +581,7 @@ def test_check_perm_write(do_dangerous_test):
 def test_check_perm_write_acl(do_dangerous_test):
     test_setup_new()
     s = S3Service()
-    # sNoCreds = S3Service(forceNoCreds=True)
+    sNoCreds = S3Service(forceNoCreds=True)
 
     # Bucket with no permissions
     b1 = s3Bucket.s3Bucket('s3scanner-private')
@@ -585,8 +589,10 @@ def test_check_perm_write_acl(do_dangerous_test):
     s.check_perm_write_acl(b1)
     if s.aws_creds_configured:
         assert b1.AuthUsersWriteACP == Permission.DENIED
+        assert b1.AllUsersWriteACP == Permission.UNKNOWN
     else:
         assert b1.AllUsersWriteACP == Permission.DENIED
+        assert b1.AuthUsersWriteACP == Permission.UNKNOWN
     
     # Bucket with WRITE_ACP enabled for AuthUsers
     if do_dangerous_test:
@@ -596,10 +602,14 @@ def test_check_perm_write_acl(do_dangerous_test):
             danger_bucket_3 = ts.create_bucket(3)
             b2 = s3Bucket.s3Bucket(danger_bucket_3)
             b2.exists = BucketExists.YES
+            sNoCreds.check_perm_read(b2)
             s.check_perm_read(b2)
+            sNoCreds.check_perm_write(b2)
             s.check_perm_write(b2)
             s.check_perm_write_acl(b2)
+            sNoCreds.check_perm_write(b2)
             s.check_perm_write(b2)
+            sNoCreds.check_perm_read(b2)
             s.check_perm_read(b2)
             if s.aws_creds_configured:
                 assert b2.AuthUsersWriteACP == Permission.ALLOWED
