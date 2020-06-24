@@ -25,10 +25,10 @@ S3Service.py methods to test:
 - check_perm_read()
 - check_perm_write()
 - check_perm_write_acl()
-    - Test against bucket with AllUsers allowed
-    - Test against bucket with AuthUsers allowed
+    - ✔️ Test against bucket with AllUsers allowed
+    - ✔️ Test against bucket with AuthUsers allowed
     - Test against bucket with both AllUsers allowed
-    - Test against bucket with no groups allowed
+    - ✔️ Test against bucket with no groups allowed
 - enumerate_bucket_objects()
 - parse_found_acl()
 
@@ -594,10 +594,11 @@ def test_check_perm_write_acl(do_dangerous_test):
         assert b1.AllUsersWriteACP == Permission.DENIED
         assert b1.AuthUsersWriteACP == Permission.UNKNOWN
     
-    # Bucket with WRITE_ACP enabled for AuthUsers
     if do_dangerous_test:
-        print("[test_check_perm_write_acl] Doing dangerous test...")
+        print("[test_check_perm_write_acl] Doing dangerous tests...")
         ts = TestBucketService()
+
+        # Bucket with WRITE_ACP enabled for AuthUsers
         try:
             danger_bucket_3 = ts.create_bucket(3)
             b2 = s3Bucket.s3Bucket(danger_bucket_3)
@@ -621,6 +622,33 @@ def test_check_perm_write_acl(do_dangerous_test):
             raise e
         finally:
             ts.delete_bucket(danger_bucket_3)
+
+        # Bucket with WRITE_ACP enabled for AllUsers
+        try:
+            danger_bucket_2 = ts.create_bucket(2)
+            b3 = s3Bucket.s3Bucket(danger_bucket_2)
+            b3.exists = BucketExists.YES
+            sNoCreds.check_perm_read(b3)
+            s.check_perm_read(b3)
+            sNoCreds.check_perm_write(b3)
+            s.check_perm_write(b3)
+            sNoCreds.check_perm_write_acl(b3)
+            s.check_perm_write_acl(b3)
+            sNoCreds.check_perm_write(b3)
+            s.check_perm_write(b3)
+            sNoCreds.check_perm_read(b3)
+            s.check_perm_read(b3)
+            if s.aws_creds_configured:
+                assert b3.AllUsersWriteACP == Permission.ALLOWED
+                assert b3.AuthUsersWriteACP == Permission.UNKNOWN
+                assert b3.AllUsersWrite == Permission.ALLOWED
+            else:
+                assert b3.AllUsersRead == Permission.ALLOWED
+                assert b3.AuthUsersWriteACP == Permission.UNKNOWN
+        except Exception as e:
+            raise e
+        finally:
+            ts.delete_bucket(danger_bucket_2)
     else:
         print("[test_check_perm_write_acl] Skipping dangerous test...")
 
