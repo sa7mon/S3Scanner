@@ -554,8 +554,9 @@ def test_check_perm_write(do_dangerous_test):
     if do_dangerous_test:
         print("[test_check_perm_write] Doing dangerous test")
         ts = TestBucketService()
+
+        danger_bucket_1 = ts.create_bucket(1)  # Bucket with AuthUser Write, WriteACP permissions
         try:
-            danger_bucket_1 = ts.create_bucket(1)  # Bucket with AuthUser Write, WriteACP permissions
             b2 = s3Bucket.s3Bucket(danger_bucket_1)
             b2.exists = BucketExists.YES
             s.check_perm_write(b2)
