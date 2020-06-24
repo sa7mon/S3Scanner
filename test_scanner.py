@@ -42,3 +42,55 @@ def test_arguments():
     # mainargs.3
     # mainargs.4
 
+
+def test_check_aws_creds():
+    """
+    Scenario checkAwsCreds.1 - Output of checkAwsCreds() matches a more intense check for creds
+    """
+    print("test_checkAwsCreds temporarily disabled.")
+
+    # test_setup()
+    #
+    # # Check more thoroughly for creds being set.
+    # vars = os.environ
+    #
+    # keyid = vars.get("AWS_ACCESS_KEY_ID")
+    # key = vars.get("AWS_SECRET_ACCESS_KEY")
+    # credsFile = os.path.expanduser("~") + "/.aws/credentials"
+    #
+    # if keyid is not None and len(keyid) == 20:
+    #     if key is not None and len(key) == 40:
+    #         credsActuallyConfigured = True
+    #     else:
+    #         credsActuallyConfigured = False
+    # else:
+    #     credsActuallyConfigured = False
+    #
+    # if os.path.exists(credsFile):
+    #     print("credsFile path exists")
+    #     if not credsActuallyConfigured:
+    #         keyIdSet = None
+    #         keySet = None
+    #
+    #         # Check the ~/.aws/credentials file
+    #         with open(credsFile, "r") as f:
+    #             for line in f:
+    #                 line = line.strip()
+    #                 if line[0:17].lower() == 'aws_access_key_id':
+    #                     if len(line) >= 38:  # key + value = length of at least 38 if no spaces around equals
+    #                         keyIdSet = True
+    #                     else:
+    #                         keyIdSet = False
+    #
+    #                 if line[0:21].lower() == 'aws_secret_access_key':
+    #                     if len(line) >= 62:
+    #                         keySet = True
+    #                     else:
+    #                         keySet = False
+    #
+    #         if keyIdSet and keySet:
+    #             credsActuallyConfigured = True
+    #
+    # # checkAwsCreds.1
+    # assert s3.checkAwsCreds() == credsActuallyConfigured
+
