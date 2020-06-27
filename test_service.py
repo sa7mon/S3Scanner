@@ -9,6 +9,7 @@ import s3Bucket
 from S3Service import S3Service
 from s3Bucket import BucketExists, Permission
 from TestUtils import TestBucketService
+from exceptions import AccessDeniedException
 
 s3scannerLocation = "./"
 testingFolder = "./test/"
@@ -36,6 +37,9 @@ S3Service.py methods to test:
     - Test against bucket with both AllUsers allowed
     - ✔️ Test against bucket with no groups allowed
 - enumerate_bucket_objects()
+    - ✔️ Test against empty bucket
+    - ✔️ Test against not empty bucket with read permission
+    - ✔️ Test against bucket without read permission
 - parse_found_acl()
     - Test against JSON with FULL_CONTROL for AllUsers
     - Test against JSON with FULL_CONTROL for AuthUsers
@@ -131,6 +135,21 @@ def test_enumerate_bucket_objects():
         assert b2.objects_enumerated is True
         assert b2.bucketSize == 4143
         assert b2.getHumanReadableSize() == "4.0KB"
+    else:
+        print("[test_enumerate_bucket_objects] Skipping test due to no AWS creds")
+
+    # Bucket without read permission
+    b3 = s3Bucket.s3Bucket('s3scanner-private')
+    b3.exists = BucketExists.YES
+    s.check_perm_read(b3)
+    if s.aws_creds_configured:
+        assert b3.AuthUsersRead == Permission.DENIED
+    else:
+        assert b3.AllUsersRead == Permission.DENIED
+    try:
+        s.enumerate_bucket_objects(b3)
+    except AccessDeniedException:
+        pass
 
 
 def test_check_perm_read_acl():

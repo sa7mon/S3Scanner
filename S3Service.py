@@ -9,6 +9,7 @@ import botocore.session
 from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
+from exceptions import AccessDeniedException
 
 allUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
 authUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
@@ -205,18 +206,25 @@ class S3Service:
                 raise e
 
     def enumerate_bucket_objects(self, bucket):
+        """
+        Raises: ClientError if user isn't allowed to read bucket.
+        """
         if bucket.exists == BucketExists.UNKNOWN:
             self.check_bucket_exists(bucket)
         if bucket.exists == BucketExists.NO:
             raise Exception("Bucket doesn't exist")
 
-        for page in self.s3_client.get_paginator("list_objects_v2").paginate(Bucket=bucket.name):
-            if 'Contents' not in page:  # No items in this bucket
-                bucket.objects_enumerated = True
-                return
-            for item in page['Contents']:
-                obj = s3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
-                bucket.addObject(obj)
+        try:
+            for page in self.s3_client.get_paginator("list_objects_v2").paginate(Bucket=bucket.name):
+                if 'Contents' not in page:  # No items in this bucket
+                    bucket.objects_enumerated = True
+                    return
+                for item in page['Contents']:
+                    obj = s3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
+                    bucket.addObject(obj)
+        except ClientError as e:
+            if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
+                raise AccessDeniedException("AccessDenied while enumerating bucket objects")
         bucket.objects_enumerated = True
 
     def parse_found_acl(self, bucket):
