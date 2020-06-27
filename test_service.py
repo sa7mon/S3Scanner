@@ -1,10 +1,4 @@
-import s3utils as s3
 import os
-import sys
-import shutil
-import time
-import logging
-import subprocess
 import s3Bucket
 from S3Service import S3Service
 from s3Bucket import BucketExists, Permission
@@ -30,7 +24,14 @@ S3Service.py methods to test:
     - Test against bucket with AuthUsers allowed
     - Test against bucket with all denied 
 - check_perm_read()
+    - ✔️ Test against bucket with AuthUsers read permission
+    - ✔️ Test against bucket with AllUsers read permission
+    - ✔️ Test against bucket with no read permission
 - check_perm_write()
+    - ✔️ Test against bucket with no write permissions
+    - ✔️ Test against bucket with AuthUsers write permission
+    - ✔️ Test against bucket with AllUsers write permission
+    - Test against bucket with AllUsers and AuthUsers write permission
 - check_perm_write_acl()
     - ✔️ Test against bucket with AllUsers allowed
     - ✔️ Test against bucket with AuthUsers allowed

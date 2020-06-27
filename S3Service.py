@@ -207,7 +207,7 @@ class S3Service:
 
     def enumerate_bucket_objects(self, bucket):
         """
-        Raises: ClientError if user isn't allowed to read bucket.
+        Raises: AccessDeniedException - if bucket doesn't have READ permission
         """
         if bucket.exists == BucketExists.UNKNOWN:
             self.check_bucket_exists(bucket)
