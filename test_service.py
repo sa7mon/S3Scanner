@@ -43,8 +43,8 @@ S3Service.py methods to test:
 - parse_found_acl()
     - ✔️ Test against JSON with FULL_CONTROL for AllUsers
     - ✔️ Test against JSON with FULL_CONTROL for AuthUsers
-    - Test against empty JSON
-    - Test against JSON with ReadACP for AuthUsers and Write for AllUsers
+    - ✔️ Test against empty JSON
+    - ✔️ Test against JSON with ReadACP for AuthUsers and Write for AllUsers
 """
 
 
@@ -429,3 +429,61 @@ def test_parse_found_acl():
     assert b3.AuthUsersWrite == Permission.ALLOWED
     assert b3.AuthUsersWriteACP == Permission.ALLOWED
     assert b3.AuthUsersFullControl == Permission.ALLOWED
+
+    test_acls_3 = {
+        'Grants': [
+            {
+                'Grantee': {
+                    'Type': 'Group',
+                    'URI': 'asdfasdf'
+                },
+                'Permission': 'READ'
+            }
+        ]
+    }
+
+    b4 = s3Bucket.s3Bucket('test-acl3-doesnt-exist')
+    b4.exists = BucketExists.YES
+    b4.foundACL = test_acls_3
+    sAnon.parse_found_acl(b4)
+
+    all_permissions = [b4.AllUsersRead, b4.AllUsersReadACP, b4.AllUsersWrite, b4.AllUsersWriteACP,
+                       b4.AllUsersFullControl, b4.AuthUsersRead, b4.AuthUsersReadACP, b4.AuthUsersWrite,
+                       b4.AuthUsersWriteACP, b4.AuthUsersFullControl]
+
+    for p in all_permissions:
+        assert p == Permission.DENIED
+
+    test_acls_4 = {
+        'Grants': [
+            {
+                'Grantee': {
+                    'Type': 'Group',
+                    'URI': 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+                },
+                'Permission': 'READ_ACP'
+            },
+            {
+                'Grantee': {
+                    'Type': 'Group',
+                    'URI': 'http://acs.amazonaws.com/groups/global/AllUsers'
+                },
+                'Permission': 'READ_ACP'
+            }
+        ]
+    }
+
+    b5 = s3Bucket.s3Bucket('test-acl4-doesnt-exist')
+    b5.exists = BucketExists.YES
+    b5.foundACL = test_acls_4
+    sAnon.parse_found_acl(b5)
+    assert b5.AllUsersRead == Permission.DENIED
+    assert b5.AllUsersReadACP == Permission.ALLOWED
+    assert b5.AllUsersWrite == Permission.DENIED
+    assert b5.AllUsersWriteACP == Permission.DENIED
+    assert b5.AllUsersFullControl == Permission.DENIED
+    assert b5.AuthUsersRead == Permission.DENIED
+    assert b5.AuthUsersReadACP == Permission.ALLOWED
+    assert b5.AuthUsersWrite == Permission.DENIED
+    assert b5.AuthUsersWriteACP == Permission.DENIED
+    assert b5.AuthUsersFullControl == Permission.DENIED
