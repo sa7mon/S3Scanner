@@ -60,6 +60,7 @@ class S3Service:
 
         try:
             bucket.foundACL = self.s3_client.get_bucket_acl(Bucket=bucket.name)
+            self.parse_found_acl(bucket)  # If we can read ACLs, we know the rest of the permissions
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 if self.aws_creds_configured:
@@ -68,8 +69,6 @@ class S3Service:
                     bucket.AllUsersReadACP = Permission.DENIED
             else:
                 raise e
-
-        self.parse_found_acl(bucket)  # If we can read ACLs, we know the rest of the permissions
 
     def check_perm_read(self, bucket):
         """

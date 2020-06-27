@@ -41,8 +41,8 @@ S3Service.py methods to test:
     - ✔️ Test against not empty bucket with read permission
     - ✔️ Test against bucket without read permission
 - parse_found_acl()
-    - Test against JSON with FULL_CONTROL for AllUsers
-    - Test against JSON with FULL_CONTROL for AuthUsers
+    - ✔️ Test against JSON with FULL_CONTROL for AllUsers
+    - ✔️ Test against JSON with FULL_CONTROL for AuthUsers
     - Test against empty JSON
     - Test against JSON with ReadACP for AuthUsers and Write for AllUsers
 """
@@ -354,14 +354,14 @@ def test_check_perm_write_acl(do_dangerous_test):
         print("[test_check_perm_write_acl] Skipping dangerous test...")
 
 
-def test_parsing_found_acl():
+def test_parse_found_acl():
     test_setup_new()
-    s = S3Service()
+    # s = S3Service()
+    sAnon = S3Service(forceNoCreds=True)
 
     b1 = s3Bucket.s3Bucket('s3scanner-all-read-readacl')
     b1.exists = BucketExists.YES
-    s.check_perm_read_acl(b1)
-    s.parse_found_acl(b1)
+    sAnon.check_perm_read_acl(b1)
 
     assert b1.foundACL is not None
     assert b1.AllUsersRead == Permission.ALLOWED
@@ -375,3 +375,57 @@ def test_parsing_found_acl():
     assert b1.AuthUsersWrite == Permission.DENIED
     assert b1.AuthUsersWriteACP == Permission.DENIED
     assert b1.AuthUsersFullControl == Permission.DENIED
+
+    test_acls_1 = {
+        'Grants': [
+            {
+                'Grantee': {
+                    'Type': 'Group',
+                    'URI': 'http://acs.amazonaws.com/groups/global/AllUsers'
+                },
+                'Permission': 'FULL_CONTROL'
+            }
+        ]
+    }
+
+    b2 = s3Bucket.s3Bucket('test-acl-doesnt-exist')
+    b2.exists = BucketExists.YES
+    b2.foundACL = test_acls_1
+    sAnon.parse_found_acl(b2)
+    assert b2.AllUsersRead == Permission.ALLOWED
+    assert b2.AllUsersReadACP == Permission.ALLOWED
+    assert b2.AllUsersWrite == Permission.ALLOWED
+    assert b2.AllUsersWriteACP == Permission.ALLOWED
+    assert b2.AllUsersFullControl == Permission.ALLOWED
+    assert b2.AuthUsersRead == Permission.DENIED
+    assert b2.AuthUsersReadACP == Permission.DENIED
+    assert b2.AuthUsersWrite == Permission.DENIED
+    assert b2.AuthUsersWriteACP == Permission.DENIED
+    assert b2.AuthUsersFullControl == Permission.DENIED
+
+    test_acls_2 = {
+        'Grants': [
+            {
+                'Grantee': {
+                    'Type': 'Group',
+                    'URI': 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+                },
+                'Permission': 'FULL_CONTROL'
+            }
+        ]
+    }
+
+    b3 = s3Bucket.s3Bucket('test-acl2-doesnt-exist')
+    b3.exists = BucketExists.YES
+    b3.foundACL = test_acls_2
+    sAnon.parse_found_acl(b3)
+    assert b3.AllUsersRead == Permission.DENIED
+    assert b3.AllUsersReadACP == Permission.DENIED
+    assert b3.AllUsersWrite == Permission.DENIED
+    assert b3.AllUsersWriteACP == Permission.DENIED
+    assert b3.AllUsersFullControl == Permission.DENIED
+    assert b3.AuthUsersRead == Permission.ALLOWED
+    assert b3.AuthUsersReadACP == Permission.ALLOWED
+    assert b3.AuthUsersWrite == Permission.ALLOWED
+    assert b3.AuthUsersWriteACP == Permission.ALLOWED
+    assert b3.AuthUsersFullControl == Permission.ALLOWED
