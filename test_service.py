@@ -14,7 +14,7 @@ setupRan = False
 S3Service.py methods to test:
 
 - init()
-    - Test service.aws_creds_configured is false when forceNoCreds = False and vice-versa
+    - ✔️ Test service.aws_creds_configured is false when forceNoCreds = False
 - check_bucket_exists()
     - ✔️ Test against that exists
     - ✔️ Test against one that doesn't
@@ -57,6 +57,13 @@ def test_setup_new():
     if not os.path.exists(testingFolder) or not os.path.isdir(testingFolder):
         os.makedirs(testingFolder)
     setupRan = True
+
+
+def test_init():
+    test_setup_new()
+
+    s = S3Service(forceNoCreds=True)
+    assert s.aws_creds_configured is False
 
 
 def test_bucket_exists():
@@ -216,8 +223,9 @@ def test_check_perm_write(do_dangerous_test):
             assert b2.AllUsersWrite == Permission.DENIED
         finally:
             ts.delete_bucket(danger_bucket_1)
+
+        danger_bucket_2 = ts.create_bucket(2)  # Bucket with AllUser Write, WriteACP permissions
         try:
-            danger_bucket_2 = ts.create_bucket(2)  # Bucket with AllUser Write, WriteACP permissions
             b3 = s3Bucket.s3Bucket(danger_bucket_2)
             b3.exists = BucketExists.YES
             sAnon.check_perm_write(b3)
@@ -356,7 +364,6 @@ def test_check_perm_write_acl(do_dangerous_test):
 
 def test_parse_found_acl():
     test_setup_new()
-    # s = S3Service()
     sAnon = S3Service(forceNoCreds=True)
 
     b1 = s3Bucket.s3Bucket('s3scanner-all-read-readacl')
