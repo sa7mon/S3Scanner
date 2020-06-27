@@ -7,6 +7,7 @@ matrix:
       - secure: Phv6W+P19/wJQfY2frJNuqldZc4snt8gUaI8ZtXxTLBFYaUpsbM4Pl2lJErp+W4k0zZ9I0i6EKs+WWj4jLkmg5tauXL7O3C4QNK3u5RAD154bcG1up8U5XPrLvz0ZRzvbAJilQQpjLrMyLO7GXaZIzZIN4MaUCuTTlvKls5fCp3Q2UJZdCpW94zlyFKInkk5Ox1wZsCbjptG5i6eGm/Q+g/ObuyfMMykUISjP7/BElb3lbVnIe2MCWQxoNlt1d0T6oaUSkIbnaYD384uEkYn5bAlEoOyUlurgMyifPWoBI4vLJHBj8votdgjxcgThGzqjfsB29U/eaaP3VUc77CeBLMGwoYzqIPcoicUBkK5GowvIXkukoUqN24JK5kTROv/aYOdVqoLCrT8fYruVdS0kkJs3DZbBoMDaWte36PhvJouh7MPaWgdm1ZcfLP2juLe5UGaiuN5iY95L/XBXbrnd6+adJYrJd7TYX6+zJE2trmwaxqZCELQtUVUcrYJ85KljjQS7QJQTE1uXQRlPCzGQlhziC8ePJI1zOuHQV7xZWbi04Jg6Pe9zE3UXnBU6KvB/q3fLdrFT5F8mqI2lUXFl+kq28sucqgUMM1rfmW30OKkyHfiRuTZL43Img0Xduql++DgLz6WweFhXf8oH18b8XuV7KUZz5FFJgjs86FM8AE=
   - python: '3.6'
   - python: '3.7'
+  - python: '3.8'
 cache: pip
 install:
 - pip install -r requirements.txt
