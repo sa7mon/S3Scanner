@@ -101,8 +101,15 @@ class S3Service:
 
     def check_perm_write(self, bucket):
         """ Check for WRITE permission by trying to upload an empty file to the bucket.
-
             File is named the current timestamp to ensure we're not overwriting an existing file in the bucket.
+
+            NOTE: If writing to bucket succeeds using an AuthUser, only mark AuthUsersWrite as Allowed if
+                  AllUsers are Denied. Writing can succeed if AuthUsers are implicitly allowed due to AllUsers being
+                  allowed, but we only want to mark AuthUsers as Allowed if they are explicitly granted.
+            If AllUsersWrite is Allowed and the write is successful by an AuthUser, we have no way of knowing if
+            AuthUsers were granted permission explicitly
+
+            Raises: ValueError, ClientError
         """
         if bucket.exists != BucketExists.YES:
             raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
@@ -114,10 +121,10 @@ class S3Service:
             self.s3_client.put_object(Bucket=bucket.name, Key=timestamp_file, Body=b'')
 
             if self.aws_creds_configured:
-                # Only set AuthUsersWrite to Allowed if it's explicitly set for AuthUsers
-                # Don't set AuthUsersWrite to Allowed if it's implicitly allowed through AllUsers being Allowed
-                if bucket.AllUsersWrite != Permission.ALLOWED:
+                if bucket.AllUsersWrite != Permission.ALLOWED:  # If AllUsers have Write permission, don't mark AuthUsers as Allowed
                     bucket.AuthUsersWrite = Permission.ALLOWED
+                else:
+                    bucket.AuthUsersWrite = Permission.UNKNOWN
             else:
                 bucket.AllUsersWrite = Permission.ALLOWED
 
@@ -131,8 +138,6 @@ class S3Service:
                     bucket.AllUsersWrite = Permission.DENIED
             else:
                 raise e
-        finally:
-            pass
 
     def check_perm_write_acl(self, bucket):
         """
@@ -194,6 +199,8 @@ class S3Service:
                 # Only mark it as allowed if the AuthUsers group is explicitly allowed
                 if bucket.AllUsersWriteACP != Permission.ALLOWED:
                     bucket.AuthUsersWriteACP = Permission.ALLOWED
+                else:
+                    bucket.AuthUsersWriteACP = Permission.UNKNOWN
             else:
                 bucket.AllUsersWriteACP = Permission.ALLOWED
         except ClientError as e:

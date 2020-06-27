@@ -16,13 +16,13 @@ S3Service.py methods to test:
 - init()
     - Test service.aws_creds_configured is false when forceNoCreds = False and vice-versa
 - check_bucket_exists()
-    - Test against that exists
-    - Test against one that doesn't
+    - ✔️ Test against that exists
+    - ✔️ Test against one that doesn't
     - Test previous scenarios with no creds   
 - check_perm_read_acl()
-    - Test against bucket with AllUsers allowed
-    - Test against bucket with AuthUsers allowed
-    - Test against bucket with all denied 
+    - ✔️ Test against bucket with AllUsers allowed
+    - ✔️ Test against bucket with AuthUsers allowed
+    - ✔️ Test against bucket with all denied 
 - check_perm_read()
     - ✔️ Test against bucket with AuthUsers read permission
     - ✔️ Test against bucket with AllUsers read permission
@@ -31,7 +31,7 @@ S3Service.py methods to test:
     - ✔️ Test against bucket with no write permissions
     - ✔️ Test against bucket with AuthUsers write permission
     - ✔️ Test against bucket with AllUsers write permission
-    - Test against bucket with AllUsers and AuthUsers write permission
+    - ✔️ Test against bucket with AllUsers and AuthUsers write permission
 - check_perm_write_acl()
     - ✔️ Test against bucket with AllUsers allowed
     - ✔️ Test against bucket with AuthUsers allowed
@@ -191,6 +191,7 @@ def test_check_perm_read_acl():
 def test_check_perm_write(do_dangerous_test):
     test_setup_new()
     s = S3Service()
+    sAnon = S3Service(forceNoCreds=True)
 
     # Bucket with no write perms
     b1 = s3Bucket.s3Bucket('flaws.cloud')
@@ -210,22 +211,34 @@ def test_check_perm_write(do_dangerous_test):
         try:
             b2 = s3Bucket.s3Bucket(danger_bucket_1)
             b2.exists = BucketExists.YES
+            sAnon.check_perm_write(b2)
             s.check_perm_write(b2)
-            if s.aws_creds_configured:
-                assert b2.AuthUsersWrite == Permission.ALLOWED
+            assert b2.AuthUsersWrite == Permission.ALLOWED
+            assert b2.AllUsersWrite == Permission.DENIED
         finally:
             ts.delete_bucket(danger_bucket_1)
         try:
             danger_bucket_2 = ts.create_bucket(2)  # Bucket with AllUser Write, WriteACP permissions
-            s2 = S3Service(forceNoCreds=True)
             b3 = s3Bucket.s3Bucket(danger_bucket_2)
             b3.exists = BucketExists.YES
-            s2.check_perm_write(b3)
+            sAnon.check_perm_write(b3)
             s.check_perm_write(b3)
             assert b3.AllUsersWrite == Permission.ALLOWED
             assert b3.AuthUsersWrite == Permission.UNKNOWN
         finally:
             ts.delete_bucket(danger_bucket_2)
+
+        # Bucket with AllUsers and AuthUser Write permissions
+        danger_bucket_4 = ts.create_bucket(4)
+        try:
+            b4 = s3Bucket.s3Bucket(danger_bucket_4)
+            b4.exists = BucketExists.YES
+            sAnon.check_perm_write(b4)
+            s.check_perm_write(b4)
+            assert b4.AllUsersWrite == Permission.ALLOWED
+            assert b4.AuthUsersWrite == Permission.UNKNOWN
+        finally:
+            ts.delete_bucket(danger_bucket_4)
     else:
         print("[test_check_perm_write] Skipping dangerous test")
 
@@ -255,18 +268,31 @@ def test_check_perm_write_acl(do_dangerous_test):
             danger_bucket_3 = ts.create_bucket(3)
             b2 = s3Bucket.s3Bucket(danger_bucket_3)
             b2.exists = BucketExists.YES
+
+            # Check for read/write permissions so when we check for write_acl we
+            # send the same perms that it had originally
             sNoCreds.check_perm_read(b2)
             s.check_perm_read(b2)
             sNoCreds.check_perm_write(b2)
             s.check_perm_write(b2)
+
+            # Check for WriteACP
+            sNoCreds.check_perm_write_acl(b2)
             s.check_perm_write_acl(b2)
+
+            # Grab permissions after our check so we can compare to original
             sNoCreds.check_perm_write(b2)
             s.check_perm_write(b2)
             sNoCreds.check_perm_read(b2)
             s.check_perm_read(b2)
             if s.aws_creds_configured:
                 assert b2.AuthUsersWriteACP == Permission.ALLOWED
+
+                # Make sure we didn't change the original permissions
                 assert b2.AuthUsersWrite == Permission.ALLOWED
+                assert b2.AllUsersWrite == Permission.DENIED
+                assert b2.AllUsersRead == Permission.ALLOWED
+                assert b2.AuthUsersRead == Permission.UNKNOWN
             else:
                 assert b2.AllUsersRead == Permission.ALLOWED
                 assert b2.AuthUsersWriteACP == Permission.UNKNOWN

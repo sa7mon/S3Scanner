@@ -26,6 +26,9 @@ class TestBucketService:
             self.s3_client.create_bucket(Bucket=bucket_name, GrantWrite='uri=http://acs.amazonaws.com/groups/global/AllUsers', GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AllUsers')
         elif danger_bucket == 3:
             self.s3_client.create_bucket(Bucket=bucket_name, GrantRead='uri=http://acs.amazonaws.com/groups/global/AllUsers', GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers', GrantWriteACP='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers')
+        elif danger_bucket == 4:
+            self.s3_client.create_bucket(Bucket=bucket_name,
+                                         GrantWrite='uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers,uri=http://acs.amazonaws.com/groups/global/AllUsers')
         else:
             raise Exception("Unknown danger bucket type")
 
