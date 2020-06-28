@@ -9,13 +9,8 @@
 #########
 
 import argparse
-import logging
+from argparse import HelpFormatter
 from os import path
-import sys
-
-import coloredlogs
-
-import s3utils as s3
 from s3Bucket import s3Bucket, BucketExists, Permission
 from S3Service import S3Service
 
@@ -27,28 +22,50 @@ class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelp
     pass
 
 
+"""
+Default arguments
+    scanner.py [--version --help]
+
+Scan mode
+    scanner.py scan [--dangerous] [--bucket-file <file.txt>] bucket_name
+    
+Dump mode
+    scanner.py dump [--dump-dir] [--bucket-file <file.txt>] bucket_name
+"""
 # Instantiate the parser
-parser = argparse.ArgumentParser(description='#  s3scanner - Find S3 buckets and dump!\n'
-                                             '#\n'
-                                             '#  Author: Dan Salmon - @bltjetpack, github.com/sa7mon\n',
+parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buckets\n'
+                                             '           by Dan Salmon - github.com/sa7mon, @bltjetpack\n',
                                  prog='s3scanner', formatter_class=CustomFormatter)
 
 # Declare arguments
-parser.add_argument('--dangerous', action='store_true', help='Include Write and WriteACP permissions checks')
-# parser.add_argument('--version', action='version', version=CURRENT_VERSION,
-#                    help='Display the current version of this tool')
-parser.add_argument('buckets_file', help='Name of text file containing buckets to check')
+parser.add_argument('--version', action='version', version=CURRENT_VERSION,
+                    help='Display the current version of this tool')
+subparsers = parser.add_subparsers(title='mode', dest='mode', help='')
 
+parser_scan = subparsers.add_parser('scan', help='Scan bucket permissions')
+parser_scan.add_argument('--dangerous', action='store_true', help='Include Write and WriteACP permissions checks')
+parser_group = parser_scan.add_mutually_exclusive_group(required=True)
+parser_group.add_argument('--buckets-file', '-f', help='Name of text file containing bucket names to check',
+                          metavar='FILE')
+parser_group.add_argument('--bucket', '-b', help='Name of bucket to check')
+
+# TODO: Get help output to not repeat metavar names - i.e. --bucket FILE, -f FILE
+#   https://stackoverflow.com/a/9643162/2307994
+
+parser_dump = subparsers.add_parser('dump', help='Dump the contents of buckets')
+parser_dump.add_argument('--dump-dir', '-d', )
 
 # Parse the args
 args = parser.parse_args()
+
+print("Mode: " + args.mode)
 
 s3service = S3Service()
 anonS3Service = S3Service(forceNoCreds=True)
 
 if s3service.aws_creds_configured is False:
     print("Warning: AWS credentials not configured - functionality will be limited. Run:"
-               " `aws configure` to fix this.\n")
+          " `aws configure` to fix this.\n")
 
 bucketsIn = set()
 
