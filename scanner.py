@@ -1,6 +1,6 @@
 #########
 #
-# AWS S3scanner - Scans domain names for S3 buckets
+# S3scanner - Audit unsecured S3 buckets
 # 
 # Author:  Dan Salmon (twitter.com/bltjetpack, github.com/sa7mon)
 # Created: 6/19/17
@@ -9,8 +9,8 @@
 #########
 
 import argparse
-from argparse import HelpFormatter
 from os import path
+import os
 from s3Bucket import s3Bucket, BucketExists, Permission
 from S3Service import S3Service
 
@@ -35,30 +35,28 @@ Dump mode
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buckets\n'
                                              '           by Dan Salmon - github.com/sa7mon, @bltjetpack\n',
-                                 prog='s3scanner', formatter_class=CustomFormatter)
-
+                                 prog='s3scanner', allow_abbrev=False, formatter_class=CustomFormatter)
 # Declare arguments
 parser.add_argument('--version', action='version', version=CURRENT_VERSION,
                     help='Display the current version of this tool')
 subparsers = parser.add_subparsers(title='mode', dest='mode', help='')
 
+# Scan mode
 parser_scan = subparsers.add_parser('scan', help='Scan bucket permissions')
 parser_scan.add_argument('--dangerous', action='store_true', help='Include Write and WriteACP permissions checks')
 parser_group = parser_scan.add_mutually_exclusive_group(required=True)
-parser_group.add_argument('--buckets-file', '-f', help='Name of text file containing bucket names to check',
-                          metavar='FILE')
-parser_group.add_argument('--bucket', '-b', help='Name of bucket to check')
-
+parser_group.add_argument('--buckets-file', '-f', dest='buckets_file',
+                          help='Name of text file containing bucket names to check', metavar='FILE')
+parser_group.add_argument('--bucket', '-b', dest='bucket', help='Name of bucket to check')
 # TODO: Get help output to not repeat metavar names - i.e. --bucket FILE, -f FILE
 #   https://stackoverflow.com/a/9643162/2307994
 
+# Dump mode
 parser_dump = subparsers.add_parser('dump', help='Dump the contents of buckets')
 parser_dump.add_argument('--dump-dir', '-d', )
 
 # Parse the args
 args = parser.parse_args()
-
-print("Mode: " + args.mode)
 
 s3service = S3Service()
 anonS3Service = S3Service(forceNoCreds=True)
@@ -67,69 +65,77 @@ if s3service.aws_creds_configured is False:
     print("Warning: AWS credentials not configured - functionality will be limited. Run:"
           " `aws configure` to fix this.\n")
 
-bucketsIn = set()
-
-if path.isfile(args.buckets_file):
-    with open(args.buckets_file, 'r') as f:
-        for line in f:
-            line = line.rstrip()            # Remove any extra whitespace
-            bucketsIn.add(line)
-else:
-    bucketsIn.add(args.buckets_file)
-
-if args.dangerous:
-    print("INFO: Including dangeous checks. WARNING: This may change bucket ACL destructively")
-
-for bucketName in bucketsIn:
-    try:
-        b = s3Bucket(bucketName)
-    except ValueError as ve:
-        if str(ve) == "Invalid bucket name":
-            print("[%s] Invalid bucket name" % bucketName)
-            continue
+if args.mode == 'scan':
+    bucketsIn = set()
+    if args.buckets_file is not None:
+        if path.isfile(args.buckets_file):
+            with open(args.buckets_file, 'r') as f:
+                for line in f:
+                    line = line.rstrip()  # Remove any extra whitespace
+                    bucketsIn.add(line)
         else:
-            print("[%s] %s" % (bucketName, str(ve)))
+            print("Error: '%s' is not a file" % args.buckets_file)
+    elif args.bucket is not None:
+        bucketsIn.add(args.bucket)
+
+    if args.dangerous:
+        print("INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively")
+
+    for bucketName in bucketsIn:
+        try:
+            b = s3Bucket(bucketName)
+        except ValueError as ve:
+            if str(ve) == "Invalid bucket name":
+                print("[%s] Invalid bucket name" % bucketName)
+                continue
+            else:
+                print("[%s] %s" % (bucketName, str(ve)))
+                continue
+
+        # Check if bucket exists first
+        s3service.check_bucket_exists(b)
+
+        if b.exists == BucketExists.NO:
+            print("[%s] Bucket doesn't exist" % b.name)
             continue
 
-    # Check if bucket exists first
-    s3service.check_bucket_exists(b)
+        checkAllUsersPerms = True
+        checkAuthUsersPerms = True
 
-    if b.exists == BucketExists.NO:
-        print("[%s] Bucket doesn't exist" % b.name)
-        continue
+        # 1. Check for ReadACP
+        anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
+        if s3service.aws_creds_configured:
+            s3service.check_perm_read_acl(b)  # Check for AuthUsers
 
-    checkAllUsersPerms = True
-    checkAuthUsersPerms = True
+        # If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests
+        if b.AuthUsersFullControl == Permission.ALLOWED:
+            checkAuthUsersPerms = False
+        if b.AllUsersFullControl == Permission.ALLOWED:
+            checkAllUsersPerms = False
 
-    # 1. Check for ReadACP
-    anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
-    if s3service.aws_creds_configured:
-        s3service.check_perm_read_acl(b)  # Check for AuthUsers
-
-    # If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests    
-    if b.AuthUsersFullControl == Permission.ALLOWED:
-        checkAuthUsersPerms = False
-    if b.AllUsersFullControl == Permission.ALLOWED:
-        checkAllUsersPerms = False
-
-    # 2. Check for Read
-    if checkAllUsersPerms:
-        anonS3Service.check_perm_read(b)
-    if s3service.aws_creds_configured and checkAuthUsersPerms:
-        s3service.check_perm_read(b)
-
-    # Do dangerous/destructive checks
-    if args.dangerous:
-        # 3. Check for Write
+        # 2. Check for Read
         if checkAllUsersPerms:
-            anonS3Service.check_perm_write(b)
+            anonS3Service.check_perm_read(b)
         if s3service.aws_creds_configured and checkAuthUsersPerms:
-            s3service.check_perm_write(b)
+            s3service.check_perm_read(b)
 
-        # 4. Check for WriteACP
-        if checkAllUsersPerms:
-            pass
-        if s3service.aws_creds_configured and checkAuthUsersPerms:
-            pass
+        # Do dangerous/destructive checks
+        if args.dangerous:
+            # 3. Check for Write
+            if checkAllUsersPerms:
+                anonS3Service.check_perm_write(b)
+            if s3service.aws_creds_configured and checkAuthUsersPerms:
+                s3service.check_perm_write(b)
 
-    print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))
+            # 4. Check for WriteACP
+            if checkAllUsersPerms:
+                pass
+            if s3service.aws_creds_configured and checkAuthUsersPerms:
+                pass
+
+        print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))
+elif args.mode == 'dump':
+    pass
+else:
+    print("Invalid mode")
+
