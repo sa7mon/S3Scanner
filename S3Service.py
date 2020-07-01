@@ -211,6 +211,8 @@ class S3Service:
             else:
                 raise e
 
+    def dump_bucket_contents(self, bucket):
+        self.s3_client.put_bucket_acl()
     def enumerate_bucket_objects(self, bucket):
         """
         Raises: AccessDeniedException - if bucket doesn't have READ permission

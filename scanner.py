@@ -10,7 +10,7 @@
 
 import argparse
 from os import path
-import os
+from sys import exit
 from s3Bucket import s3Bucket, BucketExists, Permission
 from S3Service import S3Service
 
@@ -20,6 +20,19 @@ CURRENT_VERSION = '1.0.0'
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
     pass
+
+
+def load_bucket_names_from_file(file_name):
+    buckets = set()
+    if path.isfile(file_name):
+        with open(file_name, 'r') as f:
+            for line in f:
+                line = line.rstrip()  # Remove any extra whitespace
+                buckets.add(line)
+        return buckets
+    else:
+        print("Error: '%s' is not a file" % file_name)
+        exit(1)
 
 
 """
@@ -46,14 +59,18 @@ parser_scan = subparsers.add_parser('scan', help='Scan bucket permissions')
 parser_scan.add_argument('--dangerous', action='store_true', help='Include Write and WriteACP permissions checks')
 parser_group = parser_scan.add_mutually_exclusive_group(required=True)
 parser_group.add_argument('--buckets-file', '-f', dest='buckets_file',
-                          help='Name of text file containing bucket names to check', metavar='FILE')
-parser_group.add_argument('--bucket', '-b', dest='bucket', help='Name of bucket to check')
+                          help='Name of text file containing bucket names to check', metavar='file')
+parser_group.add_argument('--bucket', '-b', dest='bucket', help='Name of bucket to check', metavar='bucket')
 # TODO: Get help output to not repeat metavar names - i.e. --bucket FILE, -f FILE
 #   https://stackoverflow.com/a/9643162/2307994
 
 # Dump mode
 parser_dump = subparsers.add_parser('dump', help='Dump the contents of buckets')
-parser_dump.add_argument('--dump-dir', '-d', )
+parser_dump.add_argument('--dump-dir', '-d', required=True, dest='dump_dir', help='Directory to dump bucket into')
+dump_parser_group = parser_dump.add_mutually_exclusive_group(required=True)
+dump_parser_group.add_argument('--buckets-file', '-f', dest='dump_buckets_file',
+                               help='Name of text file containing bucket names to check', metavar='file')
+dump_parser_group.add_argument('--bucket', '-b', dest='dump_bucket', help='Name of bucket to check', metavar='bucket')
 
 # Parse the args
 args = parser.parse_args()
@@ -65,16 +82,11 @@ if s3service.aws_creds_configured is False:
     print("Warning: AWS credentials not configured - functionality will be limited. Run:"
           " `aws configure` to fix this.\n")
 
+bucketsIn = set()
+
 if args.mode == 'scan':
-    bucketsIn = set()
     if args.buckets_file is not None:
-        if path.isfile(args.buckets_file):
-            with open(args.buckets_file, 'r') as f:
-                for line in f:
-                    line = line.rstrip()  # Remove any extra whitespace
-                    bucketsIn.add(line)
-        else:
-            print("Error: '%s' is not a file" % args.buckets_file)
+        bucketsIn = load_bucket_names_from_file(args.buckets_file)
     elif args.bucket is not None:
         bucketsIn.add(args.bucket)
 
@@ -135,7 +147,34 @@ if args.mode == 'scan':
 
         print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))
 elif args.mode == 'dump':
-    pass
+    if args.dump_dir is None or not path.isdir(args.dump_dir):
+        print("Error: Given --dump-dir does not exist or is not a directory")
+        exit(1)
+    if args.dump_buckets_file is not None:
+        bucketsIn = load_bucket_names_from_file(args.dump_buckets_file)
+    elif args.dump_bucket is not None:
+        bucketsIn.add(args.dump_bucket)
+
+    for bucketName in bucketsIn:
+        try:
+            b = s3Bucket(bucketName)
+        except ValueError as ve:
+            if str(ve) == "Invalid bucket name":
+                print("[%s] Invalid bucket name" % bucketName)
+                continue
+            else:
+                print("[%s] %s" % (bucketName, str(ve)))
+                continue
+
+        # Check if bucket exists first
+        s3service.check_bucket_exists(b)
+
+        if b.exists == BucketExists.NO:
+            print("[%s] Bucket doesn't exist" % b.name)
+            continue
+
+        # TODO: Dump bucket contents here
+
 else:
     print("Invalid mode")
-
+    parser.print_help()
