@@ -174,6 +174,25 @@ elif args.mode == 'dump':
             continue
 
         # TODO: Dump bucket contents here
+        s3service.check_perm_read(b)
+
+        if b.AuthUsersRead != Permission.ALLOWED:
+            anonS3Service.check_perm_read(b)
+            if b.AllUsersRead != Permission.ALLOWED:
+                print("[%s] No READ permissions" % bucketName)
+            else:
+                pass # Dump bucket without creds
+                print("DEBUG: Dumping without creds...")
+                print("[%s] Enumerating bucket objects..." % bucketName)
+                anonS3Service.enumerate_bucket_objects(b)
+                print("[%s] Total Objects: %s, Total Size: %s" % (bucketName, str(len(b.objects)), b.getHumanReadableSize()))
+                anonS3Service.dump_bucket_contents(b, args.dump_dir)
+        else:
+            # Dump bucket with creds
+            print("DEBUG: Dumping with creds...")
+            print("[%s] Enumerating bucket objects..." % bucketName)
+            s3service.enumerate_bucket_objects(b)
+            print(b.objects)
 
 else:
     print("Invalid mode")

@@ -41,6 +41,9 @@ class s3BucketObject:
     def __hash__(self):
         return hash(self.key)
 
+    def __repr__(self):
+        return "Key: %s, Size: %s, LastModified: %s" % (self.key, str(self.size), str(self.last_modified))
+
     def getHumanReadableSize(self):
         return bytes_to_human_readable(self.size)
 
