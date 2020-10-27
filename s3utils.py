@@ -192,9 +192,10 @@ def dumpBucket(bucketName):
             s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
         
         for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
-            for item in page['Contents']:
-                key = item['Key']
-                s3.download_file(bucketName, key, bucketDir+"/"+key)
+            if 'Contents' in page:
+                for item in page['Contents']:
+                    key = item['Key']
+                    s3.download_file(bucketName, key, bucketDir+"/"+key)
         dumped = True
     except ClientError as e:
         # global dumped
@@ -221,8 +222,9 @@ def getBucketSize(bucketName):
         size_bytes = 0
         with time_limit(SIZE_CHECK_TIMEOUT):
             for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucketName):
-                for item in page['Contents']:
-                   size_bytes += item['Size']
+                if 'Contents' in page:
+                    for item in page['Contents']:
+                       size_bytes += item['Size']
         return str(size_bytes) + " bytes"
 
     except HTTPClientError as e:
