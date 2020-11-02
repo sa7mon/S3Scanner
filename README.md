@@ -128,6 +128,7 @@ Issues are welcome and Pull Requests are appreciated. All contributions should b
 * [vysecurity](https://github.com/vysecurity)
 * [janmasarik](https://github.com/janmasarik)
 * [alanyee](https://github.com/alanyee)
+* [hipotermia](https://github.com/hipotermia)
 
 ## License
 License: [MIT](LICENSE.txt) https://opensource.org/licenses/MIT
