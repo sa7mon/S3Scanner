@@ -93,12 +93,12 @@ yelp-production.s3-us-west-1.amazonaws.com
 github-dev:us-east-1
 ```
 	
-1. Dump all open buckets, log both open and closed buckets to found.txt
+1. Log open buckets to found.txt
 	
 	```bash
-	> python ./s3scanner.py --include-closed --out-file found.txt --dump names.txt
+	> python ./s3scanner.py --out-file found.txt --dump names.txt
 	```
-2. Just log open buckets to the default output file (buckets.txt)
+2. Log open buckets to the default output file (buckets.txt)
 
 	```bash
 	> python ./s3scanner.py names.txt
