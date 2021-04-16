@@ -89,7 +89,7 @@ def checkAwsCreds():
     return True
 
 
-def checkBucket(inBucket, slog, flog, argsDump, argsList):
+def checkBucket(inBucket, slog, flog, argsDump, argsList, argsType="checked-buckets"):
     # Determine what kind of input we're given. Options:
     #   bucket name   i.e. mybucket
     #   domain name   i.e. flaws.cloud
@@ -123,7 +123,11 @@ def checkBucket(inBucket, slog, flog, argsDump, argsList):
 
         message = "{0:>11} : {1}".format("[found]", bucket + " | " + str(size) + " | ACLs: " + str(b["acls"]))
         slog.info(message)
-        flog.debug(bucket)
+
+        if argsType == "checked-buckets":
+            flog.debug(bucket)
+        elif argsType == "simple":
+            flog.debug("{0} : {1}".format("[found]", bucket + " | " + str(size) + " | ACLs: " + str(b["acls"])))
 
         if argsDump:
             if size not in ["AccessDenied", "AllAccessDisabled"]:

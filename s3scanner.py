@@ -35,6 +35,8 @@ parser = argparse.ArgumentParser(description='#  s3scanner - Find S3 buckets and
 # Declare arguments
 parser.add_argument('-o', '--out-file', dest='outFile', default='./buckets.txt',
                     help='Name of file to save the successfully checked buckets in (Default: buckets.txt)')
+parser.add_argument('-t', '--output-type', dest='outType', default='checked-buckets', choices=['checked-buckets', 'simple', 'json'],
+                    help='Type of output data (Default: checked-buckets)')
 # parser.add_argument('-c', '--include-closed', dest='includeClosed', action='store_true', default=False,
 #                     help='Include found but closed buckets in the out-file')
 parser.add_argument('-d', '--dump', dest='dump', action='store_true', default=False,
@@ -92,7 +94,7 @@ if path.isfile(args.buckets):
     with open(args.buckets, 'r') as f:
         for line in f:
             line = line.rstrip()            # Remove any extra whitespace
-            s3.checkBucket(line, slog, flog, args.dump, args.list)
+            s3.checkBucket(line, slog, flog, args.dump, args.list, args.outType)
 else:
     # It's a single bucket
-    s3.checkBucket(args.buckets, slog, flog, args.dump, args.list)
+    s3.checkBucket(args.buckets, slog, flog, args.dump, args.list, args.outType)
