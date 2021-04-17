@@ -35,16 +35,6 @@ def load_bucket_names_from_file(file_name):
         exit(1)
 
 
-"""
-Default arguments
-    scanner.py [--version --help]
-
-Scan mode
-    scanner.py scan [--dangerous] [--bucket-file <file.txt>] bucket_name
-    
-Dump mode
-    scanner.py dump [--dump-dir] [--bucket-file <file.txt>] bucket_name
-"""
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buckets\n'
                                              '           by Dan Salmon - github.com/sa7mon, @bltjetpack\n',
@@ -73,7 +63,7 @@ dump_parser_group.add_argument('--buckets-file', '-f', dest='dump_buckets_file',
                                help='Name of text file containing bucket names to check', metavar='file')
 dump_parser_group.add_argument('--bucket', '-b', dest='dump_bucket', help='Name of bucket to check', metavar='bucket')
 parser_dump.add_argument('--verbose', '-v', dest='dump_verbose', action='store_true',
-                               help='Enable verbose output while dumping bucket(s)')
+                         help='Enable verbose output while dumping bucket(s)')
 
 # Parse the args
 args = parser.parse_args()
@@ -101,17 +91,17 @@ if args.mode == 'scan':
             b = s3Bucket(bucketName)
         except ValueError as ve:
             if str(ve) == "Invalid bucket name":
-                print(f"bucket_invalid_name | {bucketName}")
+                print(f" {bucketName} | bucket_invalid_name")
                 continue
             else:
-                print("[%s] %s" % (bucketName, str(ve)))
+                print(f" {bucketName} | {str(ve)}")
                 continue
 
         # Check if bucket exists first
         s3service.check_bucket_exists(b)
 
         if b.exists == BucketExists.NO:
-            print(f"bucket_not_exist | {b.name}")
+            print(f"{b.name} | bucket_not_exist")
             continue
 
         checkAllUsersPerms = True
@@ -148,7 +138,7 @@ if args.mode == 'scan':
             if s3service.aws_creds_configured and checkAuthUsersPerms:
                 pass
 
-        print(f"bucket_exists | {b.getHumanReadablePermissions()} | {b.name}")
+        print(f"{b.name} | bucket_exists | {b.getHumanReadablePermissions()}")
 elif args.mode == 'dump':
     if args.dump_dir is None or not path.isdir(args.dump_dir):
         print("Error: Given --dump-dir does not exist or is not a directory")
@@ -163,39 +153,39 @@ elif args.mode == 'dump':
             b = s3Bucket(bucketName)
         except ValueError as ve:
             if str(ve) == "Invalid bucket name":
-                print("[%s] Invalid bucket name" % bucketName)
+                print(f"{bucketName} | bucket_name_invalid")
                 continue
             else:
-                print("[%s] %s" % (bucketName, str(ve)))
+                print(f"{bucketName} | {str(ve)}")
                 continue
 
         # Check if bucket exists first
         s3service.check_bucket_exists(b)
 
         if b.exists == BucketExists.NO:
-            print("[%s] Bucket doesn't exist" % b.name)
+            print(f"{b.name} | bucket_not_exist")
             continue
 
-        # TODO: Dump bucket contents here
         s3service.check_perm_read(b)
 
         if b.AuthUsersRead != Permission.ALLOWED:
             anonS3Service.check_perm_read(b)
             if b.AllUsersRead != Permission.ALLOWED:
-                print("[%s] No READ permissions" % bucketName)
+                print(f"{b.name} | Error: no read permissions")
             else:
                 # Dump bucket without creds
-                print("DEBUG: Dumping without creds...")
-                print("[%s] Enumerating bucket objects..." % b.name)
+                print(f"{b.name} | Debug: Dumping without creds...")
+                print(f"{b.name} | Enumerating bucket objects...")
                 anonS3Service.enumerate_bucket_objects(b)
-                print("[%s] Total Objects: %s, Total Size: %s" % (b.name, str(len(b.objects)), b.getHumanReadableSize()))
+                print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
                 anonS3Service.dump_bucket_contents(b, args.dump_dir, args.dump_verbose)
         else:
             # Dump bucket with creds
-            print("DEBUG: Dumping with creds...")
-            print("[%s] Enumerating bucket objects..." % bucketName)
+            print(f"{b.name} | Debug: Dumping with creds...")
+            print(f"{b.name} | Enumerating bucket objects...")
             s3service.enumerate_bucket_objects(b)
-            print(b.objects)
+            print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
+            s3service.dump_bucket_contents(b, args.dump_dir, args.dump_verbose)
 
 else:
     print("Invalid mode")
