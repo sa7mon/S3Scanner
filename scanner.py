@@ -14,7 +14,7 @@ from sys import exit
 from s3Bucket import s3Bucket, BucketExists, Permission
 from S3Service import S3Service
 
-CURRENT_VERSION = '1.0.0'
+CURRENT_VERSION = '2.0.0'
 
 
 # We want to use both formatter classes, so a custom class it is
@@ -56,12 +56,13 @@ subparsers = parser.add_subparsers(title='mode', dest='mode', help='')
 
 # Scan mode
 parser_scan = subparsers.add_parser('scan', help='Scan bucket permissions')
-parser_scan.add_argument('--dangerous', action='store_true', help='Include Write and WriteACP permissions checks')
+parser_scan.add_argument('--dangerous', action='store_true',
+                         help='Include Write and WriteACP permissions checks (potentially destructive)')
 parser_group = parser_scan.add_mutually_exclusive_group(required=True)
 parser_group.add_argument('--buckets-file', '-f', dest='buckets_file',
                           help='Name of text file containing bucket names to check', metavar='file')
 parser_group.add_argument('--bucket', '-b', dest='bucket', help='Name of bucket to check', metavar='bucket')
-# TODO: Get help output to not repeat metavar names - i.e. --bucket FILE, -f FILE
+# TODO: Get help output to not repeat metavar names - i.e. `--bucket FILE, -f FILE`
 #   https://stackoverflow.com/a/9643162/2307994
 
 # Dump mode
@@ -98,7 +99,7 @@ if args.mode == 'scan':
             b = s3Bucket(bucketName)
         except ValueError as ve:
             if str(ve) == "Invalid bucket name":
-                print("[%s] Invalid bucket name" % bucketName)
+                print(f"bucket_invalid_name | {bucketName}")
                 continue
             else:
                 print("[%s] %s" % (bucketName, str(ve)))
@@ -108,7 +109,7 @@ if args.mode == 'scan':
         s3service.check_bucket_exists(b)
 
         if b.exists == BucketExists.NO:
-            print("[%s] Bucket doesn't exist" % b.name)
+            print(f"bucket_not_exist | {b.name}")
             continue
 
         checkAllUsersPerms = True
@@ -145,7 +146,7 @@ if args.mode == 'scan':
             if s3service.aws_creds_configured and checkAuthUsersPerms:
                 pass
 
-        print("[%s] %s" % (b.name, b.getHumanReadablePermissions()))
+        print(f"bucket_exists | {b.getHumanReadablePermissions()} | {b.name}")
 elif args.mode == 'dump':
     if args.dump_dir is None or not path.isdir(args.dump_dir):
         print("Error: Given --dump-dir does not exist or is not a directory")
@@ -181,7 +182,7 @@ elif args.mode == 'dump':
             if b.AllUsersRead != Permission.ALLOWED:
                 print("[%s] No READ permissions" % bucketName)
             else:
-                pass # Dump bucket without creds
+                # Dump bucket without creds
                 print("DEBUG: Dumping without creds...")
                 print("[%s] Enumerating bucket objects..." % bucketName)
                 anonS3Service.enumerate_bucket_objects(b)
