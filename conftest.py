@@ -4,7 +4,8 @@
 
 
 def pytest_addoption(parser):
-    parser.addoption("--do-dangerous", action="store_true", help="Run all tests, including ones where buckets are created.")
+    parser.addoption("--do-dangerous", action="store_true",
+                     help="Run all tests, including ones where buckets are created.")
 
 
 def pytest_generate_tests(metafunc):

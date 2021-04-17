@@ -69,7 +69,6 @@ class s3Bucket:
         
         self.name = check['name']
 
-        # TODO: Probably change "allUsers" to "AuthUsers" to align with AWS terminology
         self.AuthUsersRead = Permission.UNKNOWN
         self.AuthUsersWrite = Permission.UNKNOWN
         self.AuthUsersReadACP = Permission.UNKNOWN
