@@ -213,7 +213,7 @@ class S3Service:
             else:
                 raise e
 
-    def dump_bucket_contents(self, bucket, dest_directory):
+    def dump_bucket_contents(self, bucket, dest_directory, verbose=False):
         """
         Takes a bucket and downloads all the objects to a local folder.
         If the object exists locally and is the same size as the remote object, the object is skipped.
@@ -224,18 +224,23 @@ class S3Service:
 
             TODO: Let the user choose whether or not to overwrite local files if is different
         """
+        print(f"[{bucket.name}] Dumping contents...")
         for obj in sorted(bucket.objects):
             dest_file_path = pathlib.Path(normpath(dest_directory + obj.key))
             if dest_file_path.exists():
                 if dest_file_path.stat().st_size == obj.size:
-                    print(f"Skipping {obj.key} - already downloaded")
+                    if verbose:
+                        print(f"[{bucket.name}] Skipping {obj.key} - already downloaded")
                     continue
                 else:
-                    print(f"Re-downloading {obj.key} - local size differs from remote")
+                    if verbose:
+                        print(f"[{bucket.name}] Re-downloading {obj.key} - local size differs from remote")
             else:
-                print(f"Downloading {obj.key}")
+                if verbose:
+                    print(f"[{bucket.name}] Downloading {obj.key}")
             dest_file_path.parent.mkdir(parents=True, exist_ok=True)  # Equivalent to `mkdir -p`
             self.s3_client.download_file(bucket.name, obj.key, str(dest_file_path))
+        print(f"[{bucket.name}] Dumping completed")
 
     def enumerate_bucket_objects(self, bucket):
         """

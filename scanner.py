@@ -72,6 +72,8 @@ dump_parser_group = parser_dump.add_mutually_exclusive_group(required=True)
 dump_parser_group.add_argument('--buckets-file', '-f', dest='dump_buckets_file',
                                help='Name of text file containing bucket names to check', metavar='file')
 dump_parser_group.add_argument('--bucket', '-b', dest='dump_bucket', help='Name of bucket to check', metavar='bucket')
+parser_dump.add_argument('--verbose', '-v', dest='dump_verbose', action='store_true',
+                               help='Enable verbose output while dumping bucket(s)')
 
 # Parse the args
 args = parser.parse_args()
@@ -184,10 +186,10 @@ elif args.mode == 'dump':
             else:
                 # Dump bucket without creds
                 print("DEBUG: Dumping without creds...")
-                print("[%s] Enumerating bucket objects..." % bucketName)
+                print("[%s] Enumerating bucket objects..." % b.name)
                 anonS3Service.enumerate_bucket_objects(b)
-                print("[%s] Total Objects: %s, Total Size: %s" % (bucketName, str(len(b.objects)), b.getHumanReadableSize()))
-                anonS3Service.dump_bucket_contents(b, args.dump_dir)
+                print("[%s] Total Objects: %s, Total Size: %s" % (b.name, str(len(b.objects)), b.getHumanReadableSize()))
+                anonS3Service.dump_bucket_contents(b, args.dump_dir, args.dump_verbose)
         else:
             # Dump bucket with creds
             print("DEBUG: Dumping with creds...")
