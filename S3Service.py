@@ -10,7 +10,7 @@ from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
 from exceptions import AccessDeniedException
-import os
+from os.path import normpath
 import pathlib
 
 allUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
@@ -225,7 +225,7 @@ class S3Service:
             TODO: Let the user choose whether or not to overwrite local files if is different
         """
         for obj in sorted(bucket.objects):
-            dest_file_path = pathlib.Path(os.path.normpath(dest_directory + obj.key))
+            dest_file_path = pathlib.Path(normpath(dest_directory + obj.key))
             if dest_file_path.exists():
                 if dest_file_path.stat().st_size == obj.size:
                     print(f"Skipping {obj.key} - already downloaded")
