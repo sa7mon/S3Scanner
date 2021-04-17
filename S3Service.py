@@ -10,6 +10,8 @@ from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
 from exceptions import AccessDeniedException
+import os
+import pathlib
 
 allUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
 authUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
@@ -212,7 +214,28 @@ class S3Service:
                 raise e
 
     def dump_bucket_contents(self, bucket, dest_directory):
-        self.s3_client.download_file(bucket.name, 'uploads/asdf', dest_directory + 'uploads/asdf')
+        """
+        Takes a bucket and downloads all the objects to a local folder.
+        If the object exists locally and is the same size as the remote object, the object is skipped.
+        If the object exists locally and is a different size then the remote object, the local object is overwritten.
+
+            bucket (s3Bucket): Bucket whose contents we need to dump
+            dest_directory (string): Folder to save the objects to. Includes trailing slash
+
+            TODO: Let the user choose whether or not to overwrite local files if is different
+        """
+        for obj in sorted(bucket.objects):
+            dest_file_path = pathlib.Path(os.path.normpath(dest_directory + obj.key))
+            if dest_file_path.exists():
+                if dest_file_path.stat().st_size == obj.size:
+                    print(f"Skipping {obj.key} - already downloaded")
+                    continue
+                else:
+                    print(f"Re-downloading {obj.key} - local size differs from remote")
+            else:
+                print(f"Downloading {obj.key}")
+            dest_file_path.parent.mkdir(parents=True, exist_ok=True)  # Equivalent to `mkdir -p`
+            self.s3_client.download_file(bucket.name, obj.key, str(dest_file_path))
 
     def enumerate_bucket_objects(self, bucket):
         """

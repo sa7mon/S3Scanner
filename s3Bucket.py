@@ -41,6 +41,9 @@ class s3BucketObject:
     def __hash__(self):
         return hash(self.key)
 
+    def __lt__(self, other):
+        return self.key < other.key
+
     def __repr__(self):
         return "Key: %s, Size: %s, LastModified: %s" % (self.key, str(self.size), str(self.last_modified))
 
@@ -54,7 +57,7 @@ class s3Bucket:
     """
 
     exists = BucketExists.UNKNOWN
-    objects = set()
+    objects = set()  # A collection of s3BucketObject
     bucketSize = 0
     objects_enumerated = False
     foundACL = None
