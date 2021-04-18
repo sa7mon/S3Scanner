@@ -14,37 +14,52 @@ from os.path import normpath
 import pathlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
+from urllib3 import disable_warnings
 
 allUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
 authUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
 
 
 class S3Service:
-    def __init__(self, forceNoCreds=False, endpoint_url='https://s3.amazonaws.com', verify_ssl=True):
+    def __init__(self, forceNoCreds=False, endpoint_url='https://s3.amazonaws.com', verify_ssl=True,
+                 endpoint_address_style='path'):
         """Service constructor
 
         Arguments:
             forceNoCreds {boolean} - Setting to true forces the client to make requests as if we don't have AWS credentials
             endpoint_url {string} - URL of S3 endpoint to use
         """
+
         self.endpoint_url = endpoint_url
         use_ssl = True if self.endpoint_url.startswith('http://') else False
+        self.endpoint_address_style = 'path' if endpoint_address_style == 'path' else 'virtual'
+
+        if not verify_ssl:
+            disable_warnings()
+
+        # DEBUG
+        # boto3.set_stream_logger(name='botocore')
+
+        # Validate the endpoint if it's not the default of AWS
+        if self.endpoint_url != 'https://s3.amazonaws.com':
+            if not self.validate_endpoint_url(use_ssl, verify_ssl, endpoint_address_style):
+                raise InvalidEndpointException(message=f"Endpoint '{self.endpoint_url}' does not appear to be S3-compliant")
 
         # Check for AWS credentials
         session = botocore.session.get_session()
         if forceNoCreds or session.get_credentials() is None or session.get_credentials().access_key is None:
             self.aws_creds_configured = False
-            self.s3_client = boto3.client('s3', config=Config(signature_version=UNSIGNED),
+            self.s3_client = boto3.client('s3',
+                                          config=Config(signature_version=UNSIGNED, s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
+                                         retries={'max_attempts': 2}),
                                           endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
         else:
             self.aws_creds_configured = True
-            self.s3_client = boto3.client('s3', endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
+            self.s3_client = boto3.client('s3', config=Config(s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
+                                         retries={'max_attempts': 2}),
+                                          endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
 
         del session  # No longer needed
-
-        if self.endpoint_url != 'https://s3.amazonaws.com':
-            if not self.validate_endpoint_url():
-                raise InvalidEndpointException(message=f"Endpoint '{self.endpoint_url}' does not appear to be S3-compliant")
 
     def check_bucket_exists(self, bucket):
         if not isinstance(bucket, s3Bucket):
@@ -384,19 +399,36 @@ class S3Service:
             if bucket.AllUsersFullControl == Permission.UNKNOWN:
                 bucket.AllUsersFullControl = Permission.DENIED
 
-    def validate_endpoint_url(self):
+    def validate_endpoint_url(self, use_ssl, verify_ssl, endpoint_address_style='path'):
         """
         Verify the user-supplied endpoint URL is S3-compliant by trying to list a maximum of 0 keys from a
-        bucket which is extremely unlikely to exist
+        bucket which is extremely unlikely to exist.
+
+        Note: Most S3-compliant services will return an error code of "NoSuchBucket". Some services which require auth for
+        most operations (like Minio) will return an error code of "AccessDenied" instead
 
         :return: boolean - Whether or not the server responded in an S3-compliant way
         """
-        non_existent_bucket = 's3scanner_' + str(datetime.datetime.now())[0:10]
+
+        # We always want to verify the endpoint using no creds
+        # so if the s3_client has creds configured, make a new anonymous client
+
+        addressing_style = 'virtual' if endpoint_address_style == 'vhost' else 'path'
+
+        validation_client = boto3.client('s3', config=Config(signature_version=UNSIGNED,
+                                         s3={'addressing_style': addressing_style}, connect_timeout=3,
+                                         retries={'max_attempts': 0}), endpoint_url=self.endpoint_url, use_ssl=use_ssl,
+                                         verify=verify_ssl)
+
+        non_existent_bucket = 's3scanner-' + str(datetime.datetime.now())[0:10]
         try:
-            self.s3_client.list_objects_v2(Bucket=non_existent_bucket, MaxKeys=0)
+            validation_client.list_objects_v2(Bucket=non_existent_bucket, MaxKeys=0)
         except ClientError as e:
-            if e.response['Error']['Code'] == 'NoSuchBucket' and 'BucketName' in e.response['Error']:
+            if (e.response['Error']['Code'] == 'NoSuchBucket' or e.response['Error']['Code'] == 'AccessDenied') and \
+                    'BucketName' in e.response['Error']:
                 return True
+            return False
+        except botocore.exceptions.ConnectTimeoutError:
             return False
 
         # If we get here, the bucket either existed (unlikely) or the server returned a 200 for some reason

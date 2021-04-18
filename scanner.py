@@ -111,6 +111,8 @@ parser.add_argument('--threads', '-t', type=int, default=4, dest='threads', help
 parser.add_argument('--endpoint-url', '-u', dest='endpoint_url',
                     help='URL of S3-compliant API. Default: https://s3.amazonaws.com',
                     default='https://s3.amazonaws.com')
+parser.add_argument('--endpoint-address-style', '-s', dest='endpoint_address_style', choices=['path', 'vhost'],
+                    default='path', help='Address style to use for the endpoint. Default: path')
 parser.add_argument('--insecure', '-i', dest='verify_ssl', action='store_false', help='Do not verify SSL')
 subparsers = parser.add_subparsers(title='mode', dest='mode', help='(Must choose one)')
 
@@ -145,8 +147,8 @@ if 'http://' not in args.endpoint_url and 'https://' not in args.endpoint_url:
 s3service = None
 anonS3Service = None
 try:
-    s3service = S3Service(endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl)
-    anonS3Service = S3Service(forceNoCreds=True, endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl)
+    s3service = S3Service(endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
+    anonS3Service = S3Service(forceNoCreds=True, endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
 except InvalidEndpointException as e:
     print(f"Error: {e.message}")
     exit(1)
@@ -174,7 +176,7 @@ if args.mode == 'scan':
         }
         for future in as_completed(futures):
             if future.exception():
-                print(f"Bucket scan raised exception: {futures[future]}")
+                print(f"Bucket scan raised exception: {futures[future]} - {future.exception()}")
 
 elif args.mode == 'dump':
     if args.dump_dir is None or not path.isdir(args.dump_dir):
