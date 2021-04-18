@@ -240,7 +240,7 @@ class S3Service:
             self.download_file(dest_directory, obj, bucket, verbose)
         print(f"{bucket.name} | Dumping completed")
 
-    def dump_bucket_multithread(self, bucket, dest_directory, verbose=False, args=4):
+    def dump_bucket_multithread(self, bucket, dest_directory, verbose=False, threads=4):
         """
         Takes a bucket and downloads all the objects to a local folder.
         If the object exists locally and is the same size as the remote object, the object is skipped.
@@ -254,7 +254,7 @@ class S3Service:
         print(f"{bucket.name} | Dumping contents using 4 threads...")
         func = partial(self.download_file, dest_directory, bucket, verbose)
 
-        with ThreadPoolExecutor(max_workers=12) as executor:
+        with ThreadPoolExecutor(max_workers=threads) as executor:
             futures = {
                 executor.submit(func, obj): obj for obj in bucket.objects
             }
