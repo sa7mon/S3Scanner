@@ -224,23 +224,23 @@ class S3Service:
 
             TODO: Let the user choose whether or not to overwrite local files if is different
         """
-        print(f"[{bucket.name}] Dumping contents...")
+        print(f"{bucket.name} | Dumping contents...")
         for obj in sorted(bucket.objects):
             dest_file_path = pathlib.Path(normpath(dest_directory + obj.key))
             if dest_file_path.exists():
                 if dest_file_path.stat().st_size == obj.size:
                     if verbose:
-                        print(f"[{bucket.name}] Skipping {obj.key} - already downloaded")
+                        print(f"{bucket.name} | Skipping {obj.key} - already downloaded")
                     continue
                 else:
                     if verbose:
-                        print(f"[{bucket.name}] Re-downloading {obj.key} - local size differs from remote")
+                        print(f"{bucket.name} | Re-downloading {obj.key} - local size differs from remote")
             else:
                 if verbose:
-                    print(f"[{bucket.name}] Downloading {obj.key}")
+                    print(f"{bucket.name} | Downloading {obj.key}")
             dest_file_path.parent.mkdir(parents=True, exist_ok=True)  # Equivalent to `mkdir -p`
             self.s3_client.download_file(bucket.name, obj.key, str(dest_file_path))
-        print(f"[{bucket.name}] Dumping completed")
+        print(f"{bucket.name} | Dumping completed")
 
     def enumerate_bucket_objects(self, bucket):
         """

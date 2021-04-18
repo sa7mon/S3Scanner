@@ -1,10 +1,19 @@
-venv*/
+# IDE
 .idea/
+.vscode/
+
+# Virtualenv
+venv*/
+
+# Cache
 __pycache__
 *.pyc
 .cache/
+
+# Testing
 .pytest_cache
-list-buckets/
-buckets.txt
 test/
-.vscode/
+.coverage
+htmlcov/
+temp-*/
+buckets.txt
