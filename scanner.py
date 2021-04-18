@@ -37,15 +37,21 @@ def load_bucket_names_from_file(file_name):
         exit(1)
 
 
-def scan_single_bucket(bucketName):
+def scan_single_bucket(bucket_name):
+    """
+    Scans a single bucket for permission issues. Exists on its own so we can do multi-threading
+
+    :param bucket_name: string - Name of bucket to check
+    :return: None
+    """
     try:
-        b = s3Bucket(bucketName)
+        b = s3Bucket(bucket_name)
     except ValueError as ve:
         if str(ve) == "Invalid bucket name":
-            print(f" {bucketName} | bucket_invalid_name")
+            print(f" {bucket_name} | bucket_invalid_name")
             return
         else:
-            print(f" {bucketName} | {str(ve)}")
+            print(f" {bucket_name} | {str(ve)}")
             return
 
     # Check if bucket exists first
