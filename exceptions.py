@@ -6,3 +6,8 @@ class AccessDeniedException(Exception):
 
         # Now custom code
         # self.errors = errors
+
+
+class InvalidEndpointException(Exception):
+    def __init__(self, message):
+        self.message = message

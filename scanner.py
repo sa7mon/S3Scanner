@@ -15,6 +15,7 @@ from s3Bucket import s3Bucket, BucketExists, Permission
 from S3Service import S3Service
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
+from exceptions import InvalidEndpointException
 
 CURRENT_VERSION = '2.0.0'
 
@@ -105,8 +106,13 @@ parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buck
 # Declare arguments
 parser.add_argument('--version', action='version', version=CURRENT_VERSION,
                     help='Display the current version of this tool')
-parser.add_argument('--threads', '-t', type=int, default=4, dest='threads', help='Number of threads to use. Default: 4', metavar='n')
-subparsers = parser.add_subparsers(title='mode', dest='mode', help='')
+parser.add_argument('--threads', '-t', type=int, default=4, dest='threads', help='Number of threads to use. Default: 4',
+                    metavar='n')
+parser.add_argument('--endpoint-url', '-u', dest='endpoint_url',
+                    help='URL of S3-compliant API. Default: https://s3.amazonaws.com',
+                    default='https://s3.amazonaws.com')
+parser.add_argument('--insecure', '-i', dest='verify_ssl', action='store_false', help='Do not verify SSL')
+subparsers = parser.add_subparsers(title='mode', dest='mode', help='(Must choose one)')
 
 # Scan mode
 parser_scan = subparsers.add_parser('scan', help='Scan bucket permissions')
@@ -132,8 +138,18 @@ parser_dump.add_argument('--verbose', '-v', dest='dump_verbose', action='store_t
 # Parse the args
 args = parser.parse_args()
 
-s3service = S3Service()
-anonS3Service = S3Service(forceNoCreds=True)
+if 'http://' not in args.endpoint_url and 'https://' not in args.endpoint_url:
+    print("Error: endpoint_url must start with http:// or https:// scheme")
+    exit(1)
+
+s3service = None
+anonS3Service = None
+try:
+    s3service = S3Service(endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl)
+    anonS3Service = S3Service(forceNoCreds=True, endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl)
+except InvalidEndpointException as e:
+    print(f"Error: {e.message}")
+    exit(1)
 
 if s3service.aws_creds_configured is False:
     print("Warning: AWS credentials not configured - functionality will be limited. Run:"
