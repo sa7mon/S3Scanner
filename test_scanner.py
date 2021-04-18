@@ -1,18 +1,42 @@
+import sys
+import subprocess
+import os
+import tempfile
 
 
 def test_arguments():
-    """
-    Scenario mainargs.1: No args supplied
-    Scenario mainargs.2: --out-file
-    Scenario mainargs.3: --list
-    Scenario mainargs.4: --dump
-    """
+    a = subprocess.run([sys.executable, 'scanner.py', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert a.stdout.decode('utf-8').strip() == '2.0.0'
 
-    print("test_checkAcl temporarily disabled.")
+    b = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'flaws.cloud'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert b.stdout.decode('utf-8').strip() == 'flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]'
 
-    # test_setup()
-    #
-    # # mainargs.1
+    c = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'asdfasdf---,'], stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+    assert c.stdout.decode('utf-8').strip() == 'asdfasdf---, | bucket_invalid_name'
+
+    d = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf'],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert d.stdout.decode('utf-8').strip() == 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist'
+
+    e = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'flaws.cloud', '--dangerous'],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert e.stdout.decode('utf-8').strip() == f"INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively{os.linesep}flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]"
+
+    f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', './asfasdf'],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert f.stdout.decode('utf-8').strip() == f"Error: Given --dump-dir does not exist or is not a directory"
+
+    tempdir = None
+    try:
+        tempdir = tempfile.mkdtemp(dir='./')
+
+        f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', tempdir],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        assert f.stdout.decode('utf-8').strip() == f"Error: Given --dump-dir does not exist or is not a directory"
+    finally:
+        os.remove(tempdir)
+
     # a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # assert a.stderr == b'usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets\ns3scanner: error: the following arguments are required: buckets\n'
     #
