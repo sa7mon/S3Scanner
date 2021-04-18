@@ -178,14 +178,14 @@ elif args.mode == 'dump':
                 print(f"{b.name} | Enumerating bucket objects...")
                 anonS3Service.enumerate_bucket_objects(b)
                 print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
-                anonS3Service.dump_bucket_contents(b, args.dump_dir, args.dump_verbose)
+                anonS3Service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir, verbose=args.dump_verbose)
         else:
             # Dump bucket with creds
             print(f"{b.name} | Debug: Dumping with creds...")
             print(f"{b.name} | Enumerating bucket objects...")
             s3service.enumerate_bucket_objects(b)
             print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
-            s3service.dump_bucket_contents(b, args.dump_dir, args.dump_verbose)
+            s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir, verbose=args.dump_verbose)
 
 else:
     print("Invalid mode")
