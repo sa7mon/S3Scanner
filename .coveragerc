@@ -2,3 +2,4 @@
 omit =
     # omit anything in a .local directory anywhere
     venv*
+    TestUtils.py
