@@ -18,6 +18,29 @@ jobs:
     cache:
       directories:
         - $LOCALAPPDATA/pip/Cache
+  - name: "Python: 3.9"
+    os: windows
+    language: shell
+    before_install:
+      - choco install python --version=3.9.4
+      - python -m pip install -U pip setuptools
+    env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
+    cache:
+      directories:
+        - $LOCALAPPDATA/pip/Cache
+  - name: "Python: 3.9 with keys"
+    os: windows
+    language: shell
+    before_install:
+      - choco install python --version=3.9.4
+      - python -m pip install -U pip setuptools
+    env:
+      - PATH=/c/Python36:/c/Python36/Scripts:$PATH
+      - secure: "JShcKAHn4y57mTHDIV5+8dTRjE2cREJSswXAxhFf8jha+r58zF/uBfgXapzNh9u+dpvbVjF/N0/KxREubMTd4fduYTsxMOXyqENHnq7kVmRK6HXAAnM75JZzl1sonlHsIHHXxv45SuwYWX/fk6aMeBmkGukuvM8DGi4BEBzv0CnzEUmHlb5ZPKmQteemjhbn2d3yKPKagcieeDbSRhevGKPPmfnt0TqzpF/xrbtIL05yC+038Tesa0mZqV/HBrfZgSEtcMydIhbszhDjBwC3nzhhiC8AQJ8JGRPqR3nfTZRrHA0QMT3hr8XGpLouphvpDDwiotmOTRsGiBfONX+b2JDTx989eswIXmBsdua3pxjUNuLVTiRjl63+6zJSvT3mrJ1cZMRJPvbqYTY+mvckSMeDQv4oFZeD8QCD+z8zLa39GYfKBnapo0s+rvvxYyiVNZ9HQ1MExJyVleJWRMlmKtuNUHzHaCq+B8omcGZxhEfX4dVQ/RHwNRwkKbdUKOZy4muardhYorhVO+eLt4+bAipk8BEAXvIBwaAqbIN3+01a8TbTGKkxJUTllkf2Y7wFeF6IPtxvfpJ6Bgj4BNSpDrR/eoyIodG42J6Qdl4aK6/RQbI9vzUQ8yoSxQxzHHFZeclU2Qe5KZem3ztbexkiYB+Mv7oV/rr1LGixvbBsLzI="
+      - secure: "SLjBJJsmtbHZGwmZHHJTYk0qmlS6kcbur1SMM70+n/UEp55hAFo6Ae/n75G4RR0bVIVkgrJp3ZE9V/wZKVbOOaUaepyjZXfgRBjL/zBYjFgxgQhrLis3Bg+lR6qBoWifm/mfM+mUqHLDqelSbvpgE/oZLeM9vuYBYvI9LIZSeM3C6m+4ytKoayUgggq87lQRDr9d/YPpAZEYnT13mAqkd3zbovjLAEtALx6BOg5xZv7bHCx5WS5gz79CA+jFRjWU9q4ng5zyCERWFOeTcCYAHjxKXYOJYew8N/NYA2PFd+BiedQRHuIJAHg/auofchBewmtfHG6rgMZSuE+jzl1aB344zwpVJocR09kBXi6tk9KiASTrZMSHf31LEJFwciFnSsCTVQG7kVL0NdjZBEGO7zE1u5c4dxYEctDVvCz/kmH7hl70zajot9cYihh8VLvLwpGBYepTf2a+vhRwdxeZ81KuI3SeOBqNJwyT6wZMw9AfEOmK9LqyS9vBqusujwua+W/DDeqYFo99HkS2uMdX4/IfAB5DDhVakMrff8rrUuf1K1H6rtV7qckOHDET+wdjqymZkPD/mjjW+ibAattls4cZU3I7NRVsnNiZmXAT410A92y6JEiZPuG1djz/57yrqQ3S4KzVhgBq1t5WJRc84dUKCbYnwY4fDL4BH8lkync="
+    cache:
+      directories:
+        - $LOCALAPPDATA/pip/Cache
 cache: pip
 install:
 - pip install -r requirements.txt
