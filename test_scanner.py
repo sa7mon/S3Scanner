@@ -27,44 +27,19 @@ def test_arguments():
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert f.stdout.decode('utf-8').strip() == f"Error: Given --dump-dir does not exist or is not a directory"
 
-    tempdir = None
-    try:
-        tempdir = tempfile.mkdtemp(dir='./')
+    f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', tempfile.gettempdir()],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert f.stdout.decode('utf-8').strip() == f"flaws.cloud | Debug: Dumping without creds...{os.linesep}flaws.cloud | Enumerating bucket objects...{os.linesep}flaws.cloud | Total Objects: 7, Total Size: 25.0KB{os.linesep}flaws.cloud | Dumping contents...{os.linesep}flaws.cloud | Dumping completed"
 
-        f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', tempdir],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        assert f.stdout.decode('utf-8').strip() == f"Error: Given --dump-dir does not exist or is not a directory"
-    finally:
-        os.remove(tempdir)
+    g = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'asdfasdf,asdfasd,', '--dump-dir', tempfile.gettempdir()],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert g.stdout.decode('utf-8').strip() == "asdfasdf,asdfasd, | bucket_name_invalid"
 
-    # a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # assert a.stderr == b'usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets\ns3scanner: error: the following arguments are required: buckets\n'
-    #
-    # # mainargs.2
-    #
-    # # Put one bucket into a new file
-    # with open(testingFolder + "mainargs.2_input.txt", "w") as f:
-    #     f.write('s3scanner-bucketsize\n')
-    #
-    # try:
-    #     a = subprocess.run(['python3', s3scannerLocation + 's3scanner.py', '--out-file', testingFolder + 'mainargs.2_output.txt',
-    #                     testingFolder + 'mainargs.2_input.txt'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #
-    #     with open(testingFolder + "mainargs.2_output.txt") as f:
-    #         line = f.readline().strip()
-    #
-    #     assert line == 's3scanner-bucketsize'
-    #
-    # finally:
-    #     # No matter what happens with the test, clean up the test files at the end
-    #     try:
-    #         os.remove(testingFolder + 'mainargs.2_output.txt')
-    #         os.remove(testingFolder + 'mainargs.2_input.txt')
-    #     except OSError:
-    #         pass
+    h = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf', '--dump-dir', tempfile.gettempdir()],
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert h.stdout.decode('utf-8').strip() == 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist'
 
-    # mainargs.3
-    # mainargs.4
+
 
 
 def test_check_aws_creds():
