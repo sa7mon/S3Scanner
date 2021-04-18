@@ -3,43 +3,63 @@ import subprocess
 import os
 import tempfile
 
+from S3Service import S3Service
+
 
 def test_arguments():
+    s = S3Service()
+
     a = subprocess.run([sys.executable, 'scanner.py', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert a.stdout.decode('utf-8').strip() == '2.0.0'
 
     b = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'flaws.cloud'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert b.stdout.decode('utf-8').strip() == 'flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]'
+    assert_scanner_output(s, 'flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]', b.stdout.decode('utf-8').strip())
 
     c = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'asdfasdf---,'], stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE)
-    assert c.stdout.decode('utf-8').strip() == 'asdfasdf---, | bucket_invalid_name'
+    assert_scanner_output(s, 'asdfasdf---, | bucket_invalid_name', c.stdout.decode('utf-8').strip())
 
     d = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert d.stdout.decode('utf-8').strip() == 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist'
+    assert_scanner_output(s, 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist', d.stdout.decode('utf-8').strip())
 
     e = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'flaws.cloud', '--dangerous'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert e.stdout.decode('utf-8').strip() == f"INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively{os.linesep}flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]"
+    assert_scanner_output(s, f"INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively{os.linesep}flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]", e.stdout.decode('utf-8').strip())
 
     f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', './asfasdf'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert f.stdout.decode('utf-8').strip() == f"Error: Given --dump-dir does not exist or is not a directory"
+    assert_scanner_output(s, f"Error: Given --dump-dir does not exist or is not a directory", f.stdout.decode('utf-8').strip())
 
     f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', tempfile.gettempdir()],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert f.stdout.decode('utf-8').strip() == f"flaws.cloud | Debug: Dumping without creds...{os.linesep}flaws.cloud | Enumerating bucket objects...{os.linesep}flaws.cloud | Total Objects: 7, Total Size: 25.0KB{os.linesep}flaws.cloud | Dumping contents...{os.linesep}flaws.cloud | Dumping completed"
+    assert_scanner_output(s, f"flaws.cloud | Debug: Dumping without creds...{os.linesep}flaws.cloud | Enumerating bucket objects...{os.linesep}flaws.cloud | Total Objects: 7, Total Size: 25.0KB{os.linesep}flaws.cloud | Dumping contents using 4 threads...{os.linesep}flaws.cloud | Dumping completed", f.stdout.decode('utf-8').strip())
 
     g = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'asdfasdf,asdfasd,', '--dump-dir', tempfile.gettempdir()],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert g.stdout.decode('utf-8').strip() == "asdfasdf,asdfasd, | bucket_name_invalid"
+    assert_scanner_output(s, "asdfasdf,asdfasd, | bucket_name_invalid", g.stdout.decode('utf-8').strip())
 
     h = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf', '--dump-dir', tempfile.gettempdir()],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert h.stdout.decode('utf-8').strip() == 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist'
+    assert_scanner_output(s, 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist', h.stdout.decode('utf-8').strip())
 
 
+def assert_scanner_output(service, expected_output, found_output):
+    """
+    If the tests are run without AWS creds configured, all the output from scanner.py will have a warning banner.
+    This is a convenience method to simplify comparing the expected output to the found output
+
+    :param service: s3service
+    :param expected_output: string
+    :param found_output: string
+    :return: boolean
+    """
+    creds_warning = "Warning: AWS credentials not configured - functionality will be limited. Run: `aws configure` to fix this."
+
+    if service.aws_creds_configured:
+        assert expected_output == found_output
+    else:
+        assert f"{creds_warning}{os.linesep}{os.linesep}{expected_output}" == found_output
 
 
 def test_check_aws_creds():

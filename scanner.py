@@ -49,10 +49,10 @@ def scan_single_bucket(bucket_name):
         b = s3Bucket(bucket_name)
     except ValueError as ve:
         if str(ve) == "Invalid bucket name":
-            print(f" {bucket_name} | bucket_invalid_name")
+            print(f"{bucket_name} | bucket_invalid_name")
             return
         else:
-            print(f" {bucket_name} | {str(ve)}")
+            print(f"{bucket_name} | {str(ve)}")
             return
 
     # Check if bucket exists first
