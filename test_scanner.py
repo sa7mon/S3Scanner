@@ -3,6 +3,7 @@ import subprocess
 import os
 import tempfile
 import time
+import shutil
 
 from S3Service import S3Service
 
@@ -33,13 +34,13 @@ def test_arguments():
     assert_scanner_output(s, f"Error: Given --dump-dir does not exist or is not a directory", f.stdout.decode('utf-8').strip())
 
     # Create temp folder to dump into
-    test_folder = os.path.join(os.getcwd(), 'testing_' + str(time.time())[0:10])
+    test_folder = os.path.join(os.getcwd(), 'testing_' + str(time.time())[0:10], '')
     os.mkdir(test_folder)
 
     try:
         f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', test_folder],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        assert_scanner_output(s, f"flaws.cloud | Debug: Dumping without creds...{os.linesep}flaws.cloud | Enumerating bucket objects...{os.linesep}flaws.cloud | Total Objects: 7, Total Size: 25.0KB{os.linesep}flaws.cloud | Dumping contents using 4 threads...{os.linesep}flaws.cloud | Dumping completed", f.stdout.decode('utf-8').strip())
+        assert_scanner_output(s, f"flaws.cloud | Enumerating bucket objects...{os.linesep}flaws.cloud | Total Objects: 7, Total Size: 25.0KB{os.linesep}flaws.cloud | Dumping contents using 4 threads...{os.linesep}flaws.cloud | Dumping completed", f.stdout.decode('utf-8').strip())
 
         g = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'asdfasdf,asdfasd,', '--dump-dir', test_folder],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -49,7 +50,7 @@ def test_arguments():
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert_scanner_output(s, 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist', h.stdout.decode('utf-8').strip())
     finally:
-        os.rmdir(test_folder)
+        shutil.rmtree(test_folder)  # Cleanup the testing folder
 
 
 def assert_scanner_output(service, expected_output, found_output):

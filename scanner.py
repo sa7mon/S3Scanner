@@ -211,7 +211,6 @@ elif args.mode == 'dump':
                 print(f"{b.name} | Error: no read permissions")
             else:
                 # Dump bucket without creds
-                print(f"{b.name} | Debug: Dumping without creds...")
                 print(f"{b.name} | Enumerating bucket objects...")
                 anonS3Service.enumerate_bucket_objects(b)
                 print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
@@ -219,7 +218,6 @@ elif args.mode == 'dump':
                                                       verbose=args.dump_verbose, threads=args.threads)
         else:
             # Dump bucket with creds
-            print(f"{b.name} | Debug: Dumping with creds...")
             print(f"{b.name} | Enumerating bucket objects...")
             s3service.enumerate_bucket_objects(b)
             print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
