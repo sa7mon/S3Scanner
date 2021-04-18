@@ -231,7 +231,7 @@ class S3Service:
             self.download_file(dest_directory, obj, bucket, verbose)
         print(f"{bucket.name} | Dumping completed")
 
-    def dump_bucket_multithread(self, bucket, dest_directory, verbose=False):
+    def dump_bucket_multithread(self, bucket, dest_directory, verbose=False, args=4):
         """
         Takes a bucket and downloads all the objects to a local folder.
         If the object exists locally and is the same size as the remote object, the object is skipped.

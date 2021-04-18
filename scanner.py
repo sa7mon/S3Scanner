@@ -13,6 +13,8 @@ from os import path
 from sys import exit
 from s3Bucket import s3Bucket, BucketExists, Permission
 from S3Service import S3Service
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import partial
 
 CURRENT_VERSION = '2.0.0'
 
@@ -35,6 +37,61 @@ def load_bucket_names_from_file(file_name):
         exit(1)
 
 
+def scan_single_bucket(bucketName):
+    try:
+        b = s3Bucket(bucketName)
+    except ValueError as ve:
+        if str(ve) == "Invalid bucket name":
+            print(f" {bucketName} | bucket_invalid_name")
+            return
+        else:
+            print(f" {bucketName} | {str(ve)}")
+            return
+
+    # Check if bucket exists first
+    s3service.check_bucket_exists(b)
+
+    if b.exists == BucketExists.NO:
+        print(f"{b.name} | bucket_not_exist")
+        return
+    checkAllUsersPerms = True
+    checkAuthUsersPerms = True
+
+    # 1. Check for ReadACP
+    anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
+    if s3service.aws_creds_configured:
+        s3service.check_perm_read_acl(b)  # Check for AuthUsers
+
+    # If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests
+    if b.AuthUsersFullControl == Permission.ALLOWED:
+        checkAuthUsersPerms = False
+    if b.AllUsersFullControl == Permission.ALLOWED:
+        checkAllUsersPerms = False
+
+    # 2. Check for Read
+    if checkAllUsersPerms:
+        anonS3Service.check_perm_read(b)
+    if s3service.aws_creds_configured and checkAuthUsersPerms:
+        s3service.check_perm_read(b)
+
+    # Do dangerous/destructive checks
+    if args.dangerous:
+        # 3. Check for Write
+        if checkAllUsersPerms:
+            anonS3Service.check_perm_write(b)
+        if s3service.aws_creds_configured and checkAuthUsersPerms:
+            s3service.check_perm_write(b)
+
+        # 4. Check for WriteACP
+        # TODO: Actually check this permission
+        if checkAllUsersPerms:
+            pass
+        if s3service.aws_creds_configured and checkAuthUsersPerms:
+            pass
+
+    print(f"{b.name} | bucket_exists | {b.getHumanReadablePermissions()}")
+
+
 # Instantiate the parser
 parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buckets\n'
                                              '           by Dan Salmon - github.com/sa7mon, @bltjetpack\n',
@@ -42,6 +99,7 @@ parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buck
 # Declare arguments
 parser.add_argument('--version', action='version', version=CURRENT_VERSION,
                     help='Display the current version of this tool')
+parser.add_argument('--threads', '-t', type=int, default=4, dest='threads', help='Number of threads to use. Default: 4', metavar='n')
 subparsers = parser.add_subparsers(title='mode', dest='mode', help='')
 
 # Scan mode
@@ -86,59 +144,16 @@ if args.mode == 'scan':
     if args.dangerous:
         print("INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively")
 
-    for bucketName in bucketsIn:
-        try:
-            b = s3Bucket(bucketName)
-        except ValueError as ve:
-            if str(ve) == "Invalid bucket name":
-                print(f" {bucketName} | bucket_invalid_name")
-                continue
-            else:
-                print(f" {bucketName} | {str(ve)}")
-                continue
+    func = partial(scan_single_bucket)
 
-        # Check if bucket exists first
-        s3service.check_bucket_exists(b)
+    with ThreadPoolExecutor(max_workers=args.threads) as executor:
+        futures = {
+            executor.submit(func, bucketName): bucketName for bucketName in bucketsIn
+        }
+        for future in as_completed(futures):
+            if future.exception():
+                print(f"Bucket scan raised exception: {futures[future]}")
 
-        if b.exists == BucketExists.NO:
-            print(f"{b.name} | bucket_not_exist")
-            continue
-
-        checkAllUsersPerms = True
-        checkAuthUsersPerms = True
-
-        # 1. Check for ReadACP
-        anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
-        if s3service.aws_creds_configured:
-            s3service.check_perm_read_acl(b)  # Check for AuthUsers
-
-        # If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests
-        if b.AuthUsersFullControl == Permission.ALLOWED:
-            checkAuthUsersPerms = False
-        if b.AllUsersFullControl == Permission.ALLOWED:
-            checkAllUsersPerms = False
-
-        # 2. Check for Read
-        if checkAllUsersPerms:
-            anonS3Service.check_perm_read(b)
-        if s3service.aws_creds_configured and checkAuthUsersPerms:
-            s3service.check_perm_read(b)
-
-        # Do dangerous/destructive checks
-        if args.dangerous:
-            # 3. Check for Write
-            if checkAllUsersPerms:
-                anonS3Service.check_perm_write(b)
-            if s3service.aws_creds_configured and checkAuthUsersPerms:
-                s3service.check_perm_write(b)
-
-            # 4. Check for WriteACP
-            if checkAllUsersPerms:
-                pass
-            if s3service.aws_creds_configured and checkAuthUsersPerms:
-                pass
-
-        print(f"{b.name} | bucket_exists | {b.getHumanReadablePermissions()}")
 elif args.mode == 'dump':
     if args.dump_dir is None or not path.isdir(args.dump_dir):
         print("Error: Given --dump-dir does not exist or is not a directory")
@@ -178,14 +193,16 @@ elif args.mode == 'dump':
                 print(f"{b.name} | Enumerating bucket objects...")
                 anonS3Service.enumerate_bucket_objects(b)
                 print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
-                anonS3Service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir, verbose=args.dump_verbose)
+                anonS3Service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
+                                                      verbose=args.dump_verbose, args=args.threads)
         else:
             # Dump bucket with creds
             print(f"{b.name} | Debug: Dumping with creds...")
             print(f"{b.name} | Enumerating bucket objects...")
             s3service.enumerate_bucket_objects(b)
             print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
-            s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir, verbose=args.dump_verbose)
+            s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
+                                              verbose=args.dump_verbose, args=args.threads)
 
 else:
     print("Invalid mode")
