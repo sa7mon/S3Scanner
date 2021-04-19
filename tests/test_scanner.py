@@ -1,7 +1,6 @@
 import sys
 import subprocess
 import os
-import tempfile
 import time
 import shutil
 
