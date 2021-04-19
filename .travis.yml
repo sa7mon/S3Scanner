@@ -18,16 +18,6 @@ jobs:
     cache:
       directories:
         - $LOCALAPPDATA/pip/Cache
-  - name: "Python: 3.9"
-    os: windows
-    language: shell
-    before_install:
-      - choco install python --version=3.9.4
-      - python -m pip install -U pip setuptools
-    env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
-    cache:
-      directories:
-        - $LOCALAPPDATA/pip/Cache
 
 cache: pip
 install:
