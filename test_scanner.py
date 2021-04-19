@@ -53,6 +53,23 @@ def test_arguments():
         shutil.rmtree(test_folder)  # Cleanup the testing folder
 
 
+def test_endpoints():
+    """
+    Test the handling of non-AWS endpoints
+    :return:
+    """
+    s = S3Service()
+    b = subprocess.run([sys.executable, 'scanner.py', '--endpoint-url', 'https://sfo2.digitaloceanspaces.com',
+                        'scan', '--bucket', 's3scanner'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert_scanner_output(s, 's3scanner | bucket_not_exist',
+                          b.stdout.decode('utf-8').strip())
+
+    c = subprocess.run([sys.executable, 'scanner.py', '--endpoint-url', 'http://example.com', 'scan', '--bucket',
+                        's3scanner'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert c.stdout.decode('utf-8').strip() == "Error: Endpoint 'http://example.com' does not appear to be S3-compliant"
+
+
+
 def assert_scanner_output(service, expected_output, found_output):
     """
     If the tests are run without AWS creds configured, all the output from scanner.py will have a warning banner.

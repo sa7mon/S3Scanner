@@ -9,7 +9,7 @@ import botocore.session
 from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
-from exceptions import AccessDeniedException, InvalidEndpointException
+from exceptions import AccessDeniedException, InvalidEndpointException, BucketMightNotExistException
 from os.path import normpath
 import pathlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -84,7 +84,7 @@ class S3Service:
                 ClientError
         """
         if bucket.exists != BucketExists.YES:
-            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
+            raise BucketMightNotExistException()
 
         try:
             bucket.foundACL = self.s3_client.get_bucket_acl(Bucket=bucket.name)
@@ -107,7 +107,7 @@ class S3Service:
                 ClientError
         """
         if bucket.exists != BucketExists.YES:
-            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
+            raise BucketMightNotExistException()
 
         list_bucket_perm_allowed = True
         try:
@@ -139,7 +139,7 @@ class S3Service:
             Raises: ValueError, ClientError
         """
         if bucket.exists != BucketExists.YES:
-            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
+            raise BucketMightNotExistException()
 
         timestamp_file = str(datetime.datetime.now().timestamp()) + '.txt'
 
@@ -173,7 +173,7 @@ class S3Service:
             thus ensuring minimal disruption for the bucket owner.
         """
         if bucket.exists != BucketExists.YES:
-            raise ValueError("Bucket might not exist")  # TODO: Create custom exception for easier handling
+            raise BucketMightNotExistException()
 
         # TODO: See if there's a way to simplify this section
         readURIs = []

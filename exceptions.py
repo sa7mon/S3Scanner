@@ -11,3 +11,8 @@ class AccessDeniedException(Exception):
 class InvalidEndpointException(Exception):
     def __init__(self, message):
         self.message = message
+
+
+class BucketMightNotExistException(Exception):
+    def __init__(self):
+        pass

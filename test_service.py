@@ -1,9 +1,12 @@
 import os
+
+import pytest
+
 import s3Bucket
 from S3Service import S3Service
 from s3Bucket import BucketExists, Permission
 from TestUtils import TestBucketService
-from exceptions import AccessDeniedException
+from exceptions import AccessDeniedException, BucketMightNotExistException
 
 s3scannerLocation = "./"
 testingFolder = "./test/"
@@ -494,3 +497,23 @@ def test_parse_found_acl():
     assert b5.AuthUsersWrite == Permission.DENIED
     assert b5.AuthUsersWriteACP == Permission.DENIED
     assert b5.AuthUsersFullControl == Permission.DENIED
+
+
+def test_check_perms_without_checking_bucket_exists():
+    test_setup_new()
+    s = S3Service()
+
+    sAnon = S3Service(forceNoCreds=True)
+
+    b1 = s3Bucket.s3Bucket('blahblah')
+    with pytest.raises(BucketMightNotExistException):
+        sAnon.check_perm_read_acl(b1)
+
+    with pytest.raises(BucketMightNotExistException):
+        sAnon.check_perm_read(b1)
+
+    with pytest.raises(BucketMightNotExistException):
+        sAnon.check_perm_write(b1)
+
+    with pytest.raises(BucketMightNotExistException):
+        sAnon.check_perm_write_acl(b1)
