@@ -56,7 +56,11 @@ def scan_single_bucket(bucket_name):
             return
 
     # Check if bucket exists first
-    s3service.check_bucket_exists(b)
+    # Use credentials if configured and if we're hitting AWS. Otherwise, check anonymously
+    if s3service.endpoint_url == 'https://s3.amazonaws.com':
+        s3service.check_bucket_exists(b)
+    else:
+        anonS3Service.check_bucket_exists(b)
 
     if b.exists == BucketExists.NO:
         print(f"{b.name} | bucket_not_exist")
