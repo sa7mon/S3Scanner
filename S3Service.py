@@ -16,8 +16,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
 from urllib3 import disable_warnings
 
-allUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
-authUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+ALL_USERS_URI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
+AUTH_USERS_URI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
 
 
 class S3Service:
@@ -204,31 +204,31 @@ class S3Service:
         fullControlURIs = []
 
         if bucket.AuthUsersRead == Permission.ALLOWED:
-            readURIs.append(authUsersURI)
+            readURIs.append(AUTH_USERS_URI)
         if bucket.AuthUsersWrite == Permission.ALLOWED:
-            writeURIs.append(authUsersURI)
+            writeURIs.append(AUTH_USERS_URI)
         if bucket.AuthUsersReadACP == Permission.ALLOWED:
-            readAcpURIs.append(authUsersURI)
+            readAcpURIs.append(AUTH_USERS_URI)
         if bucket.AuthUsersWriteACP == Permission.ALLOWED:
-            writeAcpURIs.append(authUsersURI)
+            writeAcpURIs.append(AUTH_USERS_URI)
         if bucket.AuthUsersFullControl == Permission.ALLOWED:
-            fullControlURIs.append(authUsersURI)
+            fullControlURIs.append(AUTH_USERS_URI)
 
         if bucket.AllUsersRead == Permission.ALLOWED:
-            readURIs.append(allUsersURI)
+            readURIs.append(ALL_USERS_URI)
         if bucket.AllUsersWrite == Permission.ALLOWED:
-            writeURIs.append(allUsersURI)
+            writeURIs.append(ALL_USERS_URI)
         if bucket.AllUsersReadACP == Permission.ALLOWED:
-            readAcpURIs.append(allUsersURI)
+            readAcpURIs.append(ALL_USERS_URI)
         if bucket.AllUsersWriteACP == Permission.ALLOWED:
-            writeAcpURIs.append(allUsersURI)
+            writeAcpURIs.append(ALL_USERS_URI)
         if bucket.AllUsersFullControl == Permission.ALLOWED:
-            fullControlURIs.append(allUsersURI)
+            fullControlURIs.append(ALL_USERS_URI)
 
         if self.aws_creds_configured:   # Otherwise AWS will return "Request was missing a required header"
-            writeAcpURIs.append(authUsersURI)
+            writeAcpURIs.append(AUTH_USERS_URI)
         else:
-            writeAcpURIs.append(allUsersURI)
+            writeAcpURIs.append(ALL_USERS_URI)
         args = {'Bucket': bucket.name}
         if len(readURIs) > 0:
             args['GrantRead'] = ','.join(readURIs)
