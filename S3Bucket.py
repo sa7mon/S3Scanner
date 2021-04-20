@@ -57,7 +57,7 @@ class s3BucketObject:
         return bytes_to_human_readable(self.size)
 
 
-class s3Bucket:
+class S3Bucket:
     """
     Represents a bucket which holds objects
     """

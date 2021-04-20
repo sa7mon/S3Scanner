@@ -2,8 +2,8 @@
     This will be a service that the client program will instantiate to then call methods
     passing buckets
 """
-import boto3 # TODO: Limit import to just boto3.client, probably
-from s3Bucket import s3Bucket, BucketExists, Permission, s3BucketObject
+import boto3  # TODO: Limit import to just boto3.client, probably
+from S3Bucket import S3Bucket, BucketExists, Permission, s3BucketObject
 from botocore.exceptions import ClientError
 import botocore.session
 from botocore import UNSIGNED
@@ -67,12 +67,12 @@ class S3Service:
         """
         Checks if a bucket exists. Sets `exists` property of `bucket`
 
-        :param s3Bucket bucket: Bucket to check
+        :param S3Bucket bucket: Bucket to check
         :raises ValueError: If `bucket` is not an s3Bucket object
         :return: None
         """
-        if not isinstance(bucket, s3Bucket):
-            raise ValueError("Passed object was not type s3Bucket")
+        if not isinstance(bucket, S3Bucket):
+            raise ValueError("Passed object was not type S3Bucket")
 
         bucket_exists = True
 
@@ -88,7 +88,7 @@ class S3Service:
         """
         Check for the READACP permission on `bucket` by trying to get the bucket ACL
 
-        :param s3Bucket bucket: Bucket to check permission of
+        :param S3Bucket bucket: Bucket to check permission of
         :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
         :raises ClientError: If we encounter an unexpected ClientError from boto client
         :return: None
@@ -114,7 +114,7 @@ class S3Service:
         Checks for the READ permission on the bucket by attempting to list the objects.
         Sets the `AllUsersRead` and/or `AuthUsersRead` property of `bucket`.
 
-        :param s3Bucket bucket: Bucket to check permission of
+        :param S3Bucket bucket: Bucket to check permission of
         :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
         :raises ClientError: If we encounter an unexpected ClientError from boto client
         :return: None
@@ -149,7 +149,7 @@ class S3Service:
         to mark AuthUsers as Allowed if they are explicitly granted. If AllUsersWrite is Allowed and the write is
         successful by an AuthUser, we have no way of knowing if AuthUsers were granted permission explicitly
 
-        :param s3Bucket bucket: Bucket to check permission of
+        :param S3Bucket bucket: Bucket to check permission of
         :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
         :raises ClientError: If we encounter an unexpected ClientError from boto client
         :return: None
@@ -188,7 +188,7 @@ class S3Service:
         WARNING: Potentially destructive - make sure to run this check last as it will include all discovered
         permissions in the ACL it tries to set, thus ensuring minimal disruption for the bucket owner.
 
-        :param s3Bucket bucket: Bucket to check permission of
+        :param S3Bucket bucket: Bucket to check permission of
         :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
         :raises ClientError: If we encounter an unexpected ClientError from boto client
         :return: None
@@ -266,7 +266,7 @@ class S3Service:
         If the object exists locally and is the same size as the remote object, the object is skipped.
         If the object exists locally and is a different size then the remote object, the local object is overwritten.
 
-        :param s3Bucket bucket: Bucket whose contents we want to dump
+        :param S3Bucket bucket: Bucket whose contents we want to dump
         :param str dest_directory: Folder to save the objects to. Must include trailing slash
         :param bool verbose: Output verbose messages to the user
         :param int threads: Number of threads to use while dumping
@@ -293,7 +293,7 @@ class S3Service:
         Download `obj` from `bucket` into `dest_directory`
 
         :param str dest_directory: Directory to store the object into
-        :param s3Bucket bucket: Bucket to download the object from
+        :param S3Bucket bucket: Bucket to download the object from
         :param bool verbose: Output verbose messages to the user
         :param s3BucketObject obj: Object to downlaod
         :return: None
@@ -318,7 +318,7 @@ class S3Service:
         Enumerate all the objects in a bucket. Sets the `BucketSize`, `objects`, and `objects_enumerated` properties
         of `bucket`.
 
-        :param s3Bucket bucket: Bucket to enumerate objects of
+        :param S3Bucket bucket: Bucket to enumerate objects of
         :raises Exception: If the bucket doesn't exist
         :raises AccessDeniedException: If we are denied access to the bucket objects
         :raises ClientError: If we encounter an unexpected ClientError from boto client
@@ -347,7 +347,7 @@ class S3Service:
         Translate ACL grants into permission properties. If we were able to read the ACLs, we should be able to skip
         manually checking most permissions
 
-        :param s3Bucket bucket: Bucket whose ACLs we want to parse
+        :param S3Bucket bucket: Bucket whose ACLs we want to parse
         :return: None
         """
         if bucket.foundACL is None:

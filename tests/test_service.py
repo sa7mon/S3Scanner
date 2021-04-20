@@ -2,9 +2,8 @@ import os
 
 import pytest
 
-import s3Bucket
 from S3Service import S3Service
-from s3Bucket import BucketExists, Permission, s3BucketObject
+from S3Bucket import BucketExists, Permission, s3BucketObject, S3Bucket
 from TestUtils import TestBucketService
 from exceptions import AccessDeniedException, BucketMightNotExistException
 from pathlib import Path
@@ -75,12 +74,12 @@ def test_bucket_exists():
     s = S3Service()
 
     # Bucket that does exist
-    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    b1 = S3Bucket('s3scanner-private')
     s.check_bucket_exists(b1)
     assert b1.exists is BucketExists.YES
 
     # Bucket that doesn't exist (hopefully)
-    b2 = s3Bucket.s3Bucket('asfasfasdfasdfasdf')
+    b2 = S3Bucket('asfasfasdfasdfasdf')
     s.check_bucket_exists(b2)
     assert b2.exists is BucketExists.NO
 
@@ -95,7 +94,7 @@ def test_check_perm_read():
     s = S3Service()
 
     # Bucket that no one can list
-    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    b1 = S3Bucket('s3scanner-private')
     b1.exists = BucketExists.YES
     s.check_perm_read(b1)
     if s.aws_creds_configured:
@@ -104,7 +103,7 @@ def test_check_perm_read():
         assert b1.AllUsersRead == Permission.DENIED
 
     # Bucket that only AuthenticatedUsers can list
-    b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+    b2 = S3Bucket('s3scanner-auth-read')
     b2.exists = BucketExists.YES
     s.check_perm_read(b2)
     if s.aws_creds_configured:
@@ -113,7 +112,7 @@ def test_check_perm_read():
         assert b2.AllUsersRead == Permission.DENIED
 
     # Bucket that Everyone can list
-    b3 = s3Bucket.s3Bucket('s3scanner-long')
+    b3 = S3Bucket('s3scanner-long')
     b3.exists = BucketExists.YES
     s.check_perm_read(b3)
     if s.aws_creds_configured:
@@ -128,7 +127,7 @@ def test_enumerate_bucket_objects():
     s = S3Service()
 
     # Empty bucket
-    b1 = s3Bucket.s3Bucket('s3scanner-empty')
+    b1 = S3Bucket('s3scanner-empty')
     b1.exists = BucketExists.YES
     s.check_perm_read(b1)
     if s.aws_creds_configured:
@@ -141,7 +140,7 @@ def test_enumerate_bucket_objects():
 
     # Bucket with > 1000 items
     if s.aws_creds_configured:
-        b2 = s3Bucket.s3Bucket('s3scanner-auth-read')
+        b2 = S3Bucket('s3scanner-auth-read')
         b2.exists = BucketExists.YES
         s.check_perm_read(b2)
         assert b2.AuthUsersRead == Permission.ALLOWED
@@ -153,7 +152,7 @@ def test_enumerate_bucket_objects():
         print("[test_enumerate_bucket_objects] Skipping test due to no AWS creds")
 
     # Bucket without read permission
-    b3 = s3Bucket.s3Bucket('s3scanner-private')
+    b3 = S3Bucket('s3scanner-private')
     b3.exists = BucketExists.YES
     s.check_perm_read(b3)
     if s.aws_creds_configured:
@@ -166,7 +165,7 @@ def test_enumerate_bucket_objects():
         pass
 
     # Try to enumerate before checking if bucket exists
-    b4 = s3Bucket.s3Bucket('s3scanner-enumerate-bucket')
+    b4 = S3Bucket('s3scanner-enumerate-bucket')
     with pytest.raises(Exception):
         s.enumerate_bucket_objects(b4)
 
@@ -176,7 +175,7 @@ def test_check_perm_read_acl():
     s = S3Service()
 
     # Bucket with no read ACL perms
-    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    b1 = S3Bucket('s3scanner-private')
     b1.exists = BucketExists.YES
     s.check_perm_read_acl(b1)
     if s.aws_creds_configured:
@@ -186,7 +185,7 @@ def test_check_perm_read_acl():
 
     # Bucket that allows AuthenticatedUsers to read ACL
     if s.aws_creds_configured:
-        b2 = s3Bucket.s3Bucket('s3scanner-auth-read-acl')
+        b2 = S3Bucket('s3scanner-auth-read-acl')
         b2.exists = BucketExists.YES
         s.check_perm_read_acl(b2)
         if s.aws_creds_configured:
@@ -195,7 +194,7 @@ def test_check_perm_read_acl():
             assert b2.AllUsersReadACP == Permission.DENIED
 
     # Bucket that allows AllUsers to read ACL
-    b3 = s3Bucket.s3Bucket('s3scanner-all-readacp')
+    b3 = S3Bucket('s3scanner-all-readacp')
     b3.exists = BucketExists.YES
     s.check_perm_read_acl(b3)
     assert b3.AllUsersReadACP == Permission.ALLOWED
@@ -212,7 +211,7 @@ def test_check_perm_write(do_dangerous_test):
     sAnon = S3Service(forceNoCreds=True)
 
     # Bucket with no write perms
-    b1 = s3Bucket.s3Bucket('flaws.cloud')
+    b1 = S3Bucket('flaws.cloud')
     b1.exists = BucketExists.YES
     s.check_perm_write(b1)
 
@@ -227,7 +226,7 @@ def test_check_perm_write(do_dangerous_test):
 
         danger_bucket_1 = ts.create_bucket(1)  # Bucket with AuthUser Write, WriteACP permissions
         try:
-            b2 = s3Bucket.s3Bucket(danger_bucket_1)
+            b2 = S3Bucket(danger_bucket_1)
             b2.exists = BucketExists.YES
             sAnon.check_perm_write(b2)
             s.check_perm_write(b2)
@@ -238,7 +237,7 @@ def test_check_perm_write(do_dangerous_test):
 
         danger_bucket_2 = ts.create_bucket(2)  # Bucket with AllUser Write, WriteACP permissions
         try:
-            b3 = s3Bucket.s3Bucket(danger_bucket_2)
+            b3 = S3Bucket(danger_bucket_2)
             b3.exists = BucketExists.YES
             sAnon.check_perm_write(b3)
             s.check_perm_write(b3)
@@ -250,7 +249,7 @@ def test_check_perm_write(do_dangerous_test):
         # Bucket with AllUsers and AuthUser Write permissions
         danger_bucket_4 = ts.create_bucket(4)
         try:
-            b4 = s3Bucket.s3Bucket(danger_bucket_4)
+            b4 = S3Bucket(danger_bucket_4)
             b4.exists = BucketExists.YES
             sAnon.check_perm_write(b4)
             s.check_perm_write(b4)
@@ -268,7 +267,7 @@ def test_check_perm_write_acl(do_dangerous_test):
     sNoCreds = S3Service(forceNoCreds=True)
 
     # Bucket with no permissions
-    b1 = s3Bucket.s3Bucket('s3scanner-private')
+    b1 = S3Bucket('s3scanner-private')
     b1.exists = BucketExists.YES
     s.check_perm_write_acl(b1)
     if s.aws_creds_configured:
@@ -285,7 +284,7 @@ def test_check_perm_write_acl(do_dangerous_test):
         # Bucket with WRITE_ACP enabled for AuthUsers
         danger_bucket_3 = ts.create_bucket(3)
         try:
-            b2 = s3Bucket.s3Bucket(danger_bucket_3)
+            b2 = S3Bucket(danger_bucket_3)
             b2.exists = BucketExists.YES
 
             # Check for read/write permissions so when we check for write_acl we
@@ -323,7 +322,7 @@ def test_check_perm_write_acl(do_dangerous_test):
         # Bucket with WRITE_ACP enabled for AllUsers
         danger_bucket_2 = ts.create_bucket(2)
         try:
-            b3 = s3Bucket.s3Bucket(danger_bucket_2)
+            b3 = S3Bucket(danger_bucket_2)
             b3.exists = BucketExists.YES
             sNoCreds.check_perm_read(b3)
             s.check_perm_read(b3)
@@ -350,7 +349,7 @@ def test_check_perm_write_acl(do_dangerous_test):
         # Bucket with WRITE_ACP enabled for both AllUsers and AuthUsers
         danger_bucket_5 = ts.create_bucket(5)
         try:
-            b5 = s3Bucket.s3Bucket(danger_bucket_5)
+            b5 = S3Bucket(danger_bucket_5)
             b5.exists = BucketExists.YES
             sNoCreds.check_perm_read(b5)
             s.check_perm_read(b5)
@@ -378,7 +377,7 @@ def test_parse_found_acl():
     test_setup_new()
     sAnon = S3Service(forceNoCreds=True)
 
-    b1 = s3Bucket.s3Bucket('s3scanner-all-read-readacl')
+    b1 = S3Bucket('s3scanner-all-read-readacl')
     b1.exists = BucketExists.YES
     sAnon.check_perm_read_acl(b1)
 
@@ -407,7 +406,7 @@ def test_parse_found_acl():
         ]
     }
 
-    b2 = s3Bucket.s3Bucket('test-acl-doesnt-exist')
+    b2 = S3Bucket('test-acl-doesnt-exist')
     b2.exists = BucketExists.YES
     b2.foundACL = test_acls_1
     sAnon.parse_found_acl(b2)
@@ -434,7 +433,7 @@ def test_parse_found_acl():
         ]
     }
 
-    b3 = s3Bucket.s3Bucket('test-acl2-doesnt-exist')
+    b3 = S3Bucket('test-acl2-doesnt-exist')
     b3.exists = BucketExists.YES
     b3.foundACL = test_acls_2
     sAnon.parse_found_acl(b3)
@@ -461,7 +460,7 @@ def test_parse_found_acl():
         ]
     }
 
-    b4 = s3Bucket.s3Bucket('test-acl3-doesnt-exist')
+    b4 = S3Bucket('test-acl3-doesnt-exist')
     b4.exists = BucketExists.YES
     b4.foundACL = test_acls_3
     sAnon.parse_found_acl(b4)
@@ -492,7 +491,7 @@ def test_parse_found_acl():
         ]
     }
 
-    b5 = s3Bucket.s3Bucket('test-acl4-doesnt-exist')
+    b5 = S3Bucket('test-acl4-doesnt-exist')
     b5.exists = BucketExists.YES
     b5.foundACL = test_acls_4
     sAnon.parse_found_acl(b5)
@@ -514,7 +513,7 @@ def test_check_perms_without_checking_bucket_exists():
 
     sAnon = S3Service(forceNoCreds=True)
 
-    b1 = s3Bucket.s3Bucket('blahblah')
+    b1 = S3Bucket('blahblah')
     with pytest.raises(BucketMightNotExistException):
         sAnon.check_perm_read_acl(b1)
 
@@ -544,5 +543,5 @@ def test_download_file():
 
     o = s3BucketObject(size=size, last_modified="2020-12-31_03-02-11z", key="test_download_file.txt")
 
-    b = s3Bucket.s3Bucket("bucket-no-existo")
+    b = S3Bucket("bucket-no-existo")
     s.download_file(os.path.join(dest_folder, ''), b, True, o)

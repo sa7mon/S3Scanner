@@ -1,13 +1,13 @@
-from s3Bucket import s3Bucket, s3BucketObject, Permission
+from S3Bucket import S3Bucket, s3BucketObject, Permission
 
 """
-Tests for s3Bucket class go here
+Tests for S3Bucket class go here
 """
 
 
 def test_invalid_bucket_name():
     try:
-        b = s3Bucket(name="asdf,;0()")
+        b = S3Bucket(name="asdf,;0()")
     except ValueError as ve:
         if str(ve) != "Invalid bucket name":
             raise ve
@@ -24,12 +24,12 @@ def test_s3_bucket_object():
 
 
 def test_check_bucket_name():
-    b = s3Bucket(name="asdfasdf.s3.amazonaws.com")
-    b2 = s3Bucket(name="asdf:us-west-1")
+    b = S3Bucket(name="asdfasdf.s3.amazonaws.com")
+    b2 = S3Bucket(name="asdf:us-west-1")
 
 
 def test_get_human_readable_permissions():
-    b = s3Bucket(name='asdf')
+    b = S3Bucket(name='asdf')
     b.AllUsersRead = Permission.ALLOWED
     b.AllUsersWrite = Permission.ALLOWED
     b.AllUsersReadACP = Permission.ALLOWED

@@ -11,7 +11,7 @@
 import argparse
 from os import path
 from sys import exit
-from s3Bucket import s3Bucket, BucketExists, Permission
+from S3Bucket import S3Bucket, BucketExists, Permission
 from S3Service import S3Service
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
@@ -52,7 +52,7 @@ def scan_single_bucket(bucket_name):
     :return: None
     """
     try:
-        b = s3Bucket(bucket_name)
+        b = S3Bucket(bucket_name)
     except ValueError as ve:
         if str(ve) == "Invalid bucket name":
             print(f"{bucket_name} | bucket_invalid_name")
@@ -200,7 +200,7 @@ if __name__ == "__main__":
 
         for bucketName in bucketsIn:
             try:
-                b = s3Bucket(bucketName)
+                b = S3Bucket(bucketName)
             except ValueError as ve:
                 if str(ve) == "Invalid bucket name":
                     print(f"{bucketName} | bucket_name_invalid")
