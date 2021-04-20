@@ -68,7 +68,6 @@ def test_endpoints():
     assert c.stdout.decode('utf-8').strip() == "Error: Endpoint 'http://example.com' does not appear to be S3-compliant"
 
 
-
 def assert_scanner_output(service, expected_output, found_output):
     """
     If the tests are run without AWS creds configured, all the output from scanner.py will have a warning banner.

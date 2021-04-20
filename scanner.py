@@ -18,7 +18,7 @@ from functools import partial
 from exceptions import InvalidEndpointException
 
 CURRENT_VERSION = '2.0.0'
-
+AWS_ENDPOINT = 'https://s3.amazonaws.com'
 
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
@@ -63,7 +63,7 @@ def scan_single_bucket(bucket_name):
 
     # Check if bucket exists first
     # Use credentials if configured and if we're hitting AWS. Otherwise, check anonymously
-    if s3service.endpoint_url == 'https://s3.amazonaws.com':
+    if s3service.endpoint_url == AWS_ENDPOINT:
         s3service.check_bucket_exists(b)
     else:
         anonS3Service.check_bucket_exists(b)
@@ -76,7 +76,7 @@ def scan_single_bucket(bucket_name):
 
     # 1. Check for ReadACP
     anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
-    if s3service.aws_creds_configured:
+    if s3service.aws_creds_configured and s3service.endpoint_url == AWS_ENDPOINT:
         s3service.check_perm_read_acl(b)  # Check for AuthUsers
 
     # If FullControl is allowed for either AllUsers or AnonUsers, skip the remainder of those tests
@@ -88,7 +88,7 @@ def scan_single_bucket(bucket_name):
     # 2. Check for Read
     if checkAllUsersPerms:
         anonS3Service.check_perm_read(b)
-    if s3service.aws_creds_configured and checkAuthUsersPerms:
+    if s3service.aws_creds_configured and checkAuthUsersPerms and s3service.endpoint_url == AWS_ENDPOINT:
         s3service.check_perm_read(b)
 
     # Do dangerous/destructive checks
