@@ -53,7 +53,7 @@ class S3BucketObject:
     def __repr__(self):
         return "Key: %s, Size: %s, LastModified: %s" % (self.key, str(self.size), str(self.last_modified))
 
-    def getHumanReadableSize(self):
+    def get_human_readable_size(self):
         return bytes_to_human_readable(self.size)
 
 

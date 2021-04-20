@@ -20,7 +20,7 @@ def test_s3_bucket_object():
     assert o1 != o2
     assert o2 < o1  # test __lt__ method which compares keys
     assert str(o1) == "Key: index.html, Size: 8096, LastModified: 2018-03-02T08:10:25.000Z"
-    assert o1.getHumanReadableSize() == "7.9KB"
+    assert o1.get_human_readable_size() == "7.9KB"
 
 
 def test_check_bucket_name():
