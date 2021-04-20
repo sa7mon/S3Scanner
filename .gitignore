@@ -17,3 +17,8 @@ test/
 htmlcov/
 temp-*/
 buckets.txt
+
+# Pip build
+build/
+dist/
+S3Scanner.egg-info/

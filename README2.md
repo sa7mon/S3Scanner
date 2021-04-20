@@ -1,4 +1,7 @@
 # S3Scanner
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
+
+A tool to find open S3 buckets and dump their contents :droplet:
 
 ## Tested non-AWS endpoints
 

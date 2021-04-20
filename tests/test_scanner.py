@@ -10,25 +10,25 @@ from S3Scanner.S3Service import S3Service
 def test_arguments():
     s = S3Service()
 
-    a = subprocess.run([sys.executable, 'scanner.py', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    a = subprocess.run([sys.executable, '-m', 'S3Scanner', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert a.stdout.decode('utf-8').strip() == '2.0.0'
 
-    b = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'flaws.cloud'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    b = subprocess.run([sys.executable, '-m', 'S3Scanner', 'scan', '--bucket', 'flaws.cloud'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert_scanner_output(s, 'flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]', b.stdout.decode('utf-8').strip())
 
-    c = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'asdfasdf---,'], stdout=subprocess.PIPE,
+    c = subprocess.run([sys.executable, '-m', 'S3Scanner', 'scan', '--bucket', 'asdfasdf---,'], stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE)
     assert_scanner_output(s, 'asdfasdf---, | bucket_invalid_name', c.stdout.decode('utf-8').strip())
 
-    d = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf'],
+    d = subprocess.run([sys.executable, '-m', 'S3Scanner', 'scan', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert_scanner_output(s, 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist', d.stdout.decode('utf-8').strip())
 
-    e = subprocess.run([sys.executable, 'scanner.py', 'scan', '--bucket', 'flaws.cloud', '--dangerous'],
+    e = subprocess.run([sys.executable, '-m', 'S3Scanner', 'scan', '--bucket', 'flaws.cloud', '--dangerous'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert_scanner_output(s, f"INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively{os.linesep}flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]", e.stdout.decode('utf-8').strip())
 
-    f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', './asfasdf'],
+    f = subprocess.run([sys.executable, '-m', 'S3Scanner', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', './asfasdf'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert_scanner_output(s, f"Error: Given --dump-dir does not exist or is not a directory", f.stdout.decode('utf-8').strip())
 
@@ -37,15 +37,15 @@ def test_arguments():
     os.mkdir(test_folder)
 
     try:
-        f = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', test_folder],
+        f = subprocess.run([sys.executable, '-m', 'S3Scanner', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', test_folder],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert_scanner_output(s, f"flaws.cloud | Enumerating bucket objects...{os.linesep}flaws.cloud | Total Objects: 7, Total Size: 25.0KB{os.linesep}flaws.cloud | Dumping contents using 4 threads...{os.linesep}flaws.cloud | Dumping completed", f.stdout.decode('utf-8').strip())
 
-        g = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'asdfasdf,asdfasd,', '--dump-dir', test_folder],
+        g = subprocess.run([sys.executable, '-m', 'S3Scanner', 'dump', '--bucket', 'asdfasdf,asdfasd,', '--dump-dir', test_folder],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert_scanner_output(s, "asdfasdf,asdfasd, | bucket_name_invalid", g.stdout.decode('utf-8').strip())
 
-        h = subprocess.run([sys.executable, 'scanner.py', 'dump', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf', '--dump-dir', test_folder],
+        h = subprocess.run([sys.executable, '-m', 'S3Scanner', 'dump', '--bucket', 'isurehopethisbucketdoesntexistasdfasdf', '--dump-dir', test_folder],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert_scanner_output(s, 'isurehopethisbucketdoesntexistasdfasdf | bucket_not_exist', h.stdout.decode('utf-8').strip())
     finally:
@@ -58,12 +58,12 @@ def test_endpoints():
     :return:
     """
     s = S3Service()
-    b = subprocess.run([sys.executable, 'scanner.py', '--endpoint-url', 'https://sfo2.digitaloceanspaces.com',
+    b = subprocess.run([sys.executable, '-m', 'S3Scanner', '--endpoint-url', 'https://sfo2.digitaloceanspaces.com',
                         'scan', '--bucket', 's3scanner'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert_scanner_output(s, 's3scanner | bucket_not_exist',
                           b.stdout.decode('utf-8').strip())
 
-    c = subprocess.run([sys.executable, 'scanner.py', '--endpoint-url', 'http://example.com', 'scan', '--bucket',
+    c = subprocess.run([sys.executable, '-m', 'S3Scanner', '--endpoint-url', 'http://example.com', 'scan', '--bucket',
                         's3scanner'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert c.stdout.decode('utf-8').strip() == "Error: Endpoint 'http://example.com' does not appear to be S3-compliant"
 

@@ -11,11 +11,11 @@
 import argparse
 from os import path
 from sys import exit
-from S3Scanner.S3Bucket import S3Bucket, BucketExists, Permission
-from S3Scanner.S3Service import S3Service
+from .S3Bucket import S3Bucket, BucketExists, Permission
+from .S3Service import S3Service
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
-from S3Scanner.exceptions import InvalidEndpointException
+from .exceptions import InvalidEndpointException
 
 CURRENT_VERSION = '2.0.0'
 AWS_ENDPOINT = 'https://s3.amazonaws.com'
