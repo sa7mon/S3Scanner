@@ -23,7 +23,7 @@ S3Service.py methods to test:
 - check_perm_read_acl()
     - ✔️ Test against bucket with AllUsers allowed
     - ✔️ Test against bucket with AuthUsers allowed
-    - ✔️ Test against bucket with all denied 
+    - ✔️ Test against bucket with all denied
 - check_perm_read()
     - ✔️ Test against bucket with AuthUsers read permission
     - ✔️ Test against bucket with AllUsers read permission
@@ -509,8 +509,6 @@ def test_parse_found_acl():
 
 def test_check_perms_without_checking_bucket_exists():
     test_setup_new()
-    s = S3Service()
-
     sAnon = S3Service(forceNoCreds=True)
 
     b1 = S3Bucket('blahblah')

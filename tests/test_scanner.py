@@ -30,7 +30,7 @@ def test_arguments():
 
     f = subprocess.run([sys.executable, '-m', 'S3Scanner', 'dump', '--bucket', 'flaws.cloud', '--dump-dir', './asfasdf'],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert_scanner_output(s, f"Error: Given --dump-dir does not exist or is not a directory", f.stdout.decode('utf-8').strip())
+    assert_scanner_output(s, "Error: Given --dump-dir does not exist or is not a directory", f.stdout.decode('utf-8').strip())
 
     # Create temp folder to dump into
     test_folder = os.path.join(os.getcwd(), 'testing_' + str(time.time())[0:10], '')

@@ -7,7 +7,7 @@ Tests for S3Bucket class go here
 
 def test_invalid_bucket_name():
     try:
-        b = S3Bucket(name="asdf,;0()")
+        S3Bucket(name="asdf,;0()")
     except ValueError as ve:
         if str(ve) != "Invalid bucket name":
             raise ve
@@ -24,8 +24,8 @@ def test_s3_bucket_object():
 
 
 def test_check_bucket_name():
-    b = S3Bucket(name="asdfasdf.s3.amazonaws.com")
-    b2 = S3Bucket(name="asdf:us-west-1")
+    S3Bucket(name="asdfasdf.s3.amazonaws.com")
+    S3Bucket(name="asdf:us-west-1")
 
 
 def test_get_human_readable_permissions():
