@@ -268,8 +268,8 @@ class S3Service:
 
         :param s3Bucket bucket: Bucket whose contents we want to dump
         :param str dest_directory: Folder to save the objects to. Must include trailing slash
-        :param verbose:
-        :param threads:
+        :param bool verbose: Output verbose messages to the user
+        :param int threads: Number of threads to use while dumping
         :return: None
         """
         # TODO: Let the user choose whether or not to overwrite local files if different

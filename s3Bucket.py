@@ -14,21 +14,27 @@ class BucketExists(Enum):
     UNKNOWN = -1
 
 
-def bytes_to_human_readable(bytes_size, suffix='B'):
+def bytes_to_human_readable(bytes_in, suffix='B'):
     """
-        Shamelessly copied from: https://stackoverflow.com/a/1094933/2307994
+    Convert number of bytes to a "human-readable" format. i.e. 1024 -> 1KB
+    Shamelessly copied from: https://stackoverflow.com/a/1094933/2307994
+
+    :param int bytes_in: Number of bytes to convert
+    :param str suffix: Suffix to convert to - i.e. B/KB/MB
+    :return: str human-readable string
     """
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-        if abs(bytes_size) < 1024.0:
-            return "%3.1f%s%s" % (bytes_size, unit, suffix)
-        bytes_size /= 1024.0
-    return "%.1f%s%s" % (bytes_size, 'Yi', suffix)
+        if abs(bytes_in) < 1024.0:
+            return "%3.1f%s%s" % (bytes_in, unit, suffix)
+        bytes_in /= 1024.0
+    return "%.1f%s%s" % (bytes_in, 'Yi', suffix)
 
 
 class s3BucketObject:
     """
-        Represents a file stored in a bucket.
-        __eq__ and __hash__ are implemented to take full advantage of the set() deduplication.
+    Represents an object stored in a bucket.
+    __eq__ and __hash__ are implemented to take full advantage of the set() deduplication
+    __lt__ is implemented to enable object sorting
     """
     def __init__(self, size, last_modified, key):
         self.size = size
@@ -53,9 +59,8 @@ class s3BucketObject:
 
 class s3Bucket:
     """
-    :raises: ValueError - if bucket name is invalid
+    Represents a bucket which holds objects
     """
-
     exists = BucketExists.UNKNOWN
     objects = set()  # A collection of s3BucketObject
     bucketSize = 0
@@ -63,6 +68,12 @@ class s3Bucket:
     foundACL = None
 
     def __init__(self, name):
+        """
+        Constructor method
+
+        :param str name: Name of bucket
+        :raises ValueError: If bucket name is invalid according to `__checkBucketName()`
+        """
         check = self.__checkBucketName(name)
         if not check['valid']:
             raise ValueError("Invalid bucket name")
@@ -82,13 +93,12 @@ class s3Bucket:
         self.AllUsersFullControl = Permission.UNKNOWN
 
     def __checkBucketName(self, name):
-        """ Checks to make sure bucket names input are valid according to S3 naming conventions
-        :param name: Name of bucket to check
-        :return: Dict
-                ['valid'] - Boolean - whether or not the name is valid
-                ['name'] - string - Bucket name extracted from the input
         """
+        Checks to make sure bucket names input are valid according to S3 naming conventions
 
+        :param str name: Name of bucket to check
+        :return: dict: ['valid'] - bool: whether or not the name is valid, ['name'] - str: extracted bucket name
+        """
         bucket_name = ""
         # Check if bucket name is valid and determine the format
         if ".amazonaws.com" in name:    # We were given a full s3 url
@@ -104,6 +114,12 @@ class s3Bucket:
         return {'valid': bool(re.match(pattern, bucket_name)), 'name': bucket_name}
 
     def addObject(self, obj):
+        """
+        Adds object to bucket. Updates the `objects` and `bucketSize` properties of the bucket
+
+        :param s3BucketObject obj: Object to add to bucket
+        :return: None
+        """
         self.objects.add(obj)
         self.bucketSize += obj.size
 
@@ -112,8 +128,10 @@ class s3Bucket:
 
     def getHumanReadablePermissions(self):
         """
-            Returns a human-readable string of allowed permissions for this bucket
-            Ex:  AuthUsers: [Read | WriteACP], AllUsers: [FullControl]
+        Returns a human-readable string of allowed permissions for this bucket
+        i.e. "AuthUsers: [Read | WriteACP], AllUsers: [FullControl]"
+
+        :return: str: Human-readable permissions
         """
         # Add AuthUsers permissions
         authUsersPermissions = []
