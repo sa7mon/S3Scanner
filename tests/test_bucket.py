@@ -1,4 +1,4 @@
-from S3Bucket import S3Bucket, s3BucketObject, Permission
+from S3Bucket import S3Bucket, S3BucketObject, Permission
 
 """
 Tests for S3Bucket class go here
@@ -14,8 +14,8 @@ def test_invalid_bucket_name():
 
 
 def test_s3_bucket_object():
-    o1 = s3BucketObject(key='index.html', size=8096, last_modified='2018-03-02T08:10:25.000Z')
-    o2 = s3BucketObject(key='home.html', size=2, last_modified='2018-03-02T08:10:25.000Z')
+    o1 = S3BucketObject(key='index.html', size=8096, last_modified='2018-03-02T08:10:25.000Z')
+    o2 = S3BucketObject(key='home.html', size=2, last_modified='2018-03-02T08:10:25.000Z')
 
     assert o1 != o2
     assert o2 < o1  # test __lt__ method which compares keys

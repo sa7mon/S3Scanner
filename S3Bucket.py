@@ -30,7 +30,7 @@ def bytes_to_human_readable(bytes_in, suffix='B'):
     return "%.1f%s%s" % (bytes_in, 'Yi', suffix)
 
 
-class s3BucketObject:
+class S3BucketObject:
     """
     Represents an object stored in a bucket.
     __eq__ and __hash__ are implemented to take full advantage of the set() deduplication
@@ -62,7 +62,7 @@ class S3Bucket:
     Represents a bucket which holds objects
     """
     exists = BucketExists.UNKNOWN
-    objects = set()  # A collection of s3BucketObject
+    objects = set()  # A collection of S3BucketObject
     bucketSize = 0
     objects_enumerated = False
     foundACL = None
@@ -117,7 +117,7 @@ class S3Bucket:
         """
         Adds object to bucket. Updates the `objects` and `bucketSize` properties of the bucket
 
-        :param s3BucketObject obj: Object to add to bucket
+        :param S3BucketObject obj: Object to add to bucket
         :return: None
         """
         self.objects.add(obj)

@@ -3,7 +3,7 @@ import os
 import pytest
 
 from S3Service import S3Service
-from S3Bucket import BucketExists, Permission, s3BucketObject, S3Bucket
+from S3Bucket import BucketExists, Permission, S3BucketObject, S3Bucket
 from TestUtils import TestBucketService
 from exceptions import AccessDeniedException, BucketMightNotExistException
 from pathlib import Path
@@ -541,7 +541,7 @@ def test_download_file():
     Path(os.path.join(dest_folder, 'test_download_file.txt')).touch()
     size = Path(os.path.join(dest_folder, 'test_download_file.txt')).stat().st_size
 
-    o = s3BucketObject(size=size, last_modified="2020-12-31_03-02-11z", key="test_download_file.txt")
+    o = S3BucketObject(size=size, last_modified="2020-12-31_03-02-11z", key="test_download_file.txt")
 
     b = S3Bucket("bucket-no-existo")
     s.download_file(os.path.join(dest_folder, ''), b, True, o)

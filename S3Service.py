@@ -3,7 +3,7 @@
     passing buckets
 """
 import boto3  # TODO: Limit import to just boto3.client, probably
-from S3Bucket import S3Bucket, BucketExists, Permission, s3BucketObject
+from S3Bucket import S3Bucket, BucketExists, Permission, S3BucketObject
 from botocore.exceptions import ClientError
 import botocore.session
 from botocore import UNSIGNED
@@ -295,7 +295,7 @@ class S3Service:
         :param str dest_directory: Directory to store the object into
         :param S3Bucket bucket: Bucket to download the object from
         :param bool verbose: Output verbose messages to the user
-        :param s3BucketObject obj: Object to downlaod
+        :param S3BucketObject obj: Object to downlaod
         :return: None
         """
         dest_file_path = pathlib.Path(normpath(dest_directory + obj.key))
@@ -335,7 +335,7 @@ class S3Service:
                     bucket.objects_enumerated = True
                     return
                 for item in page['Contents']:
-                    obj = s3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
+                    obj = S3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
                     bucket.add_object(obj)
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
