@@ -23,16 +23,18 @@ authUsersURI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
 class S3Service:
     def __init__(self, forceNoCreds=False, endpoint_url='https://s3.amazonaws.com', verify_ssl=True,
                  endpoint_address_style='path'):
-        """Service constructor
-
-        Arguments:
-            forceNoCreds {boolean} - Setting to true forces the client to make requests as if we don't have AWS credentials
-            endpoint_url {string} - URL of S3 endpoint to use
         """
+        Service constructor
 
+        :param forceNoCreds: (Boolean) Force the service to not use credentials, even if the user has creds configured
+        :param endpoint_url: (String) URL of S3 endpoint to use. Must include http(s):// scheme
+        :param verify_ssl: (Boolean) Whether of not to verify ssl. Set to false if endpoint is http
+        :param endpoint_address_style: (String) Addressing style of the endpoint. Must be 'path' or 'vhost'
+        :returns None
+        """
         self.endpoint_url = endpoint_url
-        use_ssl = True if self.endpoint_url.startswith('http://') else False
         self.endpoint_address_style = 'path' if endpoint_address_style == 'path' else 'virtual'
+        use_ssl = True if self.endpoint_url.startswith('http://') else False
 
         if not verify_ssl:
             disable_warnings()
@@ -62,6 +64,13 @@ class S3Service:
         del session  # No longer needed
 
     def check_bucket_exists(self, bucket):
+        """
+        Checks if a bucket exists. Sets `exists` property of `bucket`
+
+        :param s3Bucket bucket: Bucket to check
+        :raises ValueError: If `bucket` is not an s3Bucket object
+        :return: None
+        """
         if not isinstance(bucket, s3Bucket):
             raise ValueError("Passed object was not type s3Bucket")
 
@@ -77,12 +86,14 @@ class S3Service:
 
     def check_perm_read_acl(self, bucket):
         """
-            Check for the READACP permission on the bucket by trying to get the bucket ACL.
+        Check for the READACP permission on `bucket` by trying to get the bucket ACL
 
-            Exceptions:
-                ValueError
-                ClientError
+        :param s3Bucket bucket: Bucket to check permission of
+        :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
+        :raises ClientError: If we encounter an unexpected ClientError from boto client
+        :return: None
         """
+
         if bucket.exists != BucketExists.YES:
             raise BucketMightNotExistException()
 
@@ -100,11 +111,13 @@ class S3Service:
 
     def check_perm_read(self, bucket):
         """
-            Checks for the READ permission on the bucket by attempting to list the objects.
+        Checks for the READ permission on the bucket by attempting to list the objects.
+        Sets the `AllUsersRead` and/or `AuthUsersRead` property of `bucket`.
 
-            Exceptions:
-                ValueError
-                ClientError
+        :param s3Bucket bucket: Bucket to check permission of
+        :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
+        :raises ClientError: If we encounter an unexpected ClientError from boto client
+        :return: None
         """
         if bucket.exists != BucketExists.YES:
             raise BucketMightNotExistException()
@@ -116,7 +129,7 @@ class S3Service:
             if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 list_bucket_perm_allowed = False
             else:
-                print("ERROR: Error while checking bucket {b}".format(b=bucket.name))
+                print(f"ERROR: Error while checking bucket {bucket.name}")
                 raise e
         if self.aws_creds_configured:
             # Don't mark AuthUsersRead as Allowed if it's only implicitly allowed due to AllUsersRead being allowed
@@ -127,16 +140,19 @@ class S3Service:
             bucket.AllUsersRead = Permission.ALLOWED if list_bucket_perm_allowed else Permission.DENIED
 
     def check_perm_write(self, bucket):
-        """ Check for WRITE permission by trying to upload an empty file to the bucket.
-            File is named the current timestamp to ensure we're not overwriting an existing file in the bucket.
+        """
+        Check for WRITE permission by trying to upload an empty file to the bucket.
+        File is named the current timestamp to ensure we're not overwriting an existing file in the bucket.
 
-            NOTE: If writing to bucket succeeds using an AuthUser, only mark AuthUsersWrite as Allowed if
-                  AllUsers are Denied. Writing can succeed if AuthUsers are implicitly allowed due to AllUsers being
-                  allowed, but we only want to mark AuthUsers as Allowed if they are explicitly granted.
-            If AllUsersWrite is Allowed and the write is successful by an AuthUser, we have no way of knowing if
-            AuthUsers were granted permission explicitly
+        NOTE: If writing to bucket succeeds using an AuthUser, only mark AuthUsersWrite as Allowed if AllUsers are
+        Denied. Writing can succeed if AuthUsers are implicitly allowed due to AllUsers being allowed, but we only want
+        to mark AuthUsers as Allowed if they are explicitly granted. If AllUsersWrite is Allowed and the write is
+        successful by an AuthUser, we have no way of knowing if AuthUsers were granted permission explicitly
 
-            Raises: ValueError, ClientError
+        :param s3Bucket bucket: Bucket to check permission of
+        :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
+        :raises ClientError: If we encounter an unexpected ClientError from boto client
+        :return: None
         """
         if bucket.exists != BucketExists.YES:
             raise BucketMightNotExistException()
@@ -168,9 +184,14 @@ class S3Service:
 
     def check_perm_write_acl(self, bucket):
         """
-        Checks for WRITE_ACP permission by attempting to set an ACL on the bucket. WARNING: Potentially destructive
-        Make sure to run this check last as it will include all discovered permissions in the ACL it tries to set,
-            thus ensuring minimal disruption for the bucket owner.
+        Checks for WRITE_ACP permission by attempting to set an ACL on the bucket.
+        WARNING: Potentially destructive - make sure to run this check last as it will include all discovered
+        permissions in the ACL it tries to set, thus ensuring minimal disruption for the bucket owner.
+
+        :param s3Bucket bucket: Bucket to check permission of
+        :raises BucketMightNotExistException: If `bucket` existence hasn't been checked
+        :raises ClientError: If we encounter an unexpected ClientError from boto client
+        :return: None
         """
         if bucket.exists != BucketExists.YES:
             raise BucketMightNotExistException()
@@ -245,11 +266,14 @@ class S3Service:
         If the object exists locally and is the same size as the remote object, the object is skipped.
         If the object exists locally and is a different size then the remote object, the local object is overwritten.
 
-            bucket (s3Bucket): Bucket whose contents we need to dump
-            dest_directory (string): Folder to save the objects to. Includes trailing slash
-
-            TODO: Let the user choose whether or not to overwrite local files if is different
+        :param s3Bucket bucket: Bucket whose contents we want to dump
+        :param str dest_directory: Folder to save the objects to. Must include trailing slash
+        :param verbose:
+        :param threads:
+        :return: None
         """
+        # TODO: Let the user choose whether or not to overwrite local files if different
+
         print(f"{bucket.name} | Dumping contents using 4 threads...")
         func = partial(self.download_file, dest_directory, bucket, verbose)
 
@@ -265,6 +289,15 @@ class S3Service:
         print(f"{bucket.name} | Dumping completed")
 
     def download_file(self, dest_directory, bucket, verbose, obj):
+        """
+        Download `obj` from `bucket` into `dest_directory`
+
+        :param str dest_directory: Directory to store the object into
+        :param s3Bucket bucket: Bucket to download the object from
+        :param bool verbose: Output verbose messages to the user
+        :param s3BucketObject obj: Object to downlaod
+        :return: None
+        """
         dest_file_path = pathlib.Path(normpath(dest_directory + obj.key))
         if dest_file_path.exists():
             if dest_file_path.stat().st_size == obj.size:
@@ -282,7 +315,14 @@ class S3Service:
 
     def enumerate_bucket_objects(self, bucket):
         """
-        Raises: AccessDeniedException - if bucket doesn't have READ permission
+        Enumerate all the objects in a bucket. Sets the `BucketSize`, `objects`, and `objects_enumerated` properties
+        of `bucket`.
+
+        :param s3Bucket bucket: Bucket to enumerate objects of
+        :raises Exception: If the bucket doesn't exist
+        :raises AccessDeniedException: If we are denied access to the bucket objects
+        :raises ClientError: If we encounter an unexpected ClientError from boto client
+        :return: None
         """
         if bucket.exists == BucketExists.UNKNOWN:
             self.check_bucket_exists(bucket)
@@ -304,12 +344,12 @@ class S3Service:
 
     def parse_found_acl(self, bucket):
         """
-        If we were able to read the ACLs, we should be able to skip manually checking most permissions
+        Translate ACL grants into permission properties. If we were able to read the ACLs, we should be able to skip
+        manually checking most permissions
 
-        :param bucket:
-        :return:
+        :param s3Bucket bucket: Bucket whose ACLs we want to parse
+        :return: None
         """
-
         if bucket.foundACL is None:
             return
 
@@ -382,15 +422,18 @@ class S3Service:
             if bucket.AllUsersFullControl == Permission.UNKNOWN:
                 bucket.AllUsersFullControl = Permission.DENIED
 
-    def validate_endpoint_url(self, use_ssl, verify_ssl, endpoint_address_style='path'):
+    def validate_endpoint_url(self, use_ssl=True, verify_ssl=True, endpoint_address_style='path'):
         """
-        Verify the user-supplied endpoint URL is S3-compliant by trying to list a maximum of 0 keys from a
-        bucket which is extremely unlikely to exist.
+        Verify the user-supplied endpoint URL is S3-compliant by trying to list a maximum of 0 keys from a bucket which
+        is extremely unlikely to exist.
 
-        Note: Most S3-compliant services will return an error code of "NoSuchBucket". Some services which require auth for
-        most operations (like Minio) will return an error code of "AccessDenied" instead
+        Note: Most S3-compliant services will return an error code of "NoSuchBucket". Some services which require auth
+        for most operations (like Minio) will return an error code of "AccessDenied" instead
 
-        :return: boolean - Whether or not the server responded in an S3-compliant way
+        :param bool use_ssl: Whether or not the endpoint serves HTTP over SSL
+        :param bool verify_ssl: Whether or not to verify the SSL connection.
+        :param str endpoint_address_style: Addressing style of endpoint. Must be either 'path' or 'vhost'
+        :return: bool: Whether or not the server responded in an S3-compliant way
         """
 
         # We always want to verify the endpoint using no creds
