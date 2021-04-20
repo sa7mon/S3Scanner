@@ -239,22 +239,6 @@ class S3Service:
             else:
                 raise e
 
-    def dump_bucket_singlethread(self, bucket, dest_directory, verbose=False):
-        """
-        Takes a bucket and downloads all the objects to a local folder.
-        If the object exists locally and is the same size as the remote object, the object is skipped.
-        If the object exists locally and is a different size then the remote object, the local object is overwritten.
-
-            bucket (s3Bucket): Bucket whose contents we need to dump
-            dest_directory (string): Folder to save the objects to. Includes trailing slash
-
-            TODO: Let the user choose whether or not to overwrite local files if is different
-        """
-        print(f"{bucket.name} | Dumping contents...")
-        for obj in sorted(bucket.objects):
-            self.download_file(dest_directory, obj, bucket, verbose)
-        print(f"{bucket.name} | Dumping completed")
-
     def dump_bucket_multithread(self, bucket, dest_directory, verbose=False, threads=4):
         """
         Takes a bucket and downloads all the objects to a local folder.
@@ -286,7 +270,6 @@ class S3Service:
             if dest_file_path.stat().st_size == obj.size:
                 if verbose:
                     print(f"{bucket.name} | Skipping {obj.key} - already downloaded")
-                # continue
                 return
             else:
                 if verbose:
