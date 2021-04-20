@@ -1,4 +1,4 @@
-from S3Bucket import S3Bucket, S3BucketObject, Permission
+from S3Scanner.S3Bucket import S3Bucket, S3BucketObject, Permission
 
 """
 Tests for S3Bucket class go here

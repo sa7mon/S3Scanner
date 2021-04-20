@@ -2,14 +2,14 @@
     This will be a service that the client program will instantiate to then call methods
     passing buckets
 """
-import boto3  # TODO: Limit import to just boto3.client, probably
-from S3Bucket import S3Bucket, BucketExists, Permission, S3BucketObject
+from boto3 import client  # TODO: Limit import to just boto3.client, probably
+from S3Scanner.S3Bucket import S3Bucket, BucketExists, Permission, S3BucketObject
 from botocore.exceptions import ClientError
 import botocore.session
 from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
-from exceptions import AccessDeniedException, InvalidEndpointException, BucketMightNotExistException
+from S3Scanner.exceptions import AccessDeniedException, InvalidEndpointException, BucketMightNotExistException
 from os.path import normpath
 import pathlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -51,13 +51,13 @@ class S3Service:
         session = botocore.session.get_session()
         if forceNoCreds or session.get_credentials() is None or session.get_credentials().access_key is None:
             self.aws_creds_configured = False
-            self.s3_client = boto3.client('s3',
+            self.s3_client = client('s3',
                                           config=Config(signature_version=UNSIGNED, s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
                                          retries={'max_attempts': 2}),
                                           endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
         else:
             self.aws_creds_configured = True
-            self.s3_client = boto3.client('s3', config=Config(s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
+            self.s3_client = client('s3', config=Config(s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
                                          retries={'max_attempts': 2}),
                                           endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
 
@@ -441,7 +441,7 @@ class S3Service:
 
         addressing_style = 'virtual' if endpoint_address_style == 'vhost' else 'path'
 
-        validation_client = boto3.client('s3', config=Config(signature_version=UNSIGNED,
+        validation_client = client('s3', config=Config(signature_version=UNSIGNED,
                                          s3={'addressing_style': addressing_style}, connect_timeout=3,
                                          retries={'max_attempts': 0}), endpoint_url=self.endpoint_url, use_ssl=use_ssl,
                                          verify=verify_ssl)

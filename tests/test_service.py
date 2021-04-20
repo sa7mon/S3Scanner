@@ -2,10 +2,10 @@ import os
 
 import pytest
 
-from S3Service import S3Service
-from S3Bucket import BucketExists, Permission, S3BucketObject, S3Bucket
+from S3Scanner.S3Service import S3Service
+from S3Scanner.S3Bucket import BucketExists, Permission, S3BucketObject, S3Bucket
 from TestUtils import TestBucketService
-from exceptions import AccessDeniedException, BucketMightNotExistException
+from S3Scanner.exceptions import AccessDeniedException, BucketMightNotExistException
 from pathlib import Path
 
 testingFolder = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'test/')

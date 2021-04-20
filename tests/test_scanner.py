@@ -4,7 +4,7 @@ import os
 import time
 import shutil
 
-from S3Service import S3Service
+from S3Scanner.S3Service import S3Service
 
 
 def test_arguments():
