@@ -336,7 +336,7 @@ class S3Service:
                     return
                 for item in page['Contents']:
                     obj = s3BucketObject(key=item['Key'], last_modified=item['LastModified'], size=item['Size'])
-                    bucket.addObject(obj)
+                    bucket.add_object(obj)
         except ClientError as e:
             if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 raise AccessDeniedException("AccessDenied while enumerating bucket objects")

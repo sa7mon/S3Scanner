@@ -147,7 +147,7 @@ def test_enumerate_bucket_objects():
         s.enumerate_bucket_objects(b2)
         assert b2.objects_enumerated is True
         assert b2.bucketSize == 4143
-        assert b2.getHumanReadableSize() == "4.0KB"
+        assert b2.get_human_readable_size() == "4.0KB"
     else:
         print("[test_enumerate_bucket_objects] Skipping test due to no AWS creds")
 

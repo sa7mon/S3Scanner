@@ -106,7 +106,7 @@ def scan_single_bucket(bucket_name):
         if s3service.aws_creds_configured and checkAuthUsersPerms:
             pass
 
-    print(f"{b.name} | bucket_exists | {b.getHumanReadablePermissions()}")
+    print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()}")
 
 
 if __name__ == "__main__":
@@ -226,14 +226,14 @@ if __name__ == "__main__":
                     # Dump bucket without creds
                     print(f"{b.name} | Enumerating bucket objects...")
                     anonS3Service.enumerate_bucket_objects(b)
-                    print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
+                    print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
                     anonS3Service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
                                                           verbose=args.dump_verbose, threads=args.threads)
             else:
                 # Dump bucket with creds
                 print(f"{b.name} | Enumerating bucket objects...")
                 s3service.enumerate_bucket_objects(b)
-                print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.getHumanReadableSize()}")
+                print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
                 s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
                                                   verbose=args.dump_verbose, threads=args.threads)
     else:

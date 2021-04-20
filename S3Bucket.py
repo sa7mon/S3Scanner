@@ -72,9 +72,9 @@ class S3Bucket:
         Constructor method
 
         :param str name: Name of bucket
-        :raises ValueError: If bucket name is invalid according to `__checkBucketName()`
+        :raises ValueError: If bucket name is invalid according to `_check_bucket_name()`
         """
-        check = self.__checkBucketName(name)
+        check = self._check_bucket_name(name)
         if not check['valid']:
             raise ValueError("Invalid bucket name")
         
@@ -92,7 +92,7 @@ class S3Bucket:
         self.AllUsersWriteACP = Permission.UNKNOWN
         self.AllUsersFullControl = Permission.UNKNOWN
 
-    def __checkBucketName(self, name):
+    def _check_bucket_name(self, name):
         """
         Checks to make sure bucket names input are valid according to S3 naming conventions
 
@@ -113,7 +113,7 @@ class S3Bucket:
         pattern = r'(?=^.{3,63}$)(?!^(\d+\.)+\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])\.)*([a-z0-9]|[a-z0-9][a-z0-9\-]*[a-z0-9])$)'
         return {'valid': bool(re.match(pattern, bucket_name)), 'name': bucket_name}
 
-    def addObject(self, obj):
+    def add_object(self, obj):
         """
         Adds object to bucket. Updates the `objects` and `bucketSize` properties of the bucket
 
@@ -123,10 +123,10 @@ class S3Bucket:
         self.objects.add(obj)
         self.bucketSize += obj.size
 
-    def getHumanReadableSize(self):
+    def get_human_readable_size(self):
         return bytes_to_human_readable(self.bucketSize)
 
-    def getHumanReadablePermissions(self):
+    def get_human_readable_permissions(self):
         """
         Returns a human-readable string of allowed permissions for this bucket
         i.e. "AuthUsers: [Read | WriteACP], AllUsers: [FullControl]"

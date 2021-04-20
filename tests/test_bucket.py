@@ -39,10 +39,10 @@ def test_get_human_readable_permissions():
     b.AuthUsersReadACP = Permission.ALLOWED
     b.AuthUsersWriteACP = Permission.ALLOWED
 
-    b.getHumanReadablePermissions()
+    b.get_human_readable_permissions()
 
     b.AllUsersFullControl = Permission.ALLOWED
     b.AuthUsersFullControl = Permission.ALLOWED
 
-    b.getHumanReadablePermissions()
+    b.get_human_readable_permissions()
 
