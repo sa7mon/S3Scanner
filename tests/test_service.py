@@ -4,12 +4,12 @@ import pytest
 
 import s3Bucket
 from S3Service import S3Service
-from s3Bucket import BucketExists, Permission
+from s3Bucket import BucketExists, Permission, s3BucketObject
 from TestUtils import TestBucketService
 from exceptions import AccessDeniedException, BucketMightNotExistException
+from pathlib import Path
 
-s3scannerLocation = "./"
-testingFolder = "./test/"
+testingFolder = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'test/')
 setupRan = False
 
 
@@ -83,6 +83,10 @@ def test_bucket_exists():
     b2 = s3Bucket.s3Bucket('asfasfasdfasdfasdf')
     s.check_bucket_exists(b2)
     assert b2.exists is BucketExists.NO
+
+    # Pass a thing that's not a bucket
+    with pytest.raises(ValueError):
+        s.check_bucket_exists("asdfasdf")
 
 
 def test_check_perm_read():
@@ -160,6 +164,11 @@ def test_enumerate_bucket_objects():
         s.enumerate_bucket_objects(b3)
     except AccessDeniedException:
         pass
+
+    # Try to enumerate before checking if bucket exists
+    b4 = s3Bucket.s3Bucket('s3scanner-enumerate-bucket')
+    with pytest.raises(Exception):
+        s.enumerate_bucket_objects(b4)
 
 
 def test_check_perm_read_acl():
@@ -517,3 +526,23 @@ def test_check_perms_without_checking_bucket_exists():
 
     with pytest.raises(BucketMightNotExistException):
         sAnon.check_perm_write_acl(b1)
+
+
+def test_no_ssl():
+    test_setup_new()
+    S3Service(verify_ssl=False)
+
+
+def test_download_file():
+    test_setup_new()
+    s = S3Service()
+
+    # Try to download a file that already exists
+    dest_folder = os.path.realpath(testingFolder)
+    Path(os.path.join(dest_folder, 'test_download_file.txt')).touch()
+    size = Path(os.path.join(dest_folder, 'test_download_file.txt')).stat().st_size
+
+    o = s3BucketObject(size=size, last_modified="2020-12-31_03-02-11z", key="test_download_file.txt")
+
+    b = s3Bucket.s3Bucket("bucket-no-existo")
+    s.download_file(os.path.join(dest_folder, ''), b, True, o)
