@@ -20,6 +20,7 @@ from exceptions import InvalidEndpointException
 CURRENT_VERSION = '2.0.0'
 AWS_ENDPOINT = 'https://s3.amazonaws.com'
 
+
 # We want to use both formatter classes, so a custom class it is
 class CustomFormatter(argparse.RawTextHelpFormatter, argparse.RawDescriptionHelpFormatter):
     pass
