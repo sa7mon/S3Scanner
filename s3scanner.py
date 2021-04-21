@@ -52,15 +52,22 @@ parser.add_argument('buckets', help='Name of text file containing buckets to che
 args = parser.parse_args()
 
 # Create file logger
-flog = logging.getLogger('s3scanner-file')
-flog.setLevel(logging.DEBUG)              # Set log level for logger object
+if args.outType != "json":
+    flog = logging.getLogger('s3scanner-file')
+    flog.setLevel(logging.DEBUG)              # Set log level for logger object
 
-# Create file handler which logs even debug messages
-fh = logging.FileHandler(args.outFile)
-fh.setLevel(logging.DEBUG)
+    # Create file handler which logs even debug messages
+    fh = logging.FileHandler(args.outFile)
+    fh.setLevel(logging.DEBUG)
 
-# Add the handler to logger
-flog.addHandler(fh)
+    # Add the handler to logger
+    flog.addHandler(fh)
+else:
+    try:
+        flog = open(args.outFile, 'r+')
+    except FileNotFoundError:
+        flog = open(args.outFile, 'w+')
+        flog.write('[\n\n]')
 
 # Create secondary logger for logging to screen
 slog = logging.getLogger('s3scanner-screen')
