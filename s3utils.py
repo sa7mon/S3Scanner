@@ -91,13 +91,17 @@ def checkAwsCreds():
 
 def checkBucket(inBucket, slog, flog, argsDump, argsList):
     # Determine what kind of input we're given. Options:
-    #   bucket name   i.e. mybucket
-    #   domain name   i.e. flaws.cloud
-    #   full S3 url   i.e. flaws.cloud.s3-us-west-2.amazonaws.com
-    #   bucket:region i.e. flaws.cloud:us-west-2
+    #   bucket name                      i.e. mybucket
+    #   domain name                      i.e. flaws.cloud
+    #   S3 url - Virtual-hosted style    i.e. flaws.cloud.s3-us-west-2.amazonaws.com
+    #   S3 url - Path style              i.e. s3-us-west-2.amazonaws.com/flaw.cloud
+    #   bucket:region                    i.e. flaws.cloud:us-west-2
     
     if ".amazonaws.com" in inBucket:    # We were given a full s3 url
-        bucket = inBucket[:inBucket.rfind(".s3")]
+        if inBucket.rfind(".s3") == -1 and '/' in inBucket:
+            bucket = inBucket.split('/')[1]
+        else:
+            bucket = inBucket[:inBucket.rfind(".s3")]
     elif ":" in inBucket:               # We were given a bucket in 'bucket:region' format
         bucket = inBucket.split(":")[0]
     else:                           # We were either given a bucket name or domain name
