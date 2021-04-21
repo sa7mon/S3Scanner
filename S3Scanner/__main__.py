@@ -14,7 +14,6 @@ from sys import exit
 from .S3Bucket import S3Bucket, BucketExists, Permission
 from .S3Service import S3Service
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from functools import partial
 from .exceptions import InvalidEndpointException
 
 CURRENT_VERSION = '2.0.0'
@@ -45,10 +44,13 @@ def load_bucket_names_from_file(file_name):
         exit(1)
 
 
-def scan_single_bucket(bucket_name):
+def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
     """
     Scans a single bucket for permission issues. Exists on its own so we can do multi-threading
 
+    :param S3Service s3service: S3Service with credentials to use for scanning
+    :param S3Service anonS3Service: S3Service without credentials to use for scanning
+    :param bool do_dangerous: Whether or not to do dangerous checks
     :param str bucket_name: Name of bucket to check
     :return: None
     """
@@ -67,7 +69,7 @@ def scan_single_bucket(bucket_name):
     if s3service.endpoint_url == AWS_ENDPOINT:
         s3service.check_bucket_exists(b)
     else:
-        anonS3Service.check_bucket_exists(b)
+        anons3service.check_bucket_exists(b)
 
     if b.exists == BucketExists.NO:
         print(f"{b.name} | bucket_not_exist")
@@ -76,7 +78,7 @@ def scan_single_bucket(bucket_name):
     checkAuthUsersPerms = True
 
     # 1. Check for ReadACP
-    anonS3Service.check_perm_read_acl(b)  # Check for AllUsers
+    anons3service.check_perm_read_acl(b)  # Check for AllUsers
     if s3service.aws_creds_configured and s3service.endpoint_url == AWS_ENDPOINT:
         s3service.check_perm_read_acl(b)  # Check for AuthUsers
 
@@ -88,15 +90,15 @@ def scan_single_bucket(bucket_name):
 
     # 2. Check for Read
     if checkAllUsersPerms:
-        anonS3Service.check_perm_read(b)
+        anons3service.check_perm_read(b)
     if s3service.aws_creds_configured and checkAuthUsersPerms and s3service.endpoint_url == AWS_ENDPOINT:
         s3service.check_perm_read(b)
 
     # Do dangerous/destructive checks
-    if args.dangerous:
+    if do_dangerous:
         # 3. Check for Write
         if checkAllUsersPerms:
-            anonS3Service.check_perm_write(b)
+            anons3service.check_perm_write(b)
         if s3service.aws_creds_configured and checkAuthUsersPerms:
             s3service.check_perm_write(b)
 
@@ -110,7 +112,7 @@ def scan_single_bucket(bucket_name):
     print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()}")
 
 
-if __name__ == "__main__":
+def main():
     # Instantiate the parser
     parser = argparse.ArgumentParser(description='s3scanner: Audit unsecured S3 buckets\n'
                                                  '           by Dan Salmon - github.com/sa7mon, @bltjetpack\n',
@@ -157,10 +159,10 @@ if __name__ == "__main__":
         exit(1)
 
     s3service = None
-    anonS3Service = None
+    anons3service = None
     try:
         s3service = S3Service(endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
-        anonS3Service = S3Service(forceNoCreds=True, endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
+        anons3service = S3Service(forceNoCreds=True, endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
     except InvalidEndpointException as e:
         print(f"Error: {e.message}")
         exit(1)
@@ -180,11 +182,9 @@ if __name__ == "__main__":
         if args.dangerous:
             print("INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively")
 
-        func = partial(scan_single_bucket)
-
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             futures = {
-                executor.submit(func, bucketName): bucketName for bucketName in bucketsIn
+                executor.submit(scan_single_bucket, s3service, anons3service, args.dangerous, bucketName): bucketName for bucketName in bucketsIn
             }
             for future in as_completed(futures):
                 if future.exception():
@@ -220,15 +220,15 @@ if __name__ == "__main__":
             s3service.check_perm_read(b)
 
             if b.AuthUsersRead != Permission.ALLOWED:
-                anonS3Service.check_perm_read(b)
+                anons3service.check_perm_read(b)
                 if b.AllUsersRead != Permission.ALLOWED:
                     print(f"{b.name} | Error: no read permissions")
                 else:
                     # Dump bucket without creds
                     print(f"{b.name} | Enumerating bucket objects...")
-                    anonS3Service.enumerate_bucket_objects(b)
+                    anons3service.enumerate_bucket_objects(b)
                     print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
-                    anonS3Service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
+                    anons3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
                                                           verbose=args.dump_verbose, threads=args.threads)
             else:
                 # Dump bucket with creds
@@ -240,3 +240,7 @@ if __name__ == "__main__":
     else:
         print("Invalid mode")
         parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
