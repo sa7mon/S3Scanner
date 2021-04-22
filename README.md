@@ -41,6 +41,22 @@ mode:
 pip3 install s3scanner
 ```
 
+or via Docker:
+
+```shell
+docker build . -t s3scanner:latest
+docker run --rm s3scanner:latest scan --bucket my-buket
+```
+
+or from source:
+
+```shell
+git clone git@github.com:sa7mon/S3Scanner.git
+cd S3Scanner
+pip3 install -r requirements.txt
+python3 -m S3Scanner
+```
+
 ## Features
 
 * ⚡️ Multi-threaded scanning
@@ -71,9 +87,11 @@ pip3 install s3scanner
 
 `S3Scanner` can scan and dump buckets in S3-compatible APIs services other than AWS by using the
 `--endpoint-url` argument. Depending on the service, you may also need the `--endpoint-address-style`
-or `--insecure` arguments as well.
+or `--insecure` arguments as well. 
 
-Note: Some services have different endpoints corresponding to different regions
+Some services have different endpoints corresponding to different regions
+
+**Note:** `S3Scanner` currently only supports scanning for anonymous user permissions of non-AWS services
 
 | Service | Example Endpoint | Address Style | Insecure ? |
 |---------|------------------|:-------------:|:----------:|
@@ -82,6 +100,8 @@ Note: Some services have different endpoints corresponding to different regions
 | Linode Object Storage (eu-central-1 region) | https://eu-central-1.linodeobjects.com | vhost | No |
 | Scaleway Object Storage (nl-ams region) | https://s3.nl-ams.scw.cloud | path | No |
 | Wasabi Cloud Storage | http://s3.wasabisys.com/ | path | Yes |
+
+📚 Current status of non-AWS APIs can be found [in the project wiki](https://github.com/sa7mon/S3Scanner/wiki/S3-Compatible-APIs)
 
 ## Interpreting Results
 
