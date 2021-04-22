@@ -103,11 +103,10 @@ def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
             s3service.check_perm_write(b)
 
         # 4. Check for WriteACP
-        # TODO: Actually check this permission
         if checkAllUsersPerms:
-            pass
+            anons3service.check_perm_write_acl(b)
         if s3service.aws_creds_configured and checkAuthUsersPerms:
-            pass
+            s3service.check_perm_write_acl(b)
 
     print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()}")
 
