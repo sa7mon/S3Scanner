@@ -62,7 +62,8 @@ python3 -m S3Scanner
 * ⚡️ Multi-threaded scanning
 * 🔭 Supports tons of S3-compatible APIs
 * 🕵️‍♀️ Scans all bucket permissions to find misconfigurations
-* 💾 Dump all bucket contents to a local folder
+* 💾 Dump bucket contents to a local folder
+* 🐳 Docker support
 
 ## Examples
 
