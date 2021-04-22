@@ -129,6 +129,7 @@ Any or all of these permissions can be set for the 2 main user groups:
 * [janmasarik](https://github.com/janmasarik)
 * [alanyee](https://github.com/alanyee)
 * [klau5dev](https://github.com/klau5dev)
+* [hipotermia](https://github.com/hipotermia)
 
 ## License
 
