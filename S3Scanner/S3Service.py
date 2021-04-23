@@ -450,8 +450,7 @@ class S3Service:
         try:
             validation_client.list_objects_v2(Bucket=non_existent_bucket, MaxKeys=0)
         except ClientError as e:
-            if (e.response['Error']['Code'] == 'NoSuchBucket' or e.response['Error']['Code'] == 'AccessDenied') and \
-                    'BucketName' in e.response['Error']:
+            if e.response['Error']['Code'] == 'NoSuchBucket' or e.response['Error']['Code'] == 'AccessDenied':
                 return True
             return False
         except botocore.exceptions.ConnectTimeoutError:

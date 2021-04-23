@@ -7,6 +7,7 @@ from S3Scanner.S3Bucket import BucketExists, Permission, S3BucketObject, S3Bucke
 from TestUtils import TestBucketService
 from S3Scanner.exceptions import AccessDeniedException, BucketMightNotExistException
 from pathlib import Path
+from urllib3 import disable_warnings
 
 testingFolder = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'test/')
 setupRan = False
@@ -543,3 +544,44 @@ def test_download_file():
 
     b = S3Bucket("bucket-no-existo")
     s.download_file(os.path.join(dest_folder, ''), b, True, o)
+
+
+def test_validate_endpoint_url_nonaws():
+    disable_warnings()
+    s = S3Service()
+
+    # Test CenturyLink_Lumen
+    s.endpoint_url = 'https://useast.os.ctl.io'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test DigitalOcean
+    s.endpoint_url = 'https://sfo2.digitaloceanspaces.com'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test Dreamhost
+    s.endpoint_url = 'https://objects.dreamhost.com'
+    assert s.validate_endpoint_url(use_ssl=False, verify_ssl=False, endpoint_address_style='vhost') is True
+
+    # Test GCP
+    s.endpoint_url = 'https://storage.googleapis.com'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test IBM
+    s.endpoint_url = 'https://s3.us-east.cloud-object-storage.appdomain.cloud'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test Linode
+    s.endpoint_url = 'https://eu-central-1.linodeobjects.com'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test Scaleway
+    s.endpoint_url = 'https://s3.nl-ams.scw.cloud'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test Vultr
+    s.endpoint_url = 'https://ewr1.vultrobjects.com'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
+
+    # Test Wasabi
+    s.endpoint_url = 'https://s3.wasabisys.com'
+    assert s.validate_endpoint_url(use_ssl=True, verify_ssl=True, endpoint_address_style='path') is True
