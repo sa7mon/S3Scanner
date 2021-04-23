@@ -1,16 +1,28 @@
 language: python
-matrix:
+jobs:
   include:
   - python: '3.6'
-    env:
-      - secure: QCHu2+V5MO4OtZfBmB9yZVof0NeHK/3CGmErdK/4ICnvfkf4wteYKdDgFsZyzt/ns3BCuP3dZvXEU9p4EEudjMEv66RvPyr+q29JhK42a+HjHP7XAHBMLEENkihtBtrsnfr7NrSgPtfLkG4XaJVyn9mPCvo4JuDotldC4jlAEJqkByKbh5koI4533WOG36pmvO7jcsuqm3+ii7J9PYCRqqbqjvWjt1eJx8ITiBPbJ8+1e32HGWKSMJMJhe2RlxuhglQmOMlZDKrtQ/5u+pgMWtItjP798zJRyKEG8zrt+PM2vgYBeHB9rFMqCmtEO68zpB+HhYXb21R7qkDSTocL6uMKkR1cYplKwilFTLMutfUfCv3qRT77ciW8GGfHEbB7mukeeu8Jvz2lphFvbiRPiReQlWbmn0zJaSOW1SbqrGYrAy6WM4IyJR4v1sDPXZHUq6wYFywKqpbA4sF59RAVrPvMu/Z8Zhdol+P5CV6FZnTr1fz3JTEea/CMnbExKQfFUNgvAd11WncIyrxV0Pr26iR6HD8ajRQh3Uk8cvYtUZnnvTvSIF2Rp913RdJVaBjy1mZ/IarkhZIGp4F6y0892Ok6bRXkMsDLxkMMWWRWWUYgM/8UY9tckv4mBPDi8J9u2UAjYpkgxdyweCjI2F3aRBbRMiFZJPmepGbiUipk0zg=
-      - secure: Phv6W+P19/wJQfY2frJNuqldZc4snt8gUaI8ZtXxTLBFYaUpsbM4Pl2lJErp+W4k0zZ9I0i6EKs+WWj4jLkmg5tauXL7O3C4QNK3u5RAD154bcG1up8U5XPrLvz0ZRzvbAJilQQpjLrMyLO7GXaZIzZIN4MaUCuTTlvKls5fCp3Q2UJZdCpW94zlyFKInkk5Ox1wZsCbjptG5i6eGm/Q+g/ObuyfMMykUISjP7/BElb3lbVnIe2MCWQxoNlt1d0T6oaUSkIbnaYD384uEkYn5bAlEoOyUlurgMyifPWoBI4vLJHBj8votdgjxcgThGzqjfsB29U/eaaP3VUc77CeBLMGwoYzqIPcoicUBkK5GowvIXkukoUqN24JK5kTROv/aYOdVqoLCrT8fYruVdS0kkJs3DZbBoMDaWte36PhvJouh7MPaWgdm1ZcfLP2juLe5UGaiuN5iY95L/XBXbrnd6+adJYrJd7TYX6+zJE2trmwaxqZCELQtUVUcrYJ85KljjQS7QJQTE1uXQRlPCzGQlhziC8ePJI1zOuHQV7xZWbi04Jg6Pe9zE3UXnBU6KvB/q3fLdrFT5F8mqI2lUXFl+kq28sucqgUMM1rfmW30OKkyHfiRuTZL43Img0Xduql++DgLz6WweFhXf8oH18b8XuV7KUZz5FFJgjs86FM8AE=
-  - python: '3.6'
   - python: '3.7'
+  - python: '3.8'
+  - python: '3.9'
+    env:
+      - secure: "JShcKAHn4y57mTHDIV5+8dTRjE2cREJSswXAxhFf8jha+r58zF/uBfgXapzNh9u+dpvbVjF/N0/KxREubMTd4fduYTsxMOXyqENHnq7kVmRK6HXAAnM75JZzl1sonlHsIHHXxv45SuwYWX/fk6aMeBmkGukuvM8DGi4BEBzv0CnzEUmHlb5ZPKmQteemjhbn2d3yKPKagcieeDbSRhevGKPPmfnt0TqzpF/xrbtIL05yC+038Tesa0mZqV/HBrfZgSEtcMydIhbszhDjBwC3nzhhiC8AQJ8JGRPqR3nfTZRrHA0QMT3hr8XGpLouphvpDDwiotmOTRsGiBfONX+b2JDTx989eswIXmBsdua3pxjUNuLVTiRjl63+6zJSvT3mrJ1cZMRJPvbqYTY+mvckSMeDQv4oFZeD8QCD+z8zLa39GYfKBnapo0s+rvvxYyiVNZ9HQ1MExJyVleJWRMlmKtuNUHzHaCq+B8omcGZxhEfX4dVQ/RHwNRwkKbdUKOZy4muardhYorhVO+eLt4+bAipk8BEAXvIBwaAqbIN3+01a8TbTGKkxJUTllkf2Y7wFeF6IPtxvfpJ6Bgj4BNSpDrR/eoyIodG42J6Qdl4aK6/RQbI9vzUQ8yoSxQxzHHFZeclU2Qe5KZem3ztbexkiYB+Mv7oV/rr1LGixvbBsLzI="
+      - secure: "SLjBJJsmtbHZGwmZHHJTYk0qmlS6kcbur1SMM70+n/UEp55hAFo6Ae/n75G4RR0bVIVkgrJp3ZE9V/wZKVbOOaUaepyjZXfgRBjL/zBYjFgxgQhrLis3Bg+lR6qBoWifm/mfM+mUqHLDqelSbvpgE/oZLeM9vuYBYvI9LIZSeM3C6m+4ytKoayUgggq87lQRDr9d/YPpAZEYnT13mAqkd3zbovjLAEtALx6BOg5xZv7bHCx5WS5gz79CA+jFRjWU9q4ng5zyCERWFOeTcCYAHjxKXYOJYew8N/NYA2PFd+BiedQRHuIJAHg/auofchBewmtfHG6rgMZSuE+jzl1aB344zwpVJocR09kBXi6tk9KiASTrZMSHf31LEJFwciFnSsCTVQG7kVL0NdjZBEGO7zE1u5c4dxYEctDVvCz/kmH7hl70zajot9cYihh8VLvLwpGBYepTf2a+vhRwdxeZ81KuI3SeOBqNJwyT6wZMw9AfEOmK9LqyS9vBqusujwua+W/DDeqYFo99HkS2uMdX4/IfAB5DDhVakMrff8rrUuf1K1H6rtV7qckOHDET+wdjqymZkPD/mjjW+ibAattls4cZU3I7NRVsnNiZmXAT410A92y6JEiZPuG1djz/57yrqQ3S4KzVhgBq1t5WJRc84dUKCbYnwY4fDL4BH8lkync="
+  - name: "Python: 3.6"
+    os: windows
+    language: shell
+    before_install:
+      - choco install python --version=3.6.8
+      - python -m pip install -U pip setuptools
+    env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
+    cache:
+      directories:
+        - $LOCALAPPDATA/pip/Cache
+
 cache: pip
 install:
 - pip install -r requirements.txt
 script:
-- pytest ./test_scanner.py -s
+- pytest -s
 notifications:
   email: false

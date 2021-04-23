@@ -1,6 +1,0 @@
-flaws.cloud
-arstechnica.com
-lifehacker.com
-gizmodo.com
-reddit.com
-stackoverflow.com

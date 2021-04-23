@@ -1,134 +1,136 @@
 # S3Scanner
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
 
-A tool to find open S3 buckets and dump their contents :droplet:
+A tool to find open S3 buckets and dump their contents💧
 
-![1 - s3finder.py](https://user-images.githubusercontent.com/3712226/40662408-e1d19468-631b-11e8-8d69-0075a6c8ab0d.png)
-
-### If you've earned a bug bounty using this tool, please consider donating to support it's development
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XG5BGLQZPJ9H8)
-
+<img src="https://user-images.githubusercontent.com/3712226/115632654-d4f8c280-a2cd-11eb-87ee-c70bbd4f1edb.png" width="85%"/>
 
 ## Usage
-
 <pre>
-usage: s3scanner [-h] [-o OUTFILE] [-d] [-l] [--version] buckets
+usage: s3scanner [-h] [--version] [--threads n] [--endpoint-url ENDPOINT_URL] [--endpoint-address-style {path,vhost}] [--insecure] {scan,dump} ...
 
-#  s3scanner - Find S3 buckets and dump!
-#
-#  Author: Dan Salmon - @bltjetpack, github.com/sa7mon
-
-positional arguments:
-  buckets               Name of text file containing buckets to check
+s3scanner: Audit unsecured S3 buckets
+           by Dan Salmon - github.com/sa7mon, @bltjetpack
 
 optional arguments:
   -h, --help            show this help message and exit
-  -o OUTFILE, --out-file OUTFILE
-                        Name of file to save the successfully checked buckets in (Default: buckets.txt)
-  -d, --dump            Dump all found open buckets locally
-  -l, --list            Save bucket file listing to local file: ./list-buckets/${bucket}.txt
   --version             Display the current version of this tool
+  --threads n, -t n     Number of threads to use. Default: 4
+  --endpoint-url ENDPOINT_URL, -u ENDPOINT_URL
+                        URL of S3-compliant API. Default: https://s3.amazonaws.com
+  --endpoint-address-style {path,vhost}, -s {path,vhost}
+                        Address style to use for the endpoint. Default: path
+  --insecure, -i        Do not verify SSL
+
+mode:
+  {scan,dump}           (Must choose one)
+    scan                Scan bucket permissions
+    dump                Dump the contents of buckets
 </pre>
 
-The tool takes in a list of bucket names to check. Found S3 buckets are output to file. The tool will also dump or list the contents of 'open' buckets locally.
+## Support
+🚀 If you've found this tool useful, please consider donating to support its development
 
-### Interpreting Results
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XG5BGLQZPJ9H8)
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B0B54D93O)
+
+## Installation
+
+```shell
+pip3 install s3scanner
+```
+
+or via Docker:
+
+```shell
+docker build . -t s3scanner:latest
+docker run --rm s3scanner:latest scan --bucket my-buket
+```
+
+or from source:
+
+```shell
+git clone git@github.com:sa7mon/S3Scanner.git
+cd S3Scanner
+pip3 install -r requirements.txt
+python3 -m S3Scanner
+```
+
+## Features
+
+* ⚡️ Multi-threaded scanning
+* 🔭 Supports tons of S3-compatible APIs
+* 🕵️‍♀️ Scans all bucket permissions to find misconfigurations
+* 💾 Dump bucket contents to a local folder
+* 🐳 Docker support
+
+## Examples
+
+* Scan AWS buckets listed in a file with 8 threads
+  ```shell
+  $ s3scanner --threads 8 scan --buckets-file ./bucket-names.txt
+   ```
+* Scan a bucket in Digital Ocean Spaces 
+  ```shell
+  $ s3scanner --endpoint-url https://sfo2.digitaloceanspaces.com scan --bucket my-bucket
+  ```
+* Dump a single AWS bucket
+  ```shell
+  $ s3scanner dump --bucket my-bucket-to-dump
+  ```
+* Scan a single Dreamhost Objects bucket which uses the vhost address style and an invalid SSL cert
+  ```shell
+  $ s3scanner --endpoint-url https://objects.dreamhost.com --endpoint-address-style vhost --insecure scan --bucket my-bucket
+  ```
+
+## S3-compatible APIs
+
+`S3Scanner` can scan and dump buckets in S3-compatible APIs services other than AWS by using the
+`--endpoint-url` argument. Depending on the service, you may also need the `--endpoint-address-style`
+or `--insecure` arguments as well. 
+
+Some services have different endpoints corresponding to different regions
+
+**Note:** `S3Scanner` currently only supports scanning for anonymous user permissions of non-AWS services
+
+| Service | Example Endpoint | Address Style | Insecure ? |
+|---------|------------------|:-------------:|:----------:|
+| DigitalOcean Spaces (SFO2 region) | https://sfo2.digitaloceanspaces.com | path | No |  
+| Dreamhost | https://objects.dreamhost.com | vhost | Yes |
+| Linode Object Storage (eu-central-1 region) | https://eu-central-1.linodeobjects.com | vhost | No |
+| Scaleway Object Storage (nl-ams region) | https://s3.nl-ams.scw.cloud | path | No |
+| Wasabi Cloud Storage | http://s3.wasabisys.com/ | path | Yes |
+
+📚 Current status of non-AWS APIs can be found [in the project wiki](https://github.com/sa7mon/S3Scanner/wiki/S3-Compatible-APIs)
+
+## Interpreting Results
 
 This tool will attempt to get all available information about a bucket, but it's up to you to interpret the results.
 
-[Settings available](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/set-bucket-permissions.html) for buckets:
-* Object Access (object in this case refers to files stored in the bucket)
-  * List Objects
-  * Write Objects
-* ACL Access
-  * Read Permissions
-  * Write Permissions
+[Possible permissions](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/set-bucket-permissions.html) for buckets:
+
+* Read - List and view all files
+* Write - Write files to bucket
+* Read ACP - Read all Access Control Policies attached to bucket
+* Write ACP - Write Access Control Policies to bucket
+* Full Control - All above permissions
   
 Any or all of these permissions can be set for the 2 main user groups:
 * Authenticated Users
 * Public Users (those without AWS credentials set)
-* (They can also be applied to specific users, but that's out of scope)
+* Individual users/groups (out of scope of this tool)
   
-**What this means:** Just because a bucket returns "AccessDenied" for it's ACLs doesn't mean you can't read/write to it.
-Conversely, you may be able to list ACLs but not read/write to the bucket
+**What this means:** Just because a bucket doesn't allow reading/writing ACLs doesn't mean you can't read/write files in the bucket. Conversely, you may be able to list ACLs but not read/write to the bucket
 
-
-## Installation
-  1. (Optional) `virtualenv venv && source ./venv/bin/activate`
-  2. `pip install -r requirements.txt`
-  3. `python ./s3scanner.py`
-
-(Compatibility has been tested with Python 2.7 and 3.6)
-
-### Using Docker
-
- 1. Build the [Docker](https://docs.docker.com/) image:
-
- ```bash
-sudo docker build -t s3scanner https://github.com/sa7mon/S3Scanner.git
-```
-
- 2. Run the Docker image:
-
- ```bash
-sudo docker run -v /input-data-dir/:/data s3scanner --out-file /data/results.txt /data/names.txt
-```
-This command assumes that `names.txt` with domains to enumerate is in `/input-data-dir/` on host machine.
-
-## Examples
-This tool accepts the following type of bucket formats to check:
-
-- bucket name - `google-dev`
-- domain name - `uber.com`, `sub.domain.com`
-- full s3 url - `yahoo-staging.s3-us-west-2.amazonaws.com` (To easily combine with other tools like [bucket-stream](https://github.com/eth0izzle/bucket-stream))
-- bucket:region - `flaws.cloud:us-west-2`
-
-```bash
-> cat names.txt
-flaws.cloud
-google-dev
-testing.microsoft.com
-yelp-production.s3-us-west-1.amazonaws.com
-github-dev:us-east-1
-```
-	
-1. Dump all open buckets, log both open and closed buckets to found.txt
-	
-	```bash
-	> python ./s3scanner.py --include-closed --out-file found.txt --dump names.txt
-	```
-2. Just log open buckets to the default output file (buckets.txt)
-
-	```bash
-	> python ./s3scanner.py names.txt
-	```
-3. Save file listings of all open buckets to file
-    ```bash
-    > python ./s3scanner.py --list names.txt
-
-    ```
-
-## Contributing
-Issues are welcome and Pull Requests are appreciated. All contributions should be compatible with both Python 2.7 and 3.6.
-
-|    master    |    [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)    |
-|:------------:|:-------------------------------------------------------------------------------------------------------------------------:|
-| enhancements | [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=enhancements)](https://travis-ci.org/sa7mon/S3Scanner) |
-|     bugs     |     [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=bugs)](https://travis-ci.org/sa7mon/S3Scanner)     |
-
-### Testing
-* All test are currently in `test_scanner.py`
-* Run tests with in 2.7 and 3.6 virtual environments.
-* This project uses **pytest-xdist** to run tests. Use `pytest -n NUM` where num is number of parallel processes.
-* Run individual tests like this: `pytest -q -s test_scanner.py::test_namehere`
-
-### Contributors
+## Contributors
 * [Ohelig](https://github.com/Ohelig)
 * [vysecurity](https://github.com/vysecurity)
 * [janmasarik](https://github.com/janmasarik)
 * [alanyee](https://github.com/alanyee)
+* [klau5dev](https://github.com/klau5dev)
 * [hipotermia](https://github.com/hipotermia)
 
 ## License
-License: [MIT](LICENSE.txt) https://opensource.org/licenses/MIT
+
+MIT
