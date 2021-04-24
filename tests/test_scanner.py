@@ -11,7 +11,7 @@ def test_arguments():
     s = S3Service()
 
     a = subprocess.run([sys.executable, '-m', 'S3Scanner', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    assert a.stdout.decode('utf-8').strip() == '2.0.0'
+    assert a.stdout.decode('utf-8').strip() == '2.0.1'
 
     b = subprocess.run([sys.executable, '-m', 'S3Scanner', 'scan', '--bucket', 'flaws.cloud'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert_scanner_output(s, 'flaws.cloud | bucket_exists | AuthUsers: [], AllUsers: [Read]', b.stdout.decode('utf-8').strip())
