@@ -10,11 +10,12 @@ from botocore import UNSIGNED
 from botocore.client import Config
 import datetime
 from S3Scanner.exceptions import AccessDeniedException, InvalidEndpointException, BucketMightNotExistException
-from os.path import normpath
 import pathlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
 from urllib3 import disable_warnings
+import os
+
 
 ALL_USERS_URI = 'uri=http://acs.amazonaws.com/groups/global/AllUsers'
 AUTH_USERS_URI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
@@ -284,7 +285,7 @@ class S3Service:
 
             for future in as_completed(futures):
                 if future.exception():
-                    print(f"{bucket.name} | Download failed: {futures[future]}")
+                    print(f"{bucket.name} | Download failed: {futures[future]} | {future.exception()}")
 
         print(f"{bucket.name} | Dumping completed")
 
@@ -298,7 +299,11 @@ class S3Service:
         :param S3BucketObject obj: Object to downlaod
         :return: None
         """
-        dest_file_path = pathlib.Path(normpath(dest_directory + obj.key))
+        dest_file_path = pathlib.Path(os.path.normpath(dest_directory + obj.key))
+
+        if not self.is_safe_file_to_download(obj.key, dest_directory):
+            print(f"{bucket.name} | Skipping file {obj.key}. File references a parent directory.")
+            return
         if dest_file_path.exists():
             if dest_file_path.stat().st_size == obj.size:
                 if verbose:
@@ -341,6 +346,20 @@ class S3Service:
             if e.response['Error']['Code'] == "AccessDenied" or e.response['Error']['Code'] == "AllAccessDisabled":
                 raise AccessDeniedException("AccessDenied while enumerating bucket objects")
         bucket.objects_enumerated = True
+
+    def is_safe_file_to_download(self, file_to_check, dest_directory):
+        """
+        Check if bucket object would be saved outside of `dest_directory` if downloaded.
+        AWS allows object keys to include relative path characters like '../' which can lead to a 
+        path traversal-like issue where objects get saved outside of the intended directory.
+
+        :param string file_to_check: Bucket object key
+        :param string dest_directory: Path to directory to save file in
+        :return: bool
+        """
+        file_to_check = os.path.abspath(os.path.join(dest_directory, file_to_check))
+        safe_dir = os.path.abspath(dest_directory)
+        return os.path.commonpath([safe_dir]) == os.path.commonpath([safe_dir, file_to_check])
 
     def parse_found_acl(self, bucket):
         """
