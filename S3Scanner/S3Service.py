@@ -293,13 +293,13 @@ class S3Service:
         """
         Download `obj` from `bucket` into `dest_directory`
 
-        :param str dest_directory: Directory to store the object into
+        :param str dest_directory: Directory to store the object into. _Must_ end in a slash
         :param S3Bucket bucket: Bucket to download the object from
         :param bool verbose: Output verbose messages to the user
         :param S3BucketObject obj: Object to downlaod
         :return: None
         """
-        dest_file_path = pathlib.Path(os.path.normpath(dest_directory + obj.key))
+        dest_file_path = pathlib.Path(os.path.normpath(os.path.join(dest_directory, obj.key)))
 
         if not self.is_safe_file_to_download(obj.key, dest_directory):
             print(f"{bucket.name} | Skipping file {obj.key}. File references a parent directory.")
