@@ -545,6 +545,19 @@ def test_download_file():
     b = S3Bucket("bucket-no-existo")
     s.download_file(os.path.join(dest_folder, ''), b, True, o)
 
+def test_is_safe_file_to_download():
+    test_setup_new()
+    s = S3Service()
+
+    # Check a good file name
+    assert s.is_safe_file_to_download("file.txt", "./bucket_dir/") == True
+    assert s.is_safe_file_to_download("file.txt", "./bucket_dir") == True
+
+    # Check file with relative name
+    assert s.is_safe_file_to_download("../file.txt", "./buckets/") == False
+    assert s.is_safe_file_to_download("../", "./buckets/") == False
+    assert s.is_safe_file_to_download("/file.txt", "./buckets/") == False
+
 
 def test_validate_endpoint_url_nonaws():
     disable_warnings()
