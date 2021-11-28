@@ -16,7 +16,7 @@ from .S3Service import S3Service
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .exceptions import InvalidEndpointException
 
-CURRENT_VERSION = '2.0.1'
+CURRENT_VERSION = '2.0.2'
 AWS_ENDPOINT = 'https://s3.amazonaws.com'
 
 
