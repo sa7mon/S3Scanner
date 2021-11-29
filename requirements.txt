@@ -1,2 +1,1 @@
-pytest-xdist
-boto3
+boto3>=1.20
