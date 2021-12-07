@@ -160,3 +160,44 @@ class S3Bucket:
             if self.AllUsersWriteACP == Permission.ALLOWED:
                 allUsersPermissions.append("WriteACP")
         return f"AuthUsers: [{', '.join(authUsersPermissions)}], AllUsers: [{', '.join(allUsersPermissions)}]"
+    
+    def asdict(self):
+        authUsersPermissions = []
+        if self.AuthUsersFullControl == Permission.ALLOWED:
+            authUsersPermissions.append("FullControl")
+        else:
+            if self.AuthUsersRead == Permission.ALLOWED:
+                authUsersPermissions.append("Read")
+            if self.AuthUsersWrite == Permission.ALLOWED:
+                authUsersPermissions.append("Write")
+            if self.AuthUsersReadACP == Permission.ALLOWED:
+                authUsersPermissions.append("ReadACP")
+            if self.AuthUsersWriteACP == Permission.ALLOWED:
+                authUsersPermissions.append("WriteACP")
+        
+        allUsersPermissions = []
+        if self.AllUsersFullControl == Permission.ALLOWED:
+            allUsersPermissions.append("FullControl")
+        else:
+            if self.AllUsersRead == Permission.ALLOWED:
+                allUsersPermissions.append("Read")
+            if self.AllUsersWrite == Permission.ALLOWED:
+                allUsersPermissions.append("Write")
+            if self.AllUsersReadACP == Permission.ALLOWED:
+                allUsersPermissions.append("ReadACP")
+            if self.AllUsersWriteACP == Permission.ALLOWED:
+                allUsersPermissions.append("WriteACP")
+        exists_str = ""
+        if self.exists == BucketExists.UNKNOWN:
+            exists_str = "unknown"
+        elif self.exists == BucketExists.YES:
+            exists_str = True
+        else:
+            exists_str = False
+        return {
+            "name": self.name,
+            "exists": exists_str,
+            "auth_user_permissions": authUsersPermissions,
+            "all_users_permissions": allUsersPermissions,
+            "bucketSize": self.bucketSize
+        }
