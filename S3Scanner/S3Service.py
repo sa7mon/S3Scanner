@@ -304,6 +304,10 @@ class S3Service:
         if not self.is_safe_file_to_download(obj.key, dest_directory):
             print(f"{bucket.name} | Skipping file {obj.key}. File references a parent directory.")
             return
+        if obj.size == 0:
+            if verbose:
+                print(f"{bucket.name} | Skipping file {obj.key}. Likely a directory.")
+            return
         if dest_file_path.exists():
             if dest_file_path.stat().st_size == obj.size:
                 if verbose:
@@ -350,7 +354,7 @@ class S3Service:
     def is_safe_file_to_download(self, file_to_check, dest_directory):
         """
         Check if bucket object would be saved outside of `dest_directory` if downloaded.
-        AWS allows object keys to include relative path characters like '../' which can lead to a 
+        AWS allows object keys to include relative path characters like '../' which can lead to a
         path traversal-like issue where objects get saved outside of the intended directory.
 
         :param string file_to_check: Bucket object key
