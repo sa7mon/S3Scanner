@@ -28,12 +28,12 @@ mode:
     dump                Dump the contents of buckets
 </pre>
 
-## Support
-🚀 If you've found this tool useful, please consider donating to support its development
+## 🚀 Support
+If you've found this tool useful, please consider donating to support its development. You can find sponsor options on the side of this repo page or in [FUNDING.yml](.github/FUNDING.yml)
 
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XG5BGLQZPJ9H8)
+<center><a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner"><img src="https://user-images.githubusercontent.com/3712226/146481766-a331b010-29c4-4537-ac30-9a4b4aad06b3.png" height=50 width=140></a></center>
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/B0B54D93O)
+Huge thank you to [tines](https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner) for being an ongoing sponsor of this project.
 
 ## Installation
 
