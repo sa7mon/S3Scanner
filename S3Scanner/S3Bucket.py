@@ -161,7 +161,12 @@ class S3Bucket:
                 allUsersPermissions.append("WriteACP")
         return f"AuthUsers: [{', '.join(authUsersPermissions)}], AllUsers: [{', '.join(allUsersPermissions)}]"
     
-    def asdict(self):
+    def as_dict(self):
+        """
+        Returns a dict representation of the object string of allowed permissions for this bucket
+
+        :return: dict: Object fields as a dictionary
+        """
         authUsersPermissions = []
         if self.AuthUsersFullControl == Permission.ALLOWED:
             authUsersPermissions.append("FullControl")
@@ -199,5 +204,5 @@ class S3Bucket:
             "exists": exists_str,
             "auth_user_permissions": authUsersPermissions,
             "all_users_permissions": allUsersPermissions,
-            "bucketSize": self.bucketSize
+            "bucket_size": self.bucketSize
         }

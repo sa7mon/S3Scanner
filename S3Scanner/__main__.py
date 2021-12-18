@@ -45,7 +45,7 @@ def load_bucket_names_from_file(file_name):
         exit(1)
 
 
-def scan_single_bucket(s3service, anons3service, do_dangerous, json, bucket_name):
+def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
     """
     Scans a single bucket for permission issues. Exists on its own so we can do multi-threading
 
@@ -53,7 +53,7 @@ def scan_single_bucket(s3service, anons3service, do_dangerous, json, bucket_name
     :param S3Service anonS3Service: S3Service without credentials to use for scanning
     :param bool do_dangerous: Whether or not to do dangerous checks
     :param str bucket_name: Name of bucket to check
-    :return: None or dict()
+    :return: dict: 'bucket': bucket object, 'bucket_dict': bucket object as a dictionary
     """
     try:
         b = S3Bucket(bucket_name)
@@ -109,8 +109,10 @@ def scan_single_bucket(s3service, anons3service, do_dangerous, json, bucket_name
         if s3service.aws_creds_configured and checkAuthUsersPerms:
             s3service.check_perm_write_acl(b)
 
-    print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()}")
-    return b.asdict() if json else None
+    return {
+        'bucket': b,
+        'bucket_dict': b.as_dict()
+    }
 
 
 def main():
@@ -139,8 +141,8 @@ def main():
     parser_group.add_argument('--buckets-file', '-f', dest='buckets_file',
                               help='Name of text file containing bucket names to check', metavar='file')
     parser_group.add_argument('--bucket', '-b', dest='bucket', help='Name of bucket to check', metavar='bucket')
-    parser_scan.add_argument('--json', '-j', dest='json_file', help='Name of file to write JSON to', nargs='?', 
-                             const='results.json', type=str, metavar='json_file')
+    parser_scan.add_argument('--json', '-j', dest='json_file', help='Name of file to write JSON to (defaults to `results.json`)',
+                             nargs='?', const='results.json', type=str, metavar='json_file')
     # TODO: Get help output to not repeat metavar names - i.e. `--bucket FILE, -f FILE`
     #   https://stackoverflow.com/a/9643162/2307994
 
@@ -185,22 +187,23 @@ def main():
         if args.dangerous:
             print("INFO: Including dangerous checks. WARNING: This may change bucket ACL destructively")
 
-        results = list()
+        if args.json_file: # clear the results file
+            f=open(f'{args.json_file}', "w")
+            f.close()
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             futures = {
-                executor.submit(scan_single_bucket, s3service, anons3service, args.dangerous, args.json_file, bucketName): bucketName for bucketName in bucketsIn
+                executor.submit(scan_single_bucket, s3service, anons3service, args.dangerous, bucketName): bucketName for bucketName in bucketsIn
             }
             for future in as_completed(futures):
                 if future.exception():
                     print(f"Bucket scan raised exception: {futures[future]} - {future.exception()}")
                 elif args.json_file:
-                    results.append(future.result())
-            
-        if args.json_file:
-            with open(f"{args.json_file}", "w") as result_file:
-                for res in results:
-                    dump(res, result_file)
-                    result_file.write("\n")
+                    with open(f'{args.json_file}', 'a') as outfile:
+                        dump(future.result()['bucket_dict'], outfile)
+                        outfile.write("\n")
+                else:
+                    bucket = future.result()['bucket']
+                    print(f"{bucket.name} | bucket_exists | {bucket.get_human_readable_permissions()}")
 
     elif args.mode == 'dump':
         if args.dump_dir is None or not path.isdir(args.dump_dir):
