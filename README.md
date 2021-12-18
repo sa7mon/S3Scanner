@@ -31,9 +31,10 @@ mode:
 ## 🚀 Support
 If you've found this tool useful, please consider donating to support its development. You can find sponsor options on the side of this repo page or in [FUNDING.yml](.github/FUNDING.yml)
 
-<center><a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner"><img src="https://user-images.githubusercontent.com/3712226/146481766-a331b010-29c4-4537-ac30-9a4b4aad06b3.png" height=50 width=140></a></center>
+<div align="center"><a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner"><img src="https://user-images.githubusercontent.com/3712226/146481766-a331b010-29c4-4537-ac30-9a4b4aad06b3.png" height=50 width=140></a></div>
 
-Huge thank you to [tines](https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner) for being an ongoing sponsor of this project.
+<p align="center">Huge thank you to <a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner">tines</a> for being an ongoing sponsor of this project.</p>
+           
 
 ## Installation
 
