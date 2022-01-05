@@ -44,7 +44,7 @@ def load_bucket_names_from_file(file_name):
         exit(1)
 
 
-def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
+def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name, do_enumerate):
     """
     Scans a single bucket for permission issues. Exists on its own so we can do multi-threading
 
@@ -108,8 +108,17 @@ def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
         if s3service.aws_creds_configured and checkAuthUsersPerms:
             s3service.check_perm_write_acl(b)
 
-    print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()}")
+    if do_enumerate:
+        if b.AuthUsersRead != Permission.ALLOWED:
+            if b.AllUsersRead == Permission.ALLOWED:
+                anons3service.enumerate_bucket_objects(b)
+        else:
+            s3service.enumerate_bucket_objects(b)
 
+    if do_enumerate:
+        print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
+    else:
+        print(f"{b.name} | bucket_exists | {b.get_human_readable_permissions()}")
 
 def main():
     # Instantiate the parser
@@ -137,6 +146,7 @@ def main():
     parser_group.add_argument('--buckets-file', '-f', dest='buckets_file',
                               help='Name of text file containing bucket names to check', metavar='file')
     parser_group.add_argument('--bucket', '-b', dest='bucket', help='Name of bucket to check', metavar='bucket')
+    parser_scan.add_argument('--enumerate','-e',dest='enumerate', help='Enumerating objects and size as well',action='store_true')
     # TODO: Get help output to not repeat metavar names - i.e. `--bucket FILE, -f FILE`
     #   https://stackoverflow.com/a/9643162/2307994
 
@@ -193,7 +203,7 @@ def main():
 
         with ThreadPoolExecutor(max_workers=args.threads) as executor:
             futures = {
-                executor.submit(scan_single_bucket, s3service, anons3service, args.dangerous, bucketName): bucketName for bucketName in bucketsIn
+                executor.submit(scan_single_bucket, s3service, anons3service, args.dangerous, bucketName, args.enumerate): bucketName for bucketName in bucketsIn
             }
             for future in as_completed(futures):
                 if future.exception():
@@ -237,14 +247,16 @@ def main():
                     print(f"{b.name} | Enumerating bucket objects...")
                     anons3service.enumerate_bucket_objects(b)
                     print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
-                    anons3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
+                    if not args.enumerate:
+                        anons3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
                                                           verbose=args.dump_verbose, threads=args.threads)
             else:
                 # Dump bucket with creds
                 print(f"{b.name} | Enumerating bucket objects...")
                 s3service.enumerate_bucket_objects(b)
                 print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
-                s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
+                if not args.enumerate:
+                    s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
                                                   verbose=args.dump_verbose, threads=args.threads)
     elif args.mode == 'ls':
         if args.dump_buckets_file is not None:
