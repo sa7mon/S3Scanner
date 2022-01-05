@@ -142,7 +142,17 @@ def main():
 
     # Dump mode
     parser_dump = subparsers.add_parser('dump', help='Dump the contents of buckets')
-    parser_dump.add_argument('--dump-dir', '-d', required=True, dest='dump_dir', help='Directory to dump bucket into')
+    parser_dump.add_argument('--dump-dir', '-d', dest='dump_dir', help='Directory to dump bucket into')
+    dump_parser_group = parser_dump.add_mutually_exclusive_group(required=True)
+    dump_parser_group.add_argument('--buckets-file', '-f', dest='dump_buckets_file',
+                                   help='Name of text file containing bucket names to check', metavar='file')
+    dump_parser_group.add_argument('--bucket', '-b', dest='dump_bucket', help='Name of bucket to check', metavar='bucket')
+    parser_dump.add_argument('--verbose', '-v', dest='dump_verbose', action='store_true',
+                             help='Enable verbose output while dumping bucket(s)')
+    parser_dump.add_argument('--enumerate','-e', dest='enumerate', help='Enumerate object/size only',action='store_true')
+
+    # Dump mode
+    parser_dump = subparsers.add_parser('ls', help='display the filenames of the contents of the buckets')
     dump_parser_group = parser_dump.add_mutually_exclusive_group(required=True)
     dump_parser_group.add_argument('--buckets-file', '-f', dest='dump_buckets_file',
                                    help='Name of text file containing bucket names to check', metavar='file')
@@ -236,6 +246,50 @@ def main():
                 print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
                 s3service.dump_bucket_multithread(bucket=b, dest_directory=args.dump_dir,
                                                   verbose=args.dump_verbose, threads=args.threads)
+    elif args.mode == 'ls':
+        if args.dump_buckets_file is not None:
+            bucketsIn = load_bucket_names_from_file(args.dump_buckets_file)
+        elif args.dump_bucket is not None:
+            bucketsIn.add(args.dump_bucket)
+
+        for bucketName in bucketsIn:
+            try:
+                b = S3Bucket(bucketName)
+            except ValueError as ve:
+                if str(ve) == "Invalid bucket name":
+                    print(f"{bucketName} | bucket_name_invalid")
+                    continue
+                else:
+                    print(f"{bucketName} | {str(ve)}")
+                    continue
+
+            # Check if bucket exists first
+            s3service.check_bucket_exists(b)
+
+            if b.exists == BucketExists.NO:
+                print(f"{b.name} | bucket_not_exist")
+                continue
+
+            s3service.check_perm_read(b)
+
+            if b.AuthUsersRead != Permission.ALLOWED:
+                anons3service.check_perm_read(b)
+                if b.AllUsersRead != Permission.ALLOWED:
+                    print(f"{b.name} | Error: no read permissions")
+                else:
+                    # Dump bucket without creds
+                    print(f"{b.name} | Enumerating bucket objects...")
+                    anons3service.enumerate_bucket_objects(b)
+                    print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
+                    for obj in b.objects:
+                        print(f"{obj.key} - {obj.size} - {obj.last_modified}")
+            else:
+                # Dump bucket with creds
+                print(f"{b.name} | Enumerating bucket objects...")
+                s3service.enumerate_bucket_objects(b)
+                print(f"{b.name} | Total Objects: {str(len(b.objects))}, Total Size: {b.get_human_readable_size()}")
+                for obj in b.objects:
+                        print(f"{obj.key} - {obj.size} - {obj.last_modified}")
     else:
         print("Invalid mode")
         parser.print_help()
