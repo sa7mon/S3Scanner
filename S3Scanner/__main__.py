@@ -53,7 +53,7 @@ def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
     :param S3Service anonS3Service: S3Service without credentials to use for scanning
     :param bool do_dangerous: Whether or not to do dangerous checks
     :param str bucket_name: Name of bucket to check
-    :return: dict: 'bucket': bucket object, 'bucket_dict': bucket object as a dictionary
+    :return: S3Bucket: bucket object
     """
     try:
         b = S3Bucket(bucket_name)
@@ -109,10 +109,7 @@ def scan_single_bucket(s3service, anons3service, do_dangerous, bucket_name):
         if s3service.aws_creds_configured and checkAuthUsersPerms:
             s3service.check_perm_write_acl(b)
 
-    return {
-        'bucket': b,
-        'bucket_dict': b.as_dict()
-    }
+    return b
 
 
 def main():
@@ -199,10 +196,10 @@ def main():
                     print(f"Bucket scan raised exception: {futures[future]} - {future.exception()}")
                 elif args.json_file:
                     with open(f'{args.json_file}', 'a') as outfile:
-                        dump(future.result()['bucket_dict'], outfile)
+                        dump(future.result().as_dict(), outfile)
                         outfile.write("\n")
                 else:
-                    bucket = future.result()['bucket']
+                    bucket = future.result()
                     print(f"{bucket.name} | bucket_exists | {bucket.get_human_readable_permissions()}")
 
     elif args.mode == 'dump':
