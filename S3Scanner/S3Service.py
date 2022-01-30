@@ -52,6 +52,10 @@ class S3Service:
         session = boto_session.Session()
         if profile in session.available_profiles: # use provided profile, if it is availble to use
             session = boto_session.Session(profile_name=profile)
+        else:
+            print(f"Error: profile \"{profile}\" not found in ~/.aws/credentials")
+            exit(1)
+
         if forceNoCreds or session.get_credentials() is None or session.get_credentials().access_key is None:
             self.aws_creds_configured = False
             self.s3_client = client('s3',
