@@ -136,6 +136,7 @@ def main():
     parser.add_argument('--endpoint-address-style', '-s', dest='endpoint_address_style', choices=['path', 'vhost'],
                         default='path', help='Address style to use for the endpoint. Default: path')
     parser.add_argument('--insecure', '-i', dest='verify_ssl', action='store_false', help='Do not verify SSL')
+    parser.add_argument('--profile', '-p', dest='aws_profile',default='default', help='AWS profile to use (defaults to `default`)')
     subparsers = parser.add_subparsers(title='mode', dest='mode', help='(Must choose one)')
 
     # Scan mode
@@ -180,7 +181,7 @@ def main():
     s3service = None
     anons3service = None
     try:
-        s3service = S3Service(endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
+        s3service = S3Service(endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style,profile=args.aws_profile)
         anons3service = S3Service(forceNoCreds=True, endpoint_url=args.endpoint_url, verify_ssl=args.verify_ssl, endpoint_address_style=args.endpoint_address_style)
     except InvalidEndpointException as e:
         print(f"Error: {e.message}")

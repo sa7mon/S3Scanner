@@ -2,7 +2,7 @@
     This will be a service that the client program will instantiate to then call methods
     passing buckets
 """
-from boto3 import client  # TODO: Limit import to just boto3.client, probably
+from boto3 import client, session as boto_session # TODO: Limit import to just boto3.client, probably
 from S3Scanner.S3Bucket import S3Bucket, BucketExists, Permission, S3BucketObject
 from botocore.exceptions import ClientError
 import botocore.session
@@ -23,7 +23,7 @@ AUTH_USERS_URI = 'uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
 
 class S3Service:
     def __init__(self, forceNoCreds=False, endpoint_url='https://s3.amazonaws.com', verify_ssl=True,
-                 endpoint_address_style='path'):
+                 endpoint_address_style='path', profile='default'):
         """
         Service constructor
 
@@ -49,7 +49,13 @@ class S3Service:
                 raise InvalidEndpointException(message=f"Endpoint '{self.endpoint_url}' does not appear to be S3-compliant")
 
         # Check for AWS credentials
-        session = botocore.session.get_session()
+        session = boto_session.Session()
+        if profile in session.available_profiles: # use provided profile, if it is availble to use
+            session = boto_session.Session(profile_name=profile)
+        else:
+            print(f"Error: profile \"{profile}\" not found in ~/.aws/credentials")
+            exit(1)
+
         if forceNoCreds or session.get_credentials() is None or session.get_credentials().access_key is None:
             self.aws_creds_configured = False
             self.s3_client = client('s3',
@@ -58,7 +64,7 @@ class S3Service:
                                           endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
         else:
             self.aws_creds_configured = True
-            self.s3_client = client('s3', config=Config(s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
+            self.s3_client = session.client('s3', config=Config(s3={'addressing_style': self.endpoint_address_style}, connect_timeout=3,
                                          retries={'max_attempts': 2}),
                                           endpoint_url=self.endpoint_url, use_ssl=use_ssl, verify=verify_ssl)
 
