@@ -1,13 +1,15 @@
 # S3Scanner
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
 
-A tool to find open S3 buckets and dump their contents💧
+A tool to find open S3 buckets, list and dump their contents💧
 
 <img src="https://user-images.githubusercontent.com/3712226/115632654-d4f8c280-a2cd-11eb-87ee-c70bbd4f1edb.png" width="85%"/>
 
 ## Usage
 <pre>
-usage: s3scanner [-h] [--version] [--threads n] [--endpoint-url ENDPOINT_URL] [--endpoint-address-style {path,vhost}] [--insecure] {scan,dump} ...
+usage: s3scanner [-h] [--version] [--threads n] [--endpoint-url ENDPOINT_URL] [--endpoint-address-style {path,vhost}]
+                 [--insecure] [--profile AWS_PROFILE]
+                 {scan,dump,ls} ...
 
 s3scanner: Audit unsecured S3 buckets
            by Dan Salmon - github.com/sa7mon, @bltjetpack
@@ -21,11 +23,14 @@ optional arguments:
   --endpoint-address-style {path,vhost}, -s {path,vhost}
                         Address style to use for the endpoint. Default: path
   --insecure, -i        Do not verify SSL
+  --profile AWS_PROFILE, -p AWS_PROFILE
+                        AWS profile to use (defaults to `default`)
 
 mode:
-  {scan,dump}           (Must choose one)
+  {scan,dump,ls}        (Must choose one)
     scan                Scan bucket permissions
     dump                Dump the contents of buckets
+    ls                  display the filenames of the contents of the buckets
 </pre>
 
 ## 🚀 Support
