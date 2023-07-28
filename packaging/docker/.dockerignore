@@ -1,0 +1,6 @@
+data/
+.git
+bin/
+infra/
+packaging/dist/
+*.log

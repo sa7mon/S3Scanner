@@ -1,4 +1,0 @@
-[run]
-omit =
-    venv*
-    tests/TestUtils.py
