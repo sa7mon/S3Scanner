@@ -15,3 +15,6 @@ test:
 
 test-integration:
 	TEST_DB=1 TEST_MQ=1 go test ./...
+
+upgrade:
+	go get -u ./...
