@@ -1,111 +1,305 @@
-# S3Scanner
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Build Status](https://travis-ci.org/sa7mon/S3Scanner.svg?branch=master)](https://travis-ci.org/sa7mon/S3Scanner)
+<h1 align="center">
+S3Scanner
+</h1>
 
-A tool to find open S3 buckets and dump their contents💧
+<p align="center">
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"/></a>
+<a href="https://github.com/sponsors/sa7mon/"><img src="https://img.shields.io/github/sponsors/sa7mon" /></a>
+<a href="https://github.com/sa7mon/S3Scanner/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat"/></a>
+<a href="https://github.com/sa7mon/S3Scanner/releases/latest"><img src="https://img.shields.io/github/v/release/sa7mon/s3scanner" /></a>
+</p>
+<p align="center">
+<a href="#features">Features</a> - <a href="#usage">Usage</a> - <a href="#quick-start">Quick Start</a> - <a href="#installation">Installation</a> - <a href="https://github.com/sa7mon/S3Scanner/discussions">Discuss</a> 
+</p>
+<br>
+A tool to find open S3 buckets in AWS or other cloud providers:
 
-<img src="https://user-images.githubusercontent.com/3712226/115632654-d4f8c280-a2cd-11eb-87ee-c70bbd4f1edb.png" width="85%"/>
+- AWS
+- DigitalOcean
+- DreamHost
+- GCP
+- Linode
+- Custom
 
-## Usage
-<pre>
-usage: s3scanner [-h] [--version] [--threads n] [--endpoint-url ENDPOINT_URL] [--endpoint-address-style {path,vhost}] [--insecure] {scan,dump} ...
+<img alt="demo" src="https://github.com/sa7mon/S3Scanner/assets/3712226/cfa16801-2a44-4ae9-ad85-9dd466390cd9">
 
-s3scanner: Audit unsecured S3 buckets
-           by Dan Salmon - github.com/sa7mon, @bltjetpack
+# Features
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --version             Display the current version of this tool
-  --threads n, -t n     Number of threads to use. Default: 4
-  --endpoint-url ENDPOINT_URL, -u ENDPOINT_URL
-                        URL of S3-compliant API. Default: https://s3.amazonaws.com
-  --endpoint-address-style {path,vhost}, -s {path,vhost}
-                        Address style to use for the endpoint. Default: path
-  --insecure, -i        Do not verify SSL
+* ⚡️ Multi-threaded scanning
+* 🔭 Supports many built-in S3 storage providers or custom
+* 🕵️‍♀️ Scans all bucket permissions to find misconfigurations
+* 💾 Save results to Postgres database
+* 🐇 Connect to RabbitMQ for automated scanning at scale
+* 🐳 Docker support
 
-mode:
-  {scan,dump}           (Must choose one)
-    scan                Scan bucket permissions
-    dump                Dump the contents of buckets
-</pre>
+# Usage
 
-## 🚀 Support
+```
+INPUT: (1 required)
+  -bucket        string  Name of bucket to check.
+  -bucket-file   string  File of bucket names to check.
+  -mq                    Connect to RabbitMQ to get buckets. Requires config file key "mq". Default: "false"
+
+OUTPUT:
+  -db       Save results to a Postgres database. Requires config file key "db.uri". Default: "false"
+  -json     Print logs to stdout in JSON format instead of human-readable. Default: "false"
+
+OPTIONS:
+  -enumerate           Enumerate bucket objects (can be time-consuming). Default: "false"
+  -provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode - custom requires config file. Default: "aws"
+  -threads     int     Number of threads to scan with. Default: "4"
+
+DEBUG:
+  -verbose     Enable verbose logging. Default: "false"
+  -version     Print version Default: "false"
+
+If config file is required these locations will be searched for config.yml: "." "/etc/s3scanner/" "$HOME/.s3scanner/"
+```
+
+# 🚀 Support
 If you've found this tool useful, please consider donating to support its development. You can find sponsor options on the side of this repo page or in [FUNDING.yml](.github/FUNDING.yml)
 
 <div align="center"><a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner"><img src="https://user-images.githubusercontent.com/3712226/146481766-a331b010-29c4-4537-ac30-9a4b4aad06b3.png" height=50 width=140></a></div>
 
 <p align="center">Huge thank you to <a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=s3scanner">tines</a> for being an ongoing sponsor of this project.</p>
-           
 
-## Installation
+# Quick Start
 
-```shell
-pip3 install s3scanner
-```
-
-or via Docker:
-
-```shell
-docker build . -t s3scanner:latest
-docker run --rm s3scanner:latest scan --bucket my-buket
-```
-
-or from source:
-
-```shell
-git clone git@github.com:sa7mon/S3Scanner.git
-cd S3Scanner
-pip3 install -r requirements.txt
-python3 -m S3Scanner
-```
-
-## Features
-
-* ⚡️ Multi-threaded scanning
-* 🔭 Supports tons of S3-compatible APIs
-* 🕵️‍♀️ Scans all bucket permissions to find misconfigurations
-* 💾 Dump bucket contents to a local folder
-* 🐳 Docker support
-
-## Examples
-
-* Scan AWS buckets listed in a file with 8 threads
+Scan AWS for bucket names listed in a file, enumerate all objects
   ```shell
-  $ s3scanner --threads 8 scan --buckets-file ./bucket-names.txt
+  $ s3scanner -bucket-file names.txt -enumerate
    ```
-* Scan a bucket in Digital Ocean Spaces 
+
+Scan a bucket in GCP, enumerate all objects, and save results to database
   ```shell
-  $ s3scanner --endpoint-url https://sfo2.digitaloceanspaces.com scan --bucket my-bucket
-  ```
-* Dump a single AWS bucket
-  ```shell
-  $ s3scanner dump --bucket my-bucket-to-dump
-  ```
-* Scan a single Dreamhost Objects bucket which uses the vhost address style and an invalid SSL cert
-  ```shell
-  $ s3scanner --endpoint-url https://objects.dreamhost.com --endpoint-address-style vhost --insecure scan --bucket my-bucket
+  $ s3scanner -provider gcp -db -bucket my-bucket -enumerate
   ```
 
-## S3-compatible APIs
+# Installation
 
-`S3Scanner` can scan and dump buckets in S3-compatible APIs services other than AWS by using the
-`--endpoint-url` argument. Depending on the service, you may also need the `--endpoint-address-style`
-or `--insecure` arguments as well. 
+via Docker
 
-Some services have different endpoints corresponding to different regions
+```shell
+docker run --rm -it ghcr.io/sa7mon/s3scanner:latest -bucket my-bucket
+```
+
+from source
+
+```shell
+git clone git@github.com:sa7mon/S3Scanner.git && cd S3Scanner
+go build -o s3scanner .
+./s3scanner -bucket my-bucket
+```
+
+# Using
+
+## Input
+
+`s3scanner` requires exactly one type of input: `-bucket`, `-bucket-file`, or `-mq`.
+
+```
+INPUT: (1 required)
+  -bucket        string  Name of bucket to check.
+  -bucket-file   string  File of bucket names to check.
+  -mq                    Connect to RabbitMQ to get buckets. Requires config file key "mq". Default: "false"
+```
+
+*`-bucket`*
+------------
+
+Scan a single bucket
+
+```shell
+s3scanner -bucket secret_uploads
+```
+
+*`-bucket-file`*
+----------------
+Scans every bucket name listed in file
+
+```
+s3scanner -bucket-file names.txt
+```
+where `names.txt` contains one bucket name per line
+
+```
+$ cat names.txt
+bucket123
+assets
+image-uploads
+```
+
+*`-mq`*
+-------
+
+Connects to a RabbitMQ server and consumes messages containing bucket names to scan.
+
+```
+s3scanner -mq
+```
+
+Messages should be JSON-encoded [`Bucket`](https://github.com/sa7mon/s3scanner/blob/main/bucket/bucket.go) objects - refer to [`mqingest`](https://github.com/sa7mon/s3scanner/blob/main/cmd/mqingest/mqingest.go) for a Golang publishing example.
+
+`-mq` requires the `mq.uri` and `mq.queue_name` config file keys. See Config File section for example.
+
+## Output
+
+```
+OUTPUT:
+  -db       Save results to a Postgres database. Requires config file key "db.uri". Default: "false"
+  -json     Print logs to stdout in JSON format instead of human-readable. Default: "false"
+```
+
+*`-db`*
+----------
+
+Saves all scan results to a PostgreSQL database
+
+```shell
+s3scanner -bucket images -db
+```
+
+* Requires the `db.uri` config file key. See Config File section for example.
+* If using `-db`, results will also be printed to the console if using `-json` or the default human-readable output mode.
+* `s3scanner` runs Gorm's [Auto Migration](https://gorm.io/docs/migration.html#Auto-Migration) feature each time it connects two the database. If
+the schema already has tables with names Gorm expects, it may change these tables' structure. It is recommended to create a Postgres schema dedicated to `s3scanner` results.
+
+*`-json`*
+----------
+
+Instead of outputting scan results to console in human-readable format, output machine-readable JSON.
+
+```shell
+s3scanner -bucket images -json
+```
+
+This will print one JSON object per line to the console, which can then be piped to `jq` or other tools that accept JSON input.
+
+**Example**: Print bucket name and region for all buckets that exist
+
+```shell
+$ s3scanner -bucket-file names.txt -json | jq -r '. | select(.bucket.exists==1) | [.bucket.name, .bucket.region] | join(" - ")'       
+10000 - eu-west-1
+10000.pizza - ap-southeast-1
+images_staging - us-west-2
+```
+
+## Options
+
+```
+OPTIONS:
+  -enumerate           Enumerate bucket objects (can be time-consuming). Default: "false"
+  -provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode - custom requires config file. Default: "aws"
+  -threads     int     Number of threads to scan with. Default: "4"
+```
+
+*`-enumerate`*
+--------------
+
+Enumerate all objects stored in bucket. By default, `s3scanner` will only check permissions of buckets.
+```shell
+s3scanner -bucket attachments -enumerate
+```
+
+* **Note:** This can take a long time if there are a large number of objects stored.
+* When enumerating, `s3scanner` will request "pages" of 1,000 objects. If there are more than 5,000 pages of objects, it will skip the rest.
+
+*`-provider`*
+-------------
+
+Name of storage provider to use when checking buckets.
+
+```shell
+s3scanner -bucket assets -provider gcp
+```
+
+* Use "custom" when targeting a currently unsupported or local network storage provider.
+* "custom" provider requires config file keys under `providers.custom` listed in the Config File section.
+
+*`-threads`*
+------------
+
+Number of threads to scan with.
+
+```shell
+s3scanner -bucket secret_docs -threads 8
+```
+
+* Increasing threads will increase the number of buckets being scanned simultaneously, but will not speed up object enumeration. Enumeration is currently single-threaded per bucket.
+
+## Debug
+
+```
+DEBUG:
+  -verbose     Enable verbose logging. Default: "false"
+  -version     Print version Default: "false"
+```
+
+*`-verbose`*
+------------
+
+Enables verbose logging of debug messages. This option will produce a lot of logs and is not recommended to use unless filing a bug report.
+
+```shell
+s3scanner -bucket spreadsheets -verbose
+```
+
+*`-version`*
+------------
+
+Print the version info and exit.
+
+```shell
+s3scanner -version
+```
+
+* Will print `dev` if compiled from source.
+
+# Config File
+
+If using flags that require config options, `s3scanner` will search for `config.yml` in:
+ 
+* (current directory)
+* `/etc/s3scanner/`
+* `$HOME/.s3scanner/`
+
+```yaml
+# Required by -db
+db:
+  uri: "postgresql://user:pass@db.host.name:5432/schema_name"
+
+# Required by -mq
+mq:
+  queue_name: "aws"
+  uri: "amqp://user:pass@localhost:5672"
+
+# providers.custom required by `-provider custom`
+#   address_style - Addressing style used by endpoints.
+#     type: string
+#     values: "path" or "vhost"
+#   endpoint_format - Format of endpoint URLs. Should contain '$REGION' as placeholder for region name
+#     type: string
+#   insecure - Ignore SSL errors
+#     type: boolean
+# regions must contain at least one option
+providers:
+  custom: 
+    address_style: "path"
+    endpoint_format: "https://$REGION.vultrobjects.com"
+    insecure: false
+    regions:
+      - "ewr1"
+```
+
+When `s3scanner` parses the config file, it will take the `endpoint_format` and replace `$REGION` for all `regions` listed to create a list of endpoint URLs.
+
+# S3 compatible APIs
 
 **Note:** `S3Scanner` currently only supports scanning for anonymous user permissions of non-AWS services
 
-| Service | Example Endpoint | Address Style | Insecure ? |
-|---------|------------------|:-------------:|:----------:|
-| DigitalOcean Spaces (SFO2 region) | https://sfo2.digitaloceanspaces.com | path | No |  
-| Dreamhost | https://objects.dreamhost.com | vhost | Yes |
-| Linode Object Storage (eu-central-1 region) | https://eu-central-1.linodeobjects.com | vhost | No |
-| Scaleway Object Storage (nl-ams region) | https://s3.nl-ams.scw.cloud | path | No |
-| Wasabi Cloud Storage | http://s3.wasabisys.com/ | path | Yes |
+📚 More information on non-AWS APIs can be found [in the project wiki](https://github.com/sa7mon/S3Scanner/wiki/S3-Compatible-APIs).
 
-📚 Current status of non-AWS APIs can be found [in the project wiki](https://github.com/sa7mon/S3Scanner/wiki/S3-Compatible-APIs)
-
-## Interpreting Results
+## Permissions
 
 This tool will attempt to get all available information about a bucket, but it's up to you to interpret the results.
 
@@ -116,22 +310,14 @@ This tool will attempt to get all available information about a bucket, but it's
 * Read ACP - Read all Access Control Policies attached to bucket
 * Write ACP - Write Access Control Policies to bucket
 * Full Control - All above permissions
-  
+
 Any or all of these permissions can be set for the 2 main user groups:
 * Authenticated Users
 * Public Users (those without AWS credentials set)
 * Individual users/groups (out of scope of this tool)
-  
+
 **What this means:** Just because a bucket doesn't allow reading/writing ACLs doesn't mean you can't read/write files in the bucket. Conversely, you may be able to list ACLs but not read/write to the bucket
 
-## Contributors
-* [Ohelig](https://github.com/Ohelig)
-* [vysecurity](https://github.com/vysecurity)
-* [janmasarik](https://github.com/janmasarik)
-* [alanyee](https://github.com/alanyee)
-* [klau5dev](https://github.com/klau5dev)
-* [hipotermia](https://github.com/hipotermia)
-
-## License
+# License
 
 MIT

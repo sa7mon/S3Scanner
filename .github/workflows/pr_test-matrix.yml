@@ -1,0 +1,56 @@
+name: Unit & Integration Tests
+
+on: [ pull_request ]
+
+jobs:
+  linux-matrix:
+    strategy:
+      matrix:
+        go: [ 1.18, 1.19, "1.20" ]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    services:
+      postgres:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: example
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+        ports:
+          - "5432:5432"
+      mq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        env:
+          ALLOW_ANONYMOUS_LOGIN: "yes"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Test
+        run: TEST_DB=1 TEST_MQ=1 go test ./...
+      - name: Build
+        run: go build -v ./...
+  windows-matrix:
+    strategy:
+      matrix:
+        go: [ 1.18, 1.19, "1.20" ]
+        os: [ windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Test
+        run: go test ./...
+      - name: Build
+        run: go build -v ./...

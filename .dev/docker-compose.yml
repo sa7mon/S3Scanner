@@ -1,0 +1,38 @@
+version: "2.1"
+
+services:
+  dev_mq:
+    image: rabbitmq:3-management
+    hostname: dev_mq
+    container_name: dev_mq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 2s
+      timeout: 3s
+      retries: 10
+    ports:
+      - 5672:5672
+      - 15672:15672
+#    volumes:
+#      - "rabbitmq_data:/var/lib/rabbitmq"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  app_dev:
+    image: golang:1.18-alpine
+    container_name: app_dev
+    volumes:
+      - $PWD:/app
+    entrypoint: ["tail", "-f", "/dev/null"]
+  db_dev:
+    image: postgres:12-alpine
+    container_name: db_dev
+    volumes:
+      - db_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+
+volumes:
+  db_dev:

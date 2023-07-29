@@ -1,0 +1,14 @@
+db:
+  uri: "postgresql://postgres:example@db_dev:5432/postgres"
+
+mq:
+  queue_name: "aws"
+  uri: "amqp://guest:guest@localhost:5672"
+
+providers:
+  custom:
+    insecure: false
+    endpoint_format: "https://$REGION.vultrobjects.com"
+    regions:
+      - "ewr1"
+    address_style: "path"

@@ -1,0 +1,74 @@
+name: Bug Report
+description: Report a bug in S3Scanner
+labels:
+  - "bug"
+  - "triage"
+body:
+  - type: checkboxes
+    attributes:
+      label: Existing Issues
+      description: Please search the existing issues before creating a new one
+      options:
+        - label: I've searched the [current issues](https://github.com/sa7mon/S3Scanner/issues)
+          required: true
+
+  - type: input
+    attributes:
+      label: Command
+      description: Paste the command you ran that produced the issue.
+      placeholder: s3scanner -bucket b123
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Observed behavior (what happened?)
+      description: Please provide a brief description of the bug in 1-2 sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected behaviour
+      description: Please describe precisely what you'd expect to happen. Be specific.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Debug output
+      description: Please re-run your command with the `--verbose` flag and paste the results here
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: OS Info
+      description: Operating system version
+      placeholder: |
+        Windows 11 Pro
+        Ubuntu 22.04 LTS
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Config file
+      description: If you are using any flags that require use of config file (`-provider custom`, `-db`, `-mq`, etc), please paste the contents of your config file here.
+      placeholder: |
+        db:
+          uri: "postgresql://user:pass@db:5432/postgres"
+        providers:
+          custom:
+            insecure: false
+            endpoint_format: "https://$REGION.myprovider.com"
+            regions:
+              - "us-east-1"
+            address_style: "path"
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Additional info
+      description: Please provide any additional information that seem useful.

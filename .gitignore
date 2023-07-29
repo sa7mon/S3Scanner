@@ -1,24 +1,10 @@
-# IDE
 .idea/
-.vscode/
-
-# Virtualenv
-venv*/
-
-# Cache
-__pycache__
-*.pyc
-.cache/
-
-# Testing
-.pytest_cache
-test/
-.coverage
-htmlcov/
-temp-*/
-buckets.txt
-
-# Pip build
-build/
+*.log
+logs/
+.DS_Store
+*.sql.gz
+data/
+bin/*
+*.out
 dist/
-S3Scanner.egg-info/
+packaging/dist/
