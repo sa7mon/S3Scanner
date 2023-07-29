@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"s3scanner/bucket"
 	"s3scanner/permission"
-	//scan "s3scanner-go/pkg/scanner"
 	"time"
 )
 
