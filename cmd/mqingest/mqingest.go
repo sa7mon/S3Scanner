@@ -8,7 +8,7 @@ import (
 	"github.com/streadway/amqp"
 	"log"
 	"os"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 	"strings"
 )
 

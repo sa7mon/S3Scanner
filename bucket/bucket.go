@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
-	"s3scanner-go/groups"
+	"s3scanner/groups"
 	"strings"
 	"time"
 	"unicode"

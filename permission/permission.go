@@ -8,8 +8,8 @@ import (
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	log "github.com/sirupsen/logrus"
-	. "s3scanner-go/bucket"
-	. "s3scanner-go/groups"
+	. "s3scanner/bucket"
+	. "s3scanner/groups"
 	"strings"
 	"time"
 )

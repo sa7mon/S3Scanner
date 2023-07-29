@@ -9,7 +9,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"path/filepath"
 	"runtime"
-	"s3scanner-go/groups"
+	"s3scanner/groups"
 	"testing"
 	"time"
 )

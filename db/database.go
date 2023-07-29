@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 	"time"
 )
 

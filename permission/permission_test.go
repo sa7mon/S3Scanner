@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 	"testing"
 )
 

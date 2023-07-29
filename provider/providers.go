@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"s3scanner-go/bucket"
-	"s3scanner-go/permission"
+	"s3scanner/bucket"
+	"s3scanner/permission"
 	//scan "s3scanner-go/pkg/scanner"
 	"time"
 )

@@ -8,9 +8,9 @@ import (
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"s3scanner-go/bucket"
-	"s3scanner-go/mq"
-	"s3scanner-go/provider"
+	"s3scanner/bucket"
+	"s3scanner/mq"
+	"s3scanner/provider"
 	"sync"
 	"testing"
 )

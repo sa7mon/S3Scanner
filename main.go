@@ -12,11 +12,11 @@ import (
 	"github.com/streadway/amqp"
 	"os"
 	"reflect"
-	. "s3scanner-go/bucket"
-	"s3scanner-go/db"
-	log2 "s3scanner-go/log"
-	"s3scanner-go/mq"
-	. "s3scanner-go/provider"
+	"s3scanner/bucket"
+	"s3scanner/db"
+	log2 "s3scanner/log"
+	"s3scanner/mq"
+	. "s3scanner/provider"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -28,13 +28,13 @@ func failOnError(err error, msg string) {
 	}
 }
 
-func printResult(b *Bucket) {
+func printResult(b *bucket.Bucket) {
 	if args.json {
 		log.WithField("bucket", b).Info()
 		return
 	}
 
-	if b.Exists == BucketNotExist {
+	if b.Exists == bucket.BucketNotExist {
 		log.Infof("not_exist | %s", b.Name)
 		return
 	}
@@ -46,39 +46,39 @@ func printResult(b *Bucket) {
 	log.Info(result)
 }
 
-func work(wg *sync.WaitGroup, buckets chan Bucket, provider StorageProvider, enumerate bool, writeToDB bool) {
+func work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider StorageProvider, enumerate bool, writeToDB bool) {
 	defer wg.Done()
 	for b1 := range buckets {
-		bucket, existsErr := provider.BucketExists(&b1)
+		b, existsErr := provider.BucketExists(&b1)
 		if existsErr != nil {
-			log.Errorf("error     | %s | %s", bucket.Name, existsErr.Error())
+			log.Errorf("error     | %s | %s", b.Name, existsErr.Error())
 			continue
 		}
 
-		if bucket.Exists == BucketNotExist {
-			printResult(bucket)
+		if b.Exists == bucket.BucketNotExist {
+			printResult(b)
 			continue
 		}
 
 		// Scan permissions
-		scanErr := provider.Scan(bucket, false)
+		scanErr := provider.Scan(b, false)
 		if scanErr != nil {
-			log.WithFields(log.Fields{"bucket": bucket}).Error(scanErr)
+			log.WithFields(log.Fields{"bucket": b}).Error(scanErr)
 		}
 
-		if enumerate && bucket.PermAllUsersRead == PermissionAllowed {
+		if enumerate && b.PermAllUsersRead == bucket.PermissionAllowed {
 			log.WithFields(log.Fields{"method": "main.work()",
-				"bucket_name": bucket.Name, "region": bucket.Region}).Debugf("enumerating objects...")
-			enumErr := provider.Enumerate(bucket)
+				"bucket_name": b.Name, "region": b.Region}).Debugf("enumerating objects...")
+			enumErr := provider.Enumerate(b)
 			if enumErr != nil {
-				log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", bucket.Name, enumErr, len(bucket.Objects))
+				log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", b.Name, enumErr, len(b.Objects))
 				continue
 			}
 		}
-		printResult(bucket)
+		printResult(b)
 
 		if writeToDB {
-			dbErr := db.StoreBucket(bucket)
+			dbErr := db.StoreBucket(b)
 			if dbErr != nil {
 				log.Error(dbErr)
 			}
@@ -105,40 +105,40 @@ func mqwork(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider St
 		}
 
 		for j := range msgs {
-			bucketToScan := Bucket{}
+			bucketToScan := bucket.Bucket{}
 
 			unmarshalErr := json.Unmarshal(j.Body, &bucketToScan)
 			if unmarshalErr != nil {
 				log.Error(unmarshalErr)
 			}
 
-			if !IsValidS3BucketName(bucketToScan.Name) {
+			if !bucket.IsValidS3BucketName(bucketToScan.Name) {
 				log.Info(fmt.Sprintf("invalid   | %s", bucketToScan.Name))
 				failOnError(j.Ack(false), "failed to ack")
 				continue
 			}
 
-			bucket, existsErr := provider.BucketExists(&bucketToScan)
+			b, existsErr := provider.BucketExists(&bucketToScan)
 			if existsErr != nil {
-				log.WithFields(log.Fields{"bucket": bucket.Name, "step": "checkExists"}).Error(existsErr)
+				log.WithFields(log.Fields{"bucket": b.Name, "step": "checkExists"}).Error(existsErr)
 				failOnError(j.Reject(false), "failed to reject")
 			}
-			if bucket.Exists == BucketNotExist {
+			if b.Exists == bucket.BucketNotExist {
 				// ack the message and skip to the next
-				log.Infof("not_exist | %s", bucket.Name)
+				log.Infof("not_exist | %s", b.Name)
 				failOnError(j.Ack(false), "failed to ack")
 				continue
 			}
 
-			scanErr := provider.Scan(bucket, false)
+			scanErr := provider.Scan(b, false)
 			if scanErr != nil {
-				log.WithFields(log.Fields{"bucket": bucket}).Error(scanErr)
+				log.WithFields(log.Fields{"bucket": b}).Error(scanErr)
 				failOnError(j.Reject(false), "failed to reject")
 				continue
 			}
 
 			if doEnumerate {
-				if bucket.PermAllUsersRead != PermissionAllowed {
+				if b.PermAllUsersRead != bucket.PermissionAllowed {
 					printResult(&bucketToScan)
 					failOnError(j.Ack(false), "failed to ack")
 					if writeToDB {
@@ -151,11 +151,11 @@ func mqwork(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider St
 				}
 
 				log.WithFields(log.Fields{"method": "main.mqwork()",
-					"bucket_name": bucket.Name, "region": bucket.Region}).Debugf("enumerating objects...")
+					"bucket_name": b.Name, "region": b.Region}).Debugf("enumerating objects...")
 
-				enumErr := provider.Enumerate(bucket)
+				enumErr := provider.Enumerate(b)
 				if enumErr != nil {
-					log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", bucket.Name, enumErr, len(bucket.Objects))
+					log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", b.Name, enumErr, len(b.Objects))
 					failOnError(j.Reject(false), "failed to reject")
 				}
 			}
@@ -166,7 +166,7 @@ func mqwork(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider St
 				// Acknowledge mq message. May fail if we've taken too long and the server has closed the channel
 				// If it has, we break and start at the top of the outer for-loop again which re-establishes a new
 				// channel
-				log.WithFields(log.Fields{"bucket": bucket}).Error(ackErr)
+				log.WithFields(log.Fields{"bucket": b}).Error(ackErr)
 				break
 			}
 
@@ -429,7 +429,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	if !args.useMq {
-		buckets := make(chan Bucket)
+		buckets := make(chan bucket.Bucket)
 
 		for i := 0; i < args.threads; i++ {
 			wg.Add(1)
@@ -437,18 +437,18 @@ func main() {
 		}
 
 		if args.bucketFile != "" {
-			err := ReadFromFile(args.bucketFile, buckets)
+			err := bucket.ReadFromFile(args.bucketFile, buckets)
 			close(buckets)
 			if err != nil {
 				log.Error(err)
 				os.Exit(1)
 			}
 		} else if args.bucketName != "" {
-			if !IsValidS3BucketName(args.bucketName) {
+			if !bucket.IsValidS3BucketName(args.bucketName) {
 				log.Info(fmt.Sprintf("invalid   | %s", args.bucketName))
 				os.Exit(0)
 			}
-			c := NewBucket(strings.ToLower(args.bucketName))
+			c := bucket.NewBucket(strings.ToLower(args.bucketName))
 			buckets <- c
 			close(buckets)
 		}

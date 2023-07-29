@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"os"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 	"testing"
 	"time"
 )

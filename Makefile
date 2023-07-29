@@ -1,5 +1,5 @@
-APP          := s3scanner-go
-DOCKER_IMAGE := hothamandcheese/s3scanner-go
+APP          := s3scanner
+DOCKER_IMAGE := hothamandcheese/s3scanner
 VERSION      := $(shell git describe --tags --abbrev=0)
 COMMIT       := $(shell git rev-parse --short HEAD)
 BUILD_DATE   := `date +%FT%T%z`

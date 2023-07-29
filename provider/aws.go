@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	log "github.com/sirupsen/logrus"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 )
 
 type providerAWS struct {

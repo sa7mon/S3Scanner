@@ -2,7 +2,7 @@ package provider
 
 import (
 	"github.com/stretchr/testify/assert"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 	"testing"
 )
 

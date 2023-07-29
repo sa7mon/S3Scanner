@@ -3,7 +3,7 @@ package provider
 import (
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"s3scanner-go/bucket"
+	"s3scanner/bucket"
 )
 
 // GCP like AWS, has a "universal" endpoint, but unlike AWS GCP does not require you to follow a redirect to the

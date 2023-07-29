@@ -1,4 +1,4 @@
-module s3scanner-go
+module s3scanner
 
 go 1.18
 
