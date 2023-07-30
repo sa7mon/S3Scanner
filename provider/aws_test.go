@@ -1,8 +1,8 @@
 package provider
 
 import (
+	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/stretchr/testify/assert"
-	"s3scanner/bucket"
 	"testing"
 )
 

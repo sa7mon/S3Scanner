@@ -2,10 +2,10 @@ package db
 
 import (
 	"fmt"
+	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"os"
-	"s3scanner/bucket"
 	"testing"
 	"time"
 )

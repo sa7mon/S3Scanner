@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	. "github.com/sa7mon/s3scanner/bucket"
+	. "github.com/sa7mon/s3scanner/groups"
 	log "github.com/sirupsen/logrus"
-	. "s3scanner/bucket"
-	. "s3scanner/groups"
 	"strings"
 	"time"
 )

@@ -1,12 +1,12 @@
 package db
 
 import (
+	"github.com/sa7mon/s3scanner/bucket"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
 	"os"
-	"s3scanner/bucket"
 	"time"
 )
 

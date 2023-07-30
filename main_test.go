@@ -3,14 +3,14 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/mq"
+	"github.com/sa7mon/s3scanner/provider"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"s3scanner/bucket"
-	"s3scanner/mq"
-	"s3scanner/provider"
 	"sync"
 	"testing"
 )

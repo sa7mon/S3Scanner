@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/bucket"
 	"strings"
 )
 

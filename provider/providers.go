@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/permission"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"s3scanner/bucket"
-	"s3scanner/permission"
 	"time"
 )
 
