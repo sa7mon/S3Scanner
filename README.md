@@ -77,13 +77,21 @@ Scan a bucket in GCP, enumerate all objects, and save results to database
 
 # Installation
 
-via Docker
+**Go**
+
+```shell
+# replace version with latest release
+go install -v github.com/sa7mon/s3scanner@v3.0.1
+# or
+go install -v github.com/sa7mon/s3scanner@latest 
+```
+
+**Docker**
 
 ```shell
 docker run --rm -it ghcr.io/sa7mon/s3scanner:latest -bucket my-bucket
 ```
-
-from source
+**Build from source**
 
 ```shell
 git clone git@github.com:sa7mon/S3Scanner.git && cd S3Scanner
