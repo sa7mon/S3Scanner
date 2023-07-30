@@ -7,16 +7,16 @@ import (
 	"flag"
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/db"
+	log2 "github.com/sa7mon/s3scanner/log"
+	"github.com/sa7mon/s3scanner/mq"
+	"github.com/sa7mon/s3scanner/provider"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
 	"os"
 	"reflect"
-	"s3scanner/bucket"
-	"s3scanner/db"
-	log2 "s3scanner/log"
-	"s3scanner/mq"
-	. "s3scanner/provider"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -46,7 +46,7 @@ func printResult(b *bucket.Bucket) {
 	log.Info(result)
 }
 
-func work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider StorageProvider, enumerate bool, writeToDB bool) {
+func work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider provider.StorageProvider, enumerate bool, writeToDB bool) {
 	defer wg.Done()
 	for b1 := range buckets {
 		b, existsErr := provider.BucketExists(&b1)
@@ -86,7 +86,7 @@ func work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider StorageProvid
 	}
 }
 
-func mqwork(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider StorageProvider, queue string, threads int,
+func mqwork(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider provider.StorageProvider, queue string, threads int,
 	doEnumerate bool, writeToDB bool) {
 	_, once := os.LookupEnv("TEST_MQ") // If we're being tested, exit after one bucket is scanned
 	defer wg.Done()
@@ -288,7 +288,7 @@ func main() {
 	flagSettings := make(map[string]flagSetting, 11)
 	flag.StringVar(&args.providerFlag, "provider", "aws", fmt.Sprintf(
 		"Object storage provider: %s - custom requires config file.",
-		strings.Join(AllProviders, ", ")))
+		strings.Join(provider.AllProviders, ", ")))
 	flagSettings["provider"] = flagSetting{category: CategoryOptions}
 	flag.StringVar(&args.bucketName, "bucket", "", "Name of bucket to check.")
 	flagSettings["bucket"] = flagSetting{category: CategoryInput}
@@ -387,7 +387,7 @@ func main() {
 		log.SetFormatter(&log.TextFormatter{DisableTimestamp: true})
 	}
 
-	var provider StorageProvider
+	var p provider.StorageProvider
 	var err error
 	configErr := validateConfig(args)
 	if configErr != nil {
@@ -397,7 +397,7 @@ func main() {
 	if args.providerFlag == "custom" {
 		if viper.IsSet("providers.custom") {
 			log.Debug("found custom provider")
-			provider, err = NewCustomProvider(
+			p, err = provider.NewCustomProvider(
 				viper.GetString("providers.custom.address_style"),
 				viper.GetBool("providers.custom.insecure"),
 				viper.GetStringSlice("providers.custom.regions"),
@@ -408,7 +408,7 @@ func main() {
 			}
 		}
 	} else {
-		provider, err = NewProvider(args.providerFlag)
+		p, err = provider.NewProvider(args.providerFlag)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
@@ -433,7 +433,7 @@ func main() {
 
 		for i := 0; i < args.threads; i++ {
 			wg.Add(1)
-			go work(&wg, buckets, provider, args.doEnumerate, args.writeToDB)
+			go work(&wg, buckets, p, args.doEnumerate, args.writeToDB)
 		}
 
 		if args.bucketFile != "" {
@@ -466,7 +466,7 @@ func main() {
 
 	for i := 0; i < args.threads; i++ {
 		wg.Add(1)
-		go mqwork(i, &wg, conn, provider, mqName, args.threads, args.doEnumerate, args.writeToDB)
+		go mqwork(i, &wg, conn, p, mqName, args.threads, args.doEnumerate, args.writeToDB)
 	}
 	log.Printf("Waiting for messages. To exit press CTRL+C")
 	wg.Wait()
