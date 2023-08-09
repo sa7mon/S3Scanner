@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 )
 
 type providerAWS struct {
@@ -106,6 +107,9 @@ func (*providerAWS) newAnonClientNoRegion() (*s3.Client, error) {
 		context.TODO(),
 		config.WithDefaultRegion("us-west-2"),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
+		config.WithHTTPClient(&http.Client{Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		}}),
 	)
 	if err != nil {
 		return nil, err
@@ -123,7 +127,10 @@ func (a *providerAWS) newClient(region string) (*s3.Client, error) {
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
 		config.WithRegion(region),
-		config.WithCredentialsProvider(aws.AnonymousCredentials{}))
+		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
+		config.WithHTTPClient(&http.Client{Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		}}))
 
 	if err != nil {
 		return nil, err

@@ -78,8 +78,13 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 		return nil, err
 	}
 
+	cfg.HTTPClient = &http.Client{Transport: &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+	}}
+
 	if sp.Insecure() {
 		cfg.HTTPClient = &http.Client{Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}}
 	}
