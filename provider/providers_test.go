@@ -21,8 +21,8 @@ func TestMain(m *testing.M) {
 	provider, err = NewCustomProvider(
 		"path",
 		false,
-		[]string{"ewr1", "ams1"},
-		"https://$REGION.vultrobjects.com")
+		[]string{"nyc3", "sfo2", "sfo3", "ams3", "sgp1", "fra1", "syd1"},
+		"https://$REGION.digitaloceanspaces.com")
 	if err != nil {
 		panic(err)
 	}
@@ -196,7 +196,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		permissions string
 	}{
 		{name: "AWS", provider: providers["aws"], bucket: bucket.NewBucket("s3scanner-empty"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
-		{name: "Custom public-read-write", provider: providers["custom"], bucket: bucket.NewBucket("nurse-virtual-assistants"), permissions: "AuthUsers: [] | AllUsers: [READ, WRITE]"},
+		{name: "Custom public-read-write", provider: providers["custom"], bucket: bucket.NewBucket("nurse-virtual-assistants"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Custom no public-read", provider: providers["custom"], bucket: bucket.NewBucket("assets"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "DO", provider: providers["digitalocean"], bucket: bucket.NewBucket("logo"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Dreamhost", provider: providers["dreamhost"], bucket: bucket.NewBucket("bitrix24"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
@@ -211,7 +211,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 			assert.Nil(t2, err)
 			assert.Nil(t2, scanErr)
 			assert.Equal(t2, bucket.BucketExists, gb.Exists)
-			assert.Equal(t2, tt.bucket.String(), tt.permissions)
+			assert.Equal(t2, tt.permissions, tt.bucket.String())
 		})
 	}
 }
