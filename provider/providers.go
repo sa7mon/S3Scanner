@@ -64,6 +64,19 @@ func NewProvider(name string) (StorageProvider, error) {
 }
 
 func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
+	var httpClient s3.HTTPClient
+
+	if sp.Insecure() {
+		httpClient = &http.Client{Transport: &http.Transport{
+			Proxy:           http.ProxyFromEnvironment,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}}
+	} else {
+		httpClient = &http.Client{Transport: &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+		}}
+	}
+
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
 		config.WithEndpointResolverWithOptions(
@@ -73,15 +86,10 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 				}, nil
 			})),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
+		config.WithHTTPClient(httpClient),
 	)
 	if err != nil {
 		return nil, err
-	}
-
-	if sp.Insecure() {
-		cfg.HTTPClient = &http.Client{Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}}
 	}
 
 	addrStyleOption := func(o *s3.Options) { o.UsePathStyle = false }

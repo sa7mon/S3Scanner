@@ -36,6 +36,7 @@ jobs:
           go-version: ${{ matrix.go }}
       - name: Test
         run: TEST_DB=1 TEST_MQ=1 go test ./...
+        timeout-minutes: 5
       - name: Build
         run: go build -v ./...
   windows-matrix:
