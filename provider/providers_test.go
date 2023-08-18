@@ -1,13 +1,25 @@
 package provider
 
 import (
+	"context"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/johannesboyne/gofakes3"
+	"github.com/johannesboyne/gofakes3/backend/s3mem"
 	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/groups"
 	"github.com/stretchr/testify/assert"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
 
 var providers = map[string]StorageProvider{}
+var (
+	fakeS3Backend *s3mem.Backend
+	fakeS3Server  *httptest.Server
+)
 
 func TestMain(m *testing.M) {
 	var provider StorageProvider
@@ -17,16 +29,6 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 	providers["aws"] = provider
-
-	provider, err = NewCustomProvider(
-		"path",
-		false,
-		[]string{"ewr1", "ams1"},
-		"https://$REGION.vultrobjects.com")
-	if err != nil {
-		panic(err)
-	}
-	providers["custom"] = provider
 
 	provider, err = NewProviderDO()
 	if err != nil {
@@ -52,8 +54,98 @@ func TestMain(m *testing.M) {
 	}
 	providers["linode"] = provider
 
+	// Setup custom provider with fakeS3
+	fakeS3Backend = s3mem.New()
+	faker := gofakes3.New(fakeS3Backend)
+	fakeS3Server = httptest.NewServer(faker.Server())
+	//defer fakeS3Server.Close()
+
+	customProvider, customErr := NewCustomProvider("path", true, []string{"localhost"}, fakeS3Server.URL)
+	if customErr != nil {
+		panic(customErr)
+	}
+	providers["custom"] = customProvider
+	bucketsErr := makeTestBuckets(customProvider.getRegionClient("localhost"))
+	if bucketsErr != nil {
+		panic(bucketsErr)
+	}
+
 	code := m.Run()
 	os.Exit(code)
+}
+
+func makeTestBuckets(client *s3.Client) error {
+	/** Test cases
+
+	- bucketExists
+		- exists, access denied
+		- exists, open
+		- no such bucket
+	- enum
+		- public-read
+		- public-read-write
+		- all-access-denied
+	- scan
+		- all-access-denied
+		- public-read
+		- public-read-write
+		- public-read-acl
+		- public-write-acl
+		- public-write
+	*/
+
+	inputs := map[string]s3.CreateBucketInput{
+		"private": {
+			Bucket: aws.String("private"),
+			ACL:    types.BucketCannedACLPrivate,
+		},
+		"public-read": {
+			Bucket: aws.String("public-read"),
+			ACL:    types.BucketCannedACLPublicRead,
+		},
+		"public-read-write": {
+			Bucket: aws.String("public-read-write"),
+			ACL:    types.BucketCannedACLPublicReadWrite,
+		},
+		"auth-read": {
+			Bucket: aws.String("auth-read"),
+			ACL:    types.BucketCannedACLAuthenticatedRead,
+		},
+		"auth-write": {
+			Bucket:     aws.String("auth-write"),
+			GrantWrite: groups.AuthenticatedUsersv2.URI,
+		},
+		"public-read-acl": {
+			Bucket:       aws.String("public-read-acl"),
+			GrantReadACP: groups.AllUsersv2.URI,
+			// Could need to be: groups.ALL_USERS_URI
+		},
+		"public-write-acl": {
+			Bucket:        aws.String("public-write-acl"),
+			GrantWriteACP: groups.AllUsersv2.URI,
+		},
+		"auth-read-acl": {
+			Bucket:       aws.String("auth-read-acl"),
+			GrantReadACP: groups.AuthenticatedUsersv2.URI,
+		},
+		"auth-write-acl": {
+			Bucket:        aws.String("auth-write-acl"),
+			GrantWriteACP: groups.AuthenticatedUsersv2.URI,
+		},
+		"public-write": {
+			Bucket:     aws.String("public-write"),
+			GrantWrite: groups.AllUsersv2.URI,
+		},
+	}
+
+	for _, input := range inputs {
+		// Create a new bucket using the CreateBucket call.
+		_, err := client.CreateBucket(context.TODO(), &input)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func failIfError(t *testing.T, err error) {
@@ -164,8 +256,6 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		numObjects int
 	}{
 		{name: "AWS", provider: providers["aws"], goodBucket: bucket.NewBucket("s3scanner-empty"), numObjects: 0},
-		{name: "Custom public-read", provider: providers["custom"], goodBucket: bucket.NewBucket("alicante"), numObjects: 209},
-		{name: "Custom no public-read", provider: providers["custom"], goodBucket: bucket.NewBucket("assets"), numObjects: 0},
 		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("action"), numObjects: 2},
 		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("bitrix24"), numObjects: 6},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
@@ -196,8 +286,8 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		permissions string
 	}{
 		{name: "AWS", provider: providers["aws"], bucket: bucket.NewBucket("s3scanner-empty"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
-		{name: "Custom public-read-write", provider: providers["custom"], bucket: bucket.NewBucket("nurse-virtual-assistants"), permissions: "AuthUsers: [] | AllUsers: [READ, WRITE]"},
-		{name: "Custom no public-read", provider: providers["custom"], bucket: bucket.NewBucket("assets"), permissions: "AuthUsers: [] | AllUsers: []"},
+		{name: "Custom public-read", provider: providers["custom"], bucket: bucket.NewBucket("public-read"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
+		{name: "Custom public-read-acl", provider: providers["custom"], bucket: bucket.NewBucket("public-read-acl"), permissions: "AuthUsers: [] | AllUsers: [READ_ACP]"},
 		{name: "DO", provider: providers["digitalocean"], bucket: bucket.NewBucket("logo"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Dreamhost", provider: providers["dreamhost"], bucket: bucket.NewBucket("bitrix24"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("hatrioua"), permissions: "AuthUsers: [] | AllUsers: []"},
@@ -207,11 +297,20 @@ func Test_StorageProvider_Scan(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
 			gb, err := tt.provider.BucketExists(&tt.bucket)
-			scanErr := tt.provider.Scan(gb, true)
+			scanErr := tt.provider.Scan(gb, false)
 			assert.Nil(t2, err)
 			assert.Nil(t2, scanErr)
 			assert.Equal(t2, bucket.BucketExists, gb.Exists)
-			assert.Equal(t2, tt.bucket.String(), tt.permissions)
+			assert.Equal(t2, tt.permissions, tt.bucket.String())
 		})
 	}
+
+	//for _, tt := range tests {
+	//	gb, err := tt.provider.BucketExists(&tt.bucket)
+	//	scanErr := tt.provider.Scan(gb, true)
+	//	assert.Nil(t, err)
+	//	assert.Nil(t, scanErr)
+	//	assert.Equal(t, bucket.BucketExists, gb.Exists)
+	//	assert.Equal(t, tt.bucket.String(), tt.permissions)
+	//}
 }

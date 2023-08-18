@@ -37,6 +37,10 @@ func CheckPermReadACL(s3Client *s3.Client, bucket *Bucket) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	if aclOutput.Grants == nil {
+		return false, nil
+	}
 	return true, nil
 }
 

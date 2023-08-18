@@ -1,6 +1,12 @@
 version: "2.1"
 
 services:
+  s3ninja:
+    image: scireum/s3-ninja
+    hostname: s3ninja
+    container_name: s3ninja
+    ports:
+      - "9444:9000"
   dev_mq:
     image: rabbitmq:3-management
     hostname: dev_mq

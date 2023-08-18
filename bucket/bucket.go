@@ -174,9 +174,13 @@ func ReadFromFile(bucketFile string, bucketChan chan Bucket) error {
 
 // ParseAclOutputv2 TODO: probably move this to providers.go
 func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
-	bucket.OwnerId = *aclOutput.Owner.ID
-	if aclOutput.Owner.DisplayName != nil {
-		bucket.OwnerDisplayName = *aclOutput.Owner.DisplayName
+	if aclOutput.Owner != nil {
+		if aclOutput.Owner.ID != nil {
+			bucket.OwnerId = *aclOutput.Owner.ID
+		}
+		if aclOutput.Owner.DisplayName != nil {
+			bucket.OwnerDisplayName = *aclOutput.Owner.DisplayName
+		}
 	}
 
 	for _, b := range aclOutput.Grants {
