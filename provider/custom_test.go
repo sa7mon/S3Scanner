@@ -15,9 +15,10 @@ func TestCustomProvider_BucketExists(t *testing.T) {
 		b      bucket.Bucket
 		exists uint8
 	}{
-		{name: "exists, access denied", b: bucket.NewBucket("assets"), exists: bucket.BucketExists},
-		{name: "exists, open", b: bucket.NewBucket("nurse-virtual-assistants"), exists: bucket.BucketExists},
-		{name: "no such bucket", b: bucket.NewBucket("s3scanner-no-exist"), exists: bucket.BucketNotExist},
+
+		{name: "exists, access denied", b: bucket.NewBucket("files"), exists: bucket.BucketExists},
+		{name: "exists, open", b: bucket.NewBucket("logo"), exists: bucket.BucketExists},
+		{name: "no such bucket", b: bucket.NewBucket("hammerbarn"), exists: bucket.BucketNotExist},
 	}
 
 	for _, tt := range tests {
