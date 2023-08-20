@@ -3,9 +3,7 @@ package s3scanner
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"os"
 )
 
 type ArgCollection struct {
@@ -66,10 +64,9 @@ func validateConfig(args ArgCollection) error {
 	// Try to find and read config file
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			log.Error("config file not found")
-			os.Exit(1)
+			return errors.New("config file not found")
 		} else {
-			panic(fmt.Errorf("fatal error config file: %w", err))
+			return err
 		}
 	}
 
