@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func GetRegionsDO() ([]string, error) {
@@ -51,7 +53,7 @@ func GetRegionsDO() ([]string, error) {
 			continue
 		}
 		if spaces_supported[i] {
-			supported_regions = append(supported_regions, regions[i])
+			supported_regions = append(supported_regions, strings.ToLower(regions[i]))
 		}
 	}
 
@@ -59,11 +61,69 @@ func GetRegionsDO() ([]string, error) {
 	return supported_regions, nil
 }
 
+type linodeRegionsResp struct {
+	Data []struct {
+		ID           string   `json:"id"`
+		Label        string   `json:"label"`
+		Country      string   `json:"country"`
+		Capabilities []string `json:"capabilities"`
+		Status       string   `json:"status"`
+		Resolvers    struct {
+			Ipv4 string `json:"ipv4"`
+			Ipv6 string `json:"ipv6"`
+		} `json:"resolvers"`
+	} `json:"data"`
+	Page    int `json:"page"`
+	Pages   int `json:"pages"`
+	Results int `json:"results"`
+}
+
+func GetRegionsLinode() ([]string, error) {
+	requestURL := "https://api.linode.com/v4/regions"
+	resp, err := http.Get(requestURL)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
+	}
+
+	var r linodeRegionsResp
+	err = json.NewDecoder(resp.Body).Decode(&r)
+	if err != nil {
+		return nil, err
+	}
+
+	objectStorageRegions := []string{}
+	for _, d := range r.Data {
+		objectStorageSupport := false
+		for _, dc := range d.Capabilities {
+			if dc == "Object Storage" {
+				objectStorageSupport = true
+				break
+			}
+		}
+		if objectStorageSupport {
+			objectStorageRegions = append(objectStorageRegions, d.ID)
+		}
+	}
+
+	return objectStorageRegions, nil
+}
+
 func main() {
-	regions, err := GetRegionsDO()
+	doRegions, err := GetRegionsDO()
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
-	log.Println(regions)
+	log.Printf("DigitalOcean: %v\n", doRegions)
+
+	linodeRegions, lErr := GetRegionsLinode()
+	if lErr != nil {
+		log.Printf("Linode: %v\n", lErr)
+	} else {
+		log.Printf("Linode: %v", linodeRegions)
+	}
 }
