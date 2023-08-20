@@ -13,6 +13,9 @@ docker-image:
 test:
 	go test ./...
 
+test-coverage:
+	TEST_DB=1 TEST_MQ=1 go test ./... -coverprofile cover.out && go tool cover -html=cover.out
+
 test-integration:
 	TEST_DB=1 TEST_MQ=1 go test ./...
 
