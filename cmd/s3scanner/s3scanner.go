@@ -2,15 +2,13 @@ package s3scanner
 
 import (
 	"bytes"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/sa7mon/s3scanner/db"
 	log2 "github.com/sa7mon/s3scanner/log"
-	"github.com/sa7mon/s3scanner/mq"
 	"github.com/sa7mon/s3scanner/provider"
+	"github.com/sa7mon/s3scanner/worker"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
@@ -20,168 +18,6 @@ import (
 	"sync"
 	"text/tabwriter"
 )
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
-
-func printResult(b *bucket.Bucket) {
-	if args.Json {
-		log.WithField("bucket", b).Info()
-		return
-	}
-
-	if b.Exists == bucket.BucketNotExist {
-		log.Infof("not_exist | %s", b.Name)
-		return
-	}
-
-	result := fmt.Sprintf("exists    | %v | %v | %v", b.Name, b.Region, b.String())
-	if b.ObjectsEnumerated {
-		result = fmt.Sprintf("%v | %v objects (%v)", result, len(b.Objects), humanize.Bytes(b.BucketSize))
-	}
-	log.Info(result)
-}
-
-func work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider provider.StorageProvider, enumerate bool, writeToDB bool) {
-	defer wg.Done()
-	for b1 := range buckets {
-		b, existsErr := provider.BucketExists(&b1)
-		if existsErr != nil {
-			log.Errorf("error     | %s | %s", b.Name, existsErr.Error())
-			continue
-		}
-
-		if b.Exists == bucket.BucketNotExist {
-			printResult(b)
-			continue
-		}
-
-		// Scan permissions
-		scanErr := provider.Scan(b, false)
-		if scanErr != nil {
-			log.WithFields(log.Fields{"bucket": b}).Error(scanErr)
-		}
-
-		if enumerate && b.PermAllUsersRead == bucket.PermissionAllowed {
-			log.WithFields(log.Fields{"method": "main.work()",
-				"bucket_name": b.Name, "region": b.Region}).Debugf("enumerating objects...")
-			enumErr := provider.Enumerate(b)
-			if enumErr != nil {
-				log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", b.Name, enumErr, len(b.Objects))
-				continue
-			}
-		}
-		printResult(b)
-
-		if writeToDB {
-			dbErr := db.StoreBucket(b)
-			if dbErr != nil {
-				log.Error(dbErr)
-			}
-		}
-	}
-}
-
-func mqwork(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider provider.StorageProvider, queue string, threads int,
-	doEnumerate bool, writeToDB bool) {
-	_, once := os.LookupEnv("TEST_MQ") // If we're being tested, exit after one bucket is scanned
-	defer wg.Done()
-
-	// Wrap the whole thing in a for (while) loop so if the mq server kills the channel, we start it up again
-	for {
-		ch, chErr := mq.Connect(conn, queue, threads, threadId)
-		if chErr != nil {
-			failOnError(chErr, "couldn't connect to message queue")
-		}
-
-		msgs, consumeErr := ch.Consume(queue, fmt.Sprintf("%s_%v", queue, threadId), false, false, false, false, nil)
-		if consumeErr != nil {
-			log.Error(fmt.Errorf("failed to register a consumer: %w", consumeErr))
-			return
-		}
-
-		for j := range msgs {
-			bucketToScan := bucket.Bucket{}
-
-			unmarshalErr := json.Unmarshal(j.Body, &bucketToScan)
-			if unmarshalErr != nil {
-				log.Error(unmarshalErr)
-			}
-
-			if !bucket.IsValidS3BucketName(bucketToScan.Name) {
-				log.Info(fmt.Sprintf("invalid   | %s", bucketToScan.Name))
-				failOnError(j.Ack(false), "failed to ack")
-				continue
-			}
-
-			b, existsErr := provider.BucketExists(&bucketToScan)
-			if existsErr != nil {
-				log.WithFields(log.Fields{"bucket": b.Name, "step": "checkExists"}).Error(existsErr)
-				failOnError(j.Reject(false), "failed to reject")
-			}
-			if b.Exists == bucket.BucketNotExist {
-				// ack the message and skip to the next
-				log.Infof("not_exist | %s", b.Name)
-				failOnError(j.Ack(false), "failed to ack")
-				continue
-			}
-
-			scanErr := provider.Scan(b, false)
-			if scanErr != nil {
-				log.WithFields(log.Fields{"bucket": b}).Error(scanErr)
-				failOnError(j.Reject(false), "failed to reject")
-				continue
-			}
-
-			if doEnumerate {
-				if b.PermAllUsersRead != bucket.PermissionAllowed {
-					printResult(&bucketToScan)
-					failOnError(j.Ack(false), "failed to ack")
-					if writeToDB {
-						dbErr := db.StoreBucket(&bucketToScan)
-						if dbErr != nil {
-							log.Error(dbErr)
-						}
-					}
-					continue
-				}
-
-				log.WithFields(log.Fields{"method": "main.mqwork()",
-					"bucket_name": b.Name, "region": b.Region}).Debugf("enumerating objects...")
-
-				enumErr := provider.Enumerate(b)
-				if enumErr != nil {
-					log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", b.Name, enumErr, len(b.Objects))
-					failOnError(j.Reject(false), "failed to reject")
-				}
-			}
-
-			printResult(&bucketToScan)
-			ackErr := j.Ack(false)
-			if ackErr != nil {
-				// Acknowledge mq message. May fail if we've taken too long and the server has closed the channel
-				// If it has, we break and start at the top of the outer for-loop again which re-establishes a new
-				// channel
-				log.WithFields(log.Fields{"bucket": b}).Error(ackErr)
-				break
-			}
-
-			// Write to database
-			if writeToDB {
-				dbErr := db.StoreBucket(&bucketToScan)
-				if dbErr != nil {
-					log.Error(dbErr)
-				}
-			}
-			if once {
-				return
-			}
-		}
-	}
-}
 
 type flagSetting struct {
 	indentLevel int
@@ -361,7 +197,7 @@ func Run(version string) {
 
 		for i := 0; i < args.Threads; i++ {
 			wg.Add(1)
-			go work(&wg, buckets, p, args.DoEnumerate, args.WriteToDB)
+			go worker.Work(&wg, buckets, p, args.DoEnumerate, args.WriteToDB, args.Json)
 		}
 
 		if args.BucketFile != "" {
@@ -389,12 +225,14 @@ func Run(version string) {
 	mqUri := viper.GetString("mq.uri")
 	mqName := viper.GetString("mq.queue_name")
 	conn, err := amqp.Dial(mqUri)
-	failOnError(err, fmt.Sprintf("failed to connect to AMQP URI '%s'", mqUri))
+	if err != nil {
+		log.Fatalf("%s: %s", fmt.Sprintf("failed to connect to AMQP URI '%s'", mqUri), err)
+	}
 	defer conn.Close()
 
 	for i := 0; i < args.Threads; i++ {
 		wg.Add(1)
-		go mqwork(i, &wg, conn, p, mqName, args.Threads, args.DoEnumerate, args.WriteToDB)
+		go worker.WorkMQ(i, &wg, conn, p, mqName, args.Threads, args.DoEnumerate, args.WriteToDB)
 	}
 	log.Printf("Waiting for messages. To exit press CTRL+C")
 	wg.Wait()
