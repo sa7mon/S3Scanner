@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-func failOnError(err error, msg string) {
+func FailOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
 	}
@@ -28,7 +28,7 @@ func WorkMQ(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider pr
 	for {
 		ch, chErr := mq.Connect(conn, queue, threads, threadId)
 		if chErr != nil {
-			failOnError(chErr, "couldn't connect to message queue")
+			FailOnError(chErr, "couldn't connect to message queue")
 		}
 
 		msgs, consumeErr := ch.Consume(queue, fmt.Sprintf("%s_%v", queue, threadId), false, false, false, false, nil)
@@ -47,33 +47,33 @@ func WorkMQ(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider pr
 
 			if !bucket.IsValidS3BucketName(bucketToScan.Name) {
 				log.Info(fmt.Sprintf("invalid   | %s", bucketToScan.Name))
-				failOnError(j.Ack(false), "failed to ack")
+				FailOnError(j.Ack(false), "failed to ack")
 				continue
 			}
 
 			b, existsErr := provider.BucketExists(&bucketToScan)
 			if existsErr != nil {
 				log.WithFields(log.Fields{"bucket": b.Name, "step": "checkExists"}).Error(existsErr)
-				failOnError(j.Reject(false), "failed to reject")
+				FailOnError(j.Reject(false), "failed to reject")
 			}
 			if b.Exists == bucket.BucketNotExist {
 				// ack the message and skip to the next
 				log.Infof("not_exist | %s", b.Name)
-				failOnError(j.Ack(false), "failed to ack")
+				FailOnError(j.Ack(false), "failed to ack")
 				continue
 			}
 
 			scanErr := provider.Scan(b, false)
 			if scanErr != nil {
 				log.WithFields(log.Fields{"bucket": b}).Error(scanErr)
-				failOnError(j.Reject(false), "failed to reject")
+				FailOnError(j.Reject(false), "failed to reject")
 				continue
 			}
 
 			if doEnumerate {
 				if b.PermAllUsersRead != bucket.PermissionAllowed {
-					printResult(&bucketToScan, false)
-					failOnError(j.Ack(false), "failed to ack")
+					PrintResult(&bucketToScan, false)
+					FailOnError(j.Ack(false), "failed to ack")
 					if writeToDB {
 						dbErr := db.StoreBucket(&bucketToScan)
 						if dbErr != nil {
@@ -89,11 +89,11 @@ func WorkMQ(threadId int, wg *sync.WaitGroup, conn *amqp.Connection, provider pr
 				enumErr := provider.Enumerate(b)
 				if enumErr != nil {
 					log.Errorf("Error enumerating bucket '%s': %v\nEnumerated objects: %v", b.Name, enumErr, len(b.Objects))
-					failOnError(j.Reject(false), "failed to reject")
+					FailOnError(j.Reject(false), "failed to reject")
 				}
 			}
 
-			printResult(&bucketToScan, false)
+			PrintResult(&bucketToScan, false)
 			ackErr := j.Ack(false)
 			if ackErr != nil {
 				// Acknowledge mq message. May fail if we've taken too long and the server has closed the channel

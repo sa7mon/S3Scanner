@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func printResult(b *bucket.Bucket, json bool) {
+func PrintResult(b *bucket.Bucket, json bool) {
 	if json {
 		log.WithField("bucket", b).Info()
 		return
@@ -39,7 +39,7 @@ func Work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider provider.Stor
 		}
 
 		if b.Exists == bucket.BucketNotExist {
-			printResult(b, json)
+			PrintResult(b, json)
 			continue
 		}
 
@@ -58,7 +58,7 @@ func Work(wg *sync.WaitGroup, buckets chan bucket.Bucket, provider provider.Stor
 				continue
 			}
 		}
-		printResult(b, json)
+		PrintResult(b, json)
 
 		if writeToDB {
 			dbErr := db.StoreBucket(b)
