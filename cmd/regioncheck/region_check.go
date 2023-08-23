@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/sa7mon/s3scanner/collection"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -112,6 +114,37 @@ func GetRegionsLinode() ([]string, error) {
 	return objectStorageRegions, nil
 }
 
+func GetRegionsDreamhost() ([]string, error) {
+	var domainRe = regexp.MustCompile(`objects-[^\.]+\.dream\.io`)
+	requestURL := "https://crt.sh/?q=.dream.io"
+	// Request the HTML page.
+	res, err := http.Get(requestURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
+	}
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	certCNs := collection.StringSet{}
+	// For each cell in the Common Name column
+	doc.Find("body > table table tbody tr > td:nth-of-type(5)").Each(func(i int, t *goquery.Selection) {
+		domains := domainRe.FindAllString(t.Text(), -1)
+		for _, d := range domains {
+			certCNs.Add(d)
+		}
+	})
+
+	return certCNs.Slice(), nil
+}
+
 func main() {
 	doRegions, err := GetRegionsDO()
 	if err != nil {
@@ -125,5 +158,12 @@ func main() {
 		log.Printf("Linode: %v\n", lErr)
 	} else {
 		log.Printf("Linode: %v", linodeRegions)
+	}
+
+	dhRegions, dhErr := GetRegionsDreamhost()
+	if lErr != nil {
+		log.Printf("Dreamhost: %v\n", dhErr)
+	} else {
+		log.Printf("Dreamhost: %v", dhRegions)
 	}
 }
