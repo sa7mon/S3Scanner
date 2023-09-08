@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sa7mon/s3scanner/collection"
@@ -14,6 +13,7 @@ import (
 	"sync"
 )
 
+// eq compares sorted string slices. Once we move to Golang 1.21, use slices.Equal instead.
 func eq(f []string, s []string) bool {
 	if len(f) != len(s) {
 		return false
@@ -26,9 +26,9 @@ func eq(f []string, s []string) bool {
 	return true
 }
 
+// GetRegionsDO fetches regions from the DigitalOcean docs HTML page.
 func GetRegionsDO() ([]string, error) {
 	requestURL := "https://docs.digitalocean.com/products/platform/availability-matrix/#other-product-availability"
-	// Request the HTML page.
 	res, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
@@ -38,13 +38,11 @@ func GetRegionsDO() ([]string, error) {
 		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
 	}
 
-	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	// Find the review items
 	regions := []string{}
 	doc.Find("h2#other-product-availability + table thead tr th").Each(func(i int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
@@ -77,55 +75,30 @@ func GetRegionsDO() ([]string, error) {
 	return supported_regions, nil
 }
 
-type linodeRegionsResp struct {
-	Data []struct {
-		ID           string   `json:"id"`
-		Label        string   `json:"label"`
-		Country      string   `json:"country"`
-		Capabilities []string `json:"capabilities"`
-		Status       string   `json:"status"`
-		Resolvers    struct {
-			Ipv4 string `json:"ipv4"`
-			Ipv6 string `json:"ipv6"`
-		} `json:"resolvers"`
-	} `json:"data"`
-	Page    int `json:"page"`
-	Pages   int `json:"pages"`
-	Results int `json:"results"`
-}
-
+// GetRegionsLinode fetches region names from Linode docs HTML page. Linode also provides this info via
+// unauthenticated API (https://api.linode.com/v4/regions) but the region names do not include the trailing digit "-1".
 func GetRegionsLinode() ([]string, error) {
-	requestURL := "https://api.linode.com/v4/regions"
-	resp, err := http.Get(requestURL)
+	requestURL := "https://www.linode.com/docs/products/storage/object-storage/"
+	res, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("status code error: %d %s", resp.StatusCode, resp.Status)
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
 	}
 
-	var r linodeRegionsResp
-	err = json.NewDecoder(resp.Body).Decode(&r)
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	objectStorageRegions := []string{}
-	for _, d := range r.Data {
-		objectStorageSupport := false
-		for _, dc := range d.Capabilities {
-			if dc == "Object Storage" {
-				objectStorageSupport = true
-				break
-			}
-		}
-		if objectStorageSupport {
-			objectStorageRegions = append(objectStorageRegions, d.ID)
-		}
-	}
+	regions := []string{}
+	doc.Find("h2#availability + p + table tbody tr td:nth-of-type(2)").Each(func(i int, t *goquery.Selection) {
+		regions = append(regions, t.Text())
+	})
 
-	return objectStorageRegions, nil
+	return regions, nil
 }
 
 // GetRegionsDreamhost fetches subdomains of dream.io like 'objects-us-east-1.dream.io' via crt.sh since Dreamhost
