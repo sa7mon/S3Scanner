@@ -5,12 +5,26 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sa7mon/s3scanner/collection"
+	"github.com/sa7mon/s3scanner/provider"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
+	"sort"
 	"strings"
+	"sync"
 )
+
+func eq(f []string, s []string) bool {
+	if len(f) != len(s) {
+		return false
+	}
+	for i := range f {
+		if f[i] != s[i] {
+			return false
+		}
+	}
+	return true
+}
 
 func GetRegionsDO() ([]string, error) {
 	requestURL := "https://docs.digitalocean.com/products/platform/availability-matrix/#other-product-availability"
@@ -150,24 +164,39 @@ func GetRegionsDreamhost() ([]string, error) {
 }
 
 func main() {
-	doRegions, err := GetRegionsDO()
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-	log.Printf("DigitalOcean: %v\n", doRegions)
+	wg := sync.WaitGroup{}
+	wg.Add(3)
 
-	linodeRegions, lErr := GetRegionsLinode()
-	if lErr != nil {
-		log.Printf("Linode: %v\n", lErr)
-	} else {
-		log.Printf("Linode: %v", linodeRegions)
-	}
+	results := map[string][]string{}
+	errors := map[string]error{}
 
-	dhRegions, dhErr := GetRegionsDreamhost()
-	if lErr != nil {
-		log.Printf("Dreamhost: %v\n", dhErr)
-	} else {
-		log.Printf("Dreamhost: %v", dhRegions)
+	go func(w *sync.WaitGroup) {
+		results["digitalocean"], errors["digitalocean"] = GetRegionsDO()
+		wg.Done()
+	}(&wg)
+	go func(w *sync.WaitGroup) {
+		results["dreamhost"], errors["dreamhost"] = GetRegionsDreamhost()
+		wg.Done()
+	}(&wg)
+	go func(w *sync.WaitGroup) {
+		results["linode"], errors["linode"] = GetRegionsLinode()
+		wg.Done()
+	}(&wg)
+	wg.Wait()
+
+	for p, knownRegions := range provider.ProviderRegions {
+		if errors[p] != nil {
+			log.Printf("[%s]: %v\n", p, errors[p])
+			continue
+		}
+		foundRegions := results[p]
+		sort.Strings(foundRegions)
+		sort.Strings(knownRegions)
+
+		if !eq(foundRegions, knownRegions) {
+			log.Printf("[%s] regions differ! Existing: %v, found; %v", p, knownRegions, foundRegions)
+		} else {
+			log.Printf("[%s} OK", p)
+		}
 	}
 }
