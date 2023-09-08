@@ -59,17 +59,13 @@ func (pdo providerDO) Enumerate(b *bucket.Bucket) error {
 }
 
 func (pdo *providerDO) Regions() []string {
-	urls := make([]string, len(pdo.regions))
-	for i, r := range pdo.regions {
-		urls[i] = fmt.Sprintf("https://%s.digitaloceanspaces.com", r)
-	}
-	return urls
+	return pdo.regions
 }
 
 func (pdo *providerDO) newClients() (map[string]*s3.Client, error) {
 	clients := make(map[string]*s3.Client, len(pdo.regions))
 	for _, r := range pdo.Regions() {
-		client, err := newNonAWSClient(pdo, r)
+		client, err := newNonAWSClient(pdo, fmt.Sprintf("https://%s.digitaloceanspaces.com", r))
 		if err != nil {
 			return nil, err
 		}

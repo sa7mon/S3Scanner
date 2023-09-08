@@ -41,6 +41,12 @@ var AllProviders = []string{
 	"aws", "custom", "digitalocean", "dreamhost", "gcp", "linode",
 }
 
+var ProviderRegions = map[string][]string{
+	"digitalocean": {"nyc3", "sfo2", "sfo3", "ams3", "sgp1", "fra1", "syd1"},
+	"dreamhost":    {"us-east-1"},
+	"linode":       {"us-east-1", "us-southeast-1", "eu-central-1", "ap-south-1"},
+}
+
 func NewProvider(name string) (StorageProvider, error) {
 	var (
 		provider StorageProvider

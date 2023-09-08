@@ -67,17 +67,13 @@ func (p ProviderDreamhost) Enumerate(b *bucket.Bucket) error {
 }
 
 func (p ProviderDreamhost) Regions() []string {
-	urls := make([]string, len(p.regions))
-	for i, r := range p.regions {
-		urls[i] = fmt.Sprintf("https://objects-%s.dream.io", r)
-	}
-	return urls
+	return p.regions
 }
 
 func (p *ProviderDreamhost) newClients() (map[string]*s3.Client, error) {
 	clients := make(map[string]*s3.Client, len(p.regions))
-	for _, r := range p.Regions() {
-		client, err := newNonAWSClient(p, r)
+	for _, r := range p.regions {
+		client, err := newNonAWSClient(p, fmt.Sprintf("https://objects-%s.dream.io", r))
 		if err != nil {
 			return nil, err
 		}
