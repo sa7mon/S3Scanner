@@ -5,6 +5,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -13,9 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/sa7mon/s3scanner/permission"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"time"
 )
 
 const (
@@ -195,13 +197,13 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 	return nil
 }
 
-func bucketExists(clients map[string]*s3.Client, b *bucket.Bucket) (bool, string, error) {
+func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string, error) {
 	// TODO: Should this return a client or a region name? If region name, we'll need GetClient(region)
 	// TODO: Add region priority - order in which to check. maps are not ordered
-	results := make(chan bucketCheckResult, len(clients))
+	results := make(chan bucketCheckResult, clients.Len())
 	e := make(chan error, 1)
 
-	for region, client := range clients {
+	clients.Each(func(region string, client *s3.Client) {
 		go func(bucketName string, client *s3.Client, region string) {
 			logFields := log.Fields{
 				"bucket_name": b.Name,
@@ -234,9 +236,9 @@ func bucketExists(clients map[string]*s3.Client, b *bucket.Bucket) (bool, string
 				e <- err
 			}
 		}(b.Name, client, region)
-	}
+	})
 
-	for range clients {
+	for i := 0; i < clients.Len(); i++ {
 		select {
 		case err := <-e:
 			return false, "", err

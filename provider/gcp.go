@@ -2,8 +2,10 @@ package provider
 
 import (
 	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 // GCP like AWS, has a "universal" endpoint, but unlike AWS GCP does not require you to follow a redirect to the
@@ -30,7 +32,9 @@ func (g GCP) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 	if !bucket.IsValidS3BucketName(b.Name) {
 		return nil, errors.New("invalid bucket name")
 	}
-	exists, region, err := bucketExists(map[string]*s3.Client{"default": g.client}, b)
+	clients := clientmap.New()
+	clients.Set("default", g.client)
+	exists, region, err := bucketExists(clients, b)
 	if err != nil {
 		return b, err
 	}

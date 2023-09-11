@@ -3,19 +3,21 @@ package provider
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type providerAWS struct {
 	existsClient *s3.Client
-	clients      map[string]*s3.Client
+	clients      *clientmap.ClientMap
 }
 
 func (a *providerAWS) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
@@ -85,7 +87,8 @@ func NewProviderAWS() (*providerAWS, error) {
 	if usErr != nil {
 		return nil, usErr
 	}
-	pa.clients = map[string]*s3.Client{"us-east-1": usEastClient}
+	pa.clients = clientmap.New()
+	pa.clients.Set("us-east-1", usEastClient)
 	return pa, nil
 }
 
@@ -142,8 +145,8 @@ func (a *providerAWS) newClient(region string) (*s3.Client, error) {
 
 // TODO: This method is copied from providerLinode
 func (a *providerAWS) getRegionClient(region string) (*s3.Client, error) {
-	c, ok := a.clients[region]
-	if ok {
+	c := a.clients.Get(region)
+	if c != nil {
 		return c, nil
 	}
 
@@ -152,6 +155,6 @@ func (a *providerAWS) getRegionClient(region string) (*s3.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	a.clients[region] = c // TODO: Make sure this is thread-safe
+	a.clients.Set(region, c)
 	return c, nil
 }

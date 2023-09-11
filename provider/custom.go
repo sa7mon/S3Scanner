@@ -3,14 +3,16 @@ package provider
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
-	"strings"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 type CustomProvider struct {
 	regions        []string
-	clients        map[string]*s3.Client
+	clients        *clientmap.ClientMap
 	insecure       bool
 	addressStyle   int
 	endpointFormat string
@@ -66,11 +68,7 @@ func (cp CustomProvider) Enumerate(b *bucket.Bucket) error {
 }
 
 func (cp *CustomProvider) getRegionClient(region string) *s3.Client {
-	c, ok := cp.clients[region]
-	if ok {
-		return c
-	}
-	return nil
+	return cp.clients.Get(region)
 }
 
 /*
@@ -98,15 +96,15 @@ func NewCustomProvider(addressStyle string, insecure bool, regions []string, end
 	return cp, nil
 }
 
-func (cp *CustomProvider) newClients() (map[string]*s3.Client, error) {
-	clients := make(map[string]*s3.Client, len(cp.regions))
+func (cp *CustomProvider) newClients() (*clientmap.ClientMap, error) {
+	clients := clientmap.WithCapacity(len(cp.regions))
 	for _, r := range cp.regions {
 		regionUrl := strings.Replace(cp.endpointFormat, "$REGION", r, -1)
 		client, err := newNonAWSClient(cp, regionUrl)
 		if err != nil {
 			return nil, err
 		}
-		clients[r] = client
+		clients.Set(r, client)
 	}
 
 	return clients, nil

@@ -3,13 +3,15 @@ package provider
 import (
 	"errors"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 type providerLinode struct {
 	regions []string
-	clients map[string]*s3.Client
+	clients *clientmap.ClientMap
 }
 
 func NewProviderLinode() (*providerLinode, error) {
@@ -25,11 +27,7 @@ func NewProviderLinode() (*providerLinode, error) {
 }
 
 func (pl *providerLinode) getRegionClient(region string) *s3.Client {
-	c, ok := pl.clients[region]
-	if ok {
-		return c
-	}
-	return nil
+	return pl.clients.Get(region)
 }
 
 func (pl *providerLinode) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
@@ -61,14 +59,14 @@ func (pl *providerLinode) Enumerate(b *bucket.Bucket) error {
 	return nil
 }
 
-func (pl *providerLinode) newClients() (map[string]*s3.Client, error) {
-	clients := make(map[string]*s3.Client, len(pl.regions))
+func (pl *providerLinode) newClients() (*clientmap.ClientMap, error) {
+	clients := clientmap.WithCapacity(len(pl.regions))
 	for _, r := range pl.Regions() {
 		client, err := newNonAWSClient(pl, r)
 		if err != nil {
 			return nil, err
 		}
-		clients[r] = client
+		clients.Set(r, client)
 	}
 
 	return clients, nil
