@@ -3,13 +3,15 @@ package provider
 import (
 	"errors"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 type ProviderDreamhost struct {
 	regions []string
-	clients map[string]*s3.Client
+	clients *clientmap.ClientMap
 }
 
 func (p ProviderDreamhost) Insecure() bool {
@@ -46,11 +48,7 @@ func (p ProviderDreamhost) Scan(bucket *bucket.Bucket, doDestructiveChecks bool)
 }
 
 func (p ProviderDreamhost) getRegionClient(region string) *s3.Client {
-	c, ok := p.clients[region]
-	if ok {
-		return c
-	}
-	return nil
+	return p.clients.Get(region)
 }
 
 func (p ProviderDreamhost) Enumerate(b *bucket.Bucket) error {
@@ -74,14 +72,14 @@ func (p ProviderDreamhost) Regions() []string {
 	return urls
 }
 
-func (p *ProviderDreamhost) newClients() (map[string]*s3.Client, error) {
-	clients := make(map[string]*s3.Client, len(p.regions))
+func (p *ProviderDreamhost) newClients() (*clientmap.ClientMap, error) {
+	clients := clientmap.WithCapacity(len(p.regions))
 	for _, r := range p.Regions() {
 		client, err := newNonAWSClient(p, r)
 		if err != nil {
 			return nil, err
 		}
-		clients[r] = client
+		clients.Set(r, client)
 	}
 
 	return clients, nil
