@@ -7,6 +7,7 @@ import (
 	"github.com/sa7mon/s3scanner/provider"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -157,6 +158,8 @@ func main() {
 	}(&wg)
 	wg.Wait()
 
+	exit := 0
+
 	for p, knownRegions := range provider.ProviderRegions {
 		if errors[p] != nil {
 			log.Printf("[%s]: %v\n", p, errors[p])
@@ -167,9 +170,11 @@ func main() {
 		sort.Strings(knownRegions)
 
 		if !eq(foundRegions, knownRegions) {
-			log.Printf("[%s] regions differ! Existing: %v, found; %v", p, knownRegions, foundRegions)
+			log.Printf("[%s] regions differ! Existing: %v, found: %v", p, knownRegions, foundRegions)
+			exit = 1
 		} else {
 			log.Printf("[%s} OK", p)
 		}
 	}
+	os.Exit(exit)
 }

@@ -44,9 +44,9 @@ var AllProviders = []string{
 }
 
 var ProviderRegions = map[string][]string{
-	"digitalocean": {"nyc3", "sfo2", "sfo3", "ams3", "sgp1", "fra1", "syd1"},
-	"dreamhost":    {"us-east-1"},
-	"linode":       {"us-east-1", "us-southeast-1", "eu-central-1", "ap-south-1"},
+	"digitalocean": {"ams3", "blr1", "fra1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1"},
+	"dreamhost":    {"us-east-1", "us-west-1"},
+	"linode":       {"ap-south-1", "eu-central-1", "fr-par-1", "se-sto-1", "us-east-1", "us-iad-1", "us-ord-1", "us-southeast-1"},
 }
 
 func NewProvider(name string) (StorageProvider, error) {
