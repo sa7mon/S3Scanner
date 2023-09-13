@@ -77,27 +77,14 @@ Scan a bucket in GCP, enumerate all objects, and save results to database
 
 # Installation
 
-* **Homebrew**
-    ```shell
-    brew install s3scanner
-    ```
-* **Docker**
-    ```shell
-    docker run --rm -it ghcr.io/sa7mon/s3scanner:latest -bucket my-bucket
-    ```
-* **Go**
-    ```shell
-    # replace version with latest release
-    go install -v github.com/sa7mon/s3scanner@v3.0.1
-    # or
-    go install -v github.com/sa7mon/s3scanner@latest 
-    ```
-* **Build from source**
-    ```shell
-    git clone git@github.com:sa7mon/S3Scanner.git && cd S3Scanner
-    go build -o s3scanner .
-    ./s3scanner -bucket my-bucket
-    ```
+| Platform                  | Version                                                                                                                                                      | Steps                                                                                      |
+|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| Homebrew                  | [![homebrew version](https://img.shields.io/homebrew/v/s3scanner)](https://github.com/Homebrew/homebrew-core/blob/master/Formula/s/s3scanner.rb)             | `brew install s3scanner`                                                                   |
+| Kali Linux                | [![Kali package](https://repology.org/badge/version-for-repo/kali_rolling/s3scanner.svg?header=Kali+Linux)](https://repology.org/project/s3scanner/versions) | `apt install s3scanner`                                                                    |
+| Parrot OS                 | [![Parrot package](https://repology.org/badge/version-for-repo/parrot/s3scanner.svg?header=Parrot+OS)](https://repology.org/project/s3scanner/versions)      | `apt install s3scanner`                                                                    |
+| Docker                    | ![Docker release](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Docker)                                                                     | `docker run ghcr.io/sa7mon/s3scanner`                                                      |
+| Go                        | ![Golang](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Go)                                                                                 | `go install -v github.com/sa7mon/s3scanner@latest`                                         |
+| Other (Build from source) | ![GitHub release](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Git)                                                                        | `git clone git@github.com:sa7mon/S3Scanner.git && cd S3Scanner && go build -o s3scanner .` |
 
 # Using
 
