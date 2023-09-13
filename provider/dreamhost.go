@@ -3,11 +3,15 @@ package provider
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
+
+// Dreamhost responds strangely if you attempt to access a bucket named 'auth'
+var forbiddenBuckets = []string{"auth"}
 
 type ProviderDreamhost struct {
 	regions []string
@@ -27,6 +31,14 @@ func (p ProviderDreamhost) AddressStyle() int {
 }
 
 func (p ProviderDreamhost) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
+	// Check for forbidden name
+	for _, fb := range forbiddenBuckets {
+		if strings.ToLower(b.Name) == fb {
+			b.Exists = bucket.BucketNotExist
+			return b, nil
+		}
+	}
+
 	b.Provider = p.Name()
 	exists, region, err := bucketExists(p.clients, b)
 	if err != nil {
