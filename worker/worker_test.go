@@ -1,87 +1,15 @@
-package main
+package worker
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/sa7mon/s3scanner/bucket"
-	"github.com/sa7mon/s3scanner/mq"
 	"github.com/sa7mon/s3scanner/provider"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
-	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"sync"
 	"testing"
 )
-
-func publishBucket(ch *amqp.Channel, b bucket.Bucket) {
-	bucketBytes, err := json.Marshal(b)
-	if err != nil {
-		failOnError(err, "Failed to marshal bucket msg")
-	}
-
-	err = ch.Publish(
-		"",
-		"test",
-		false,
-		false,
-		amqp.Publishing{Body: bucketBytes, DeliveryMode: amqp.Transient},
-	)
-	if err != nil {
-		failOnError(err, "Failed to publish to channel")
-	}
-}
-
-func TestArgCollection_Validate(t *testing.T) {
-	goodInputs := []argCollection{
-		{
-			bucketName: "asdf",
-			bucketFile: "",
-			useMq:      false,
-		},
-		{
-			bucketName: "",
-			bucketFile: "buckets.txt",
-			useMq:      false,
-		},
-		{
-			bucketName: "",
-			bucketFile: "",
-			useMq:      true,
-		},
-	}
-	tooManyInputs := []argCollection{
-		{
-			bucketName: "asdf",
-			bucketFile: "asdf",
-			useMq:      false,
-		},
-		{
-			bucketName: "adsf",
-			bucketFile: "",
-			useMq:      true,
-		},
-		{
-			bucketName: "",
-			bucketFile: "asdf.txt",
-			useMq:      true,
-		},
-	}
-
-	for _, v := range goodInputs {
-		err := v.Validate()
-		if err != nil {
-			t.Errorf("%v: %e", v, err)
-		}
-	}
-	for _, v := range tooManyInputs {
-		err := v.Validate()
-		if err == nil {
-			t.Errorf("expected error but did not find one: %v", v)
-		}
-	}
-}
 
 func TestWork(t *testing.T) {
 	b := bucket.NewBucket("s3scanner-bucketsize")
@@ -95,31 +23,7 @@ func TestWork(t *testing.T) {
 	c := make(chan bucket.Bucket, 1)
 	c <- *b2
 	close(c)
-	work(&wg, c, aws, true, false)
-}
-
-func TestMqWork(t *testing.T) {
-	_, testMQ := os.LookupEnv("TEST_MQ")
-	if !testMQ {
-		t.Skip("TEST_MQ not enabled")
-	}
-
-	aws, err := provider.NewProviderAWS()
-	assert.Nil(t, err)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672")
-	assert.Nil(t, err)
-
-	// Connect to queue and add a test bucket
-	ch, err := mq.Connect(conn, "test", 1, 0)
-	assert.Nil(t, err)
-	publishBucket(ch, bucket.Bucket{Name: "mqtest"})
-
-	mqwork(0, &wg, conn, aws, "test", 1,
-		false, false)
+	Work(&wg, c, aws, true, false, false)
 }
 
 func TestLogs(t *testing.T) {
@@ -171,7 +75,7 @@ func TestLogs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
-			printResult(&tt.b)
+			PrintResult(&tt.b, false)
 			assert.Contains(t2, buf.String(), tt.expected)
 		})
 	}

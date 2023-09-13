@@ -3,13 +3,15 @@ package provider
 import (
 	"errors"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 type providerDO struct {
 	regions []string
-	clients map[string]*s3.Client
+	clients *clientmap.ClientMap
 }
 
 func (pdo providerDO) Insecure() bool {
@@ -62,25 +64,21 @@ func (pdo *providerDO) Regions() []string {
 	return pdo.regions
 }
 
-func (pdo *providerDO) newClients() (map[string]*s3.Client, error) {
-	clients := make(map[string]*s3.Client, len(pdo.regions))
+func (pdo *providerDO) newClients() (*clientmap.ClientMap, error) {
+	clients := clientmap.WithCapacity(len(pdo.regions))
 	for _, r := range pdo.Regions() {
 		client, err := newNonAWSClient(pdo, fmt.Sprintf("https://%s.digitaloceanspaces.com", r))
 		if err != nil {
 			return nil, err
 		}
-		clients[r] = client
+		clients.Set(r, client)
 	}
 
 	return clients, nil
 }
 
 func (pdo *providerDO) getRegionClient(region string) *s3.Client {
-	c, ok := pdo.clients[region]
-	if ok {
-		return c
-	}
-	return nil
+	return pdo.clients.Get(region)
 }
 
 func NewProviderDO() (*providerDO, error) {

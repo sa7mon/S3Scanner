@@ -169,7 +169,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("action"), numObjects: 2},
 		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("bitrix24"), numObjects: 6},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
-		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 45},
+		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 47},
 	}
 
 	for _, tt := range tests {
