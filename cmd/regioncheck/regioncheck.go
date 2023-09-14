@@ -6,12 +6,14 @@ import (
 	"github.com/sa7mon/s3scanner/collection"
 	"github.com/sa7mon/s3scanner/provider"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 // eq compares sorted string slices. Once we move to Golang 1.21, use slices.Equal instead.
@@ -134,7 +136,19 @@ func GetRegionsDreamhost() ([]string, error) {
 		}
 	})
 
-	return certCNs.Slice(), nil
+	// crt.sh may return old or invalid SSL certs
+	// verify regions found resolve and respond on port 443
+	resolvableRegions := []string{}
+	for _, s := range certCNs.Slice() {
+		timeout := 1 * time.Second
+		_, cerr := net.DialTimeout("tcp", fmt.Sprintf("objects-%s.dream.io:443", s), timeout)
+		if cerr == nil {
+			resolvableRegions = append(resolvableRegions, s)
+		}
+
+	}
+
+	return resolvableRegions, nil
 }
 
 func main() {
