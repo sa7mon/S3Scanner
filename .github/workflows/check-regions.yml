@@ -1,6 +1,8 @@
 name: Check provider regions
 
-on: [ pull_request ]
+on:
+  schedule:
+    - cron: '5 4 * * 3'
 
 jobs:
   region-check:
