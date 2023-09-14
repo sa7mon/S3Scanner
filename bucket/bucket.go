@@ -155,21 +155,27 @@ func ReadFromFile(bucketFile string, bucketChan chan Bucket) error {
 	}
 	defer file.Close()
 
+	bucketsSeen := make(map[string]struct{})
 	fileScanner := bufio.NewScanner(file)
 	for fileScanner.Scan() {
 		bucketName := strings.TrimSpace(fileScanner.Text())
 		if !IsValidS3BucketName(bucketName) {
 			log.Info(fmt.Sprintf("invalid   | %s", bucketName))
-		} else {
-			bucketChan <- NewBucket(strings.ToLower(bucketName))
+			continue
 		}
+		bucketName = strings.ToLower(bucketName)
+		if _, seen := bucketsSeen[bucketName]; seen {
+			continue
+		}
+		bucketsSeen[bucketName] = struct{}{}
+		bucketChan <- NewBucket(bucketName)
 	}
 
 	if ferr := fileScanner.Err(); ferr != nil {
 		return ferr
 	}
 
-	return err
+	return nil
 }
 
 // ParseAclOutputv2 TODO: probably move this to providers.go
