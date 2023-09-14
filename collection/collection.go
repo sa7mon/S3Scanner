@@ -20,7 +20,7 @@ func (ss StringSet) Has(s string) bool {
 func (ss StringSet) Slice() []string {
 	slice := make([]string, len(ss))
 	i := 0
-	for s, _ := range ss {
+	for s := range ss {
 		slice[i] = s
 		i++
 	}

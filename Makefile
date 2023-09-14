@@ -10,6 +10,9 @@ dev:
 docker-image:
 	docker build -t $(DOCKER_IMAGE):$(VERSION) -f packaging/docker/Dockerfile .
 
+lint:
+	docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.53.3 golangci-lint run -v 
+
 test:
 	go test ./...
 
