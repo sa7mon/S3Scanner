@@ -10,13 +10,11 @@ import (
 )
 
 type providerLinode struct {
-	regions []string
 	clients *clientmap.ClientMap
 }
 
 func NewProviderLinode() (*providerLinode, error) {
 	pl := new(providerLinode)
-	pl.regions = []string{"us-east-1", "us-southeast-1", "eu-central-1", "ap-south-1"}
 
 	clients, err := pl.newClients()
 	if err != nil {
@@ -60,9 +58,9 @@ func (pl *providerLinode) Enumerate(b *bucket.Bucket) error {
 }
 
 func (pl *providerLinode) newClients() (*clientmap.ClientMap, error) {
-	clients := clientmap.WithCapacity(len(pl.regions))
-	for _, r := range pl.Regions() {
-		client, err := newNonAWSClient(pl, r)
+	clients := clientmap.WithCapacity(len(ProviderRegions[pl.Name()]))
+	for _, r := range ProviderRegions[pl.Name()] {
+		client, err := newNonAWSClient(pl, fmt.Sprintf("https://%s.linodeobjects.com", r))
 		if err != nil {
 			return nil, err
 		}
@@ -83,14 +81,6 @@ func (*providerLinode) Insecure() bool {
 
 func (*providerLinode) Name() string {
 	return "linode"
-}
-
-func (pl *providerLinode) Regions() []string {
-	urls := make([]string, len(pl.regions))
-	for i, r := range pl.regions {
-		urls[i] = fmt.Sprintf("https://%s.linodeobjects.com", r)
-	}
-	return urls
 }
 
 func (*providerLinode) AddressStyle() int {
