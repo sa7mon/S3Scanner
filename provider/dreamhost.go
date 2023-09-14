@@ -3,14 +3,12 @@ package provider
 import (
 	"errors"
 	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 type ProviderDreamhost struct {
-	regions []string
 	clients *clientmap.ClientMap
 }
 
@@ -64,18 +62,10 @@ func (p ProviderDreamhost) Enumerate(b *bucket.Bucket) error {
 	return nil
 }
 
-func (p ProviderDreamhost) Regions() []string {
-	urls := make([]string, len(p.regions))
-	for i, r := range p.regions {
-		urls[i] = fmt.Sprintf("https://objects-%s.dream.io", r)
-	}
-	return urls
-}
-
 func (p *ProviderDreamhost) newClients() (*clientmap.ClientMap, error) {
-	clients := clientmap.WithCapacity(len(p.regions))
-	for _, r := range p.Regions() {
-		client, err := newNonAWSClient(p, r)
+	clients := clientmap.WithCapacity(len(ProviderRegions[p.Name()]))
+	for _, r := range ProviderRegions[p.Name()] {
+		client, err := newNonAWSClient(p, fmt.Sprintf("https://objects-%s.dream.io", r))
 		if err != nil {
 			return nil, err
 		}
@@ -87,7 +77,6 @@ func (p *ProviderDreamhost) newClients() (*clientmap.ClientMap, error) {
 
 func NewProviderDreamhost() (*ProviderDreamhost, error) {
 	pd := new(ProviderDreamhost)
-	pd.regions = []string{"us-east-1"}
 
 	clients, err := pd.newClients()
 	if err != nil {

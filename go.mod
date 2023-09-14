@@ -3,6 +3,7 @@ module github.com/sa7mon/s3scanner
 go 1.19
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.39
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.83
@@ -18,6 +19,7 @@ require (
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.37 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11 // indirect
@@ -52,6 +54,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
