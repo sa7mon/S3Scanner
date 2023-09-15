@@ -10,7 +10,6 @@ import (
 )
 
 type providerDO struct {
-	regions []string
 	clients *clientmap.ClientMap
 }
 
@@ -60,18 +59,10 @@ func (pdo providerDO) Enumerate(b *bucket.Bucket) error {
 	return nil
 }
 
-func (pdo *providerDO) Regions() []string {
-	urls := make([]string, len(pdo.regions))
-	for i, r := range pdo.regions {
-		urls[i] = fmt.Sprintf("https://%s.digitaloceanspaces.com", r)
-	}
-	return urls
-}
-
 func (pdo *providerDO) newClients() (*clientmap.ClientMap, error) {
-	clients := clientmap.WithCapacity(len(pdo.regions))
-	for _, r := range pdo.Regions() {
-		client, err := newNonAWSClient(pdo, r)
+	clients := clientmap.WithCapacity(len(ProviderRegions[pdo.Name()]))
+	for _, r := range ProviderRegions[pdo.Name()] {
+		client, err := newNonAWSClient(pdo, fmt.Sprintf("https://%s.digitaloceanspaces.com", r))
 		if err != nil {
 			return nil, err
 		}
@@ -87,7 +78,6 @@ func (pdo *providerDO) getRegionClient(region string) *s3.Client {
 
 func NewProviderDO() (*providerDO, error) {
 	pdo := new(providerDO)
-	pdo.regions = []string{"nyc3", "sfo2", "sfo3", "ams3", "sgp1", "fra1", "syd1"}
 
 	clients, err := pdo.newClients()
 	if err != nil {
