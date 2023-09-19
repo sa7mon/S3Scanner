@@ -3,18 +3,15 @@ package main
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sa7mon/s3scanner/collection"
 	"github.com/sa7mon/s3scanner/provider"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // eq compares sorted string slices. Once we move to Golang 1.21, use slices.Equal instead.
@@ -105,52 +102,6 @@ func GetRegionsLinode() ([]string, error) {
 	return regions, nil
 }
 
-// GetRegionsDreamhost fetches subdomains of dream.io like 'objects-us-east-1.dream.io' via crt.sh since Dreamhost
-// doesn't have a documentation page listing the regions.
-func GetRegionsDreamhost() ([]string, error) {
-	var domainRe = regexp.MustCompile(`objects-([^\.]+)\.dream\.io`)
-	requestURL := "https://crt.sh/?q=.dream.io"
-	// Request the HTML page.
-	res, err := http.Get(requestURL)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
-	}
-
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	certCNs := collection.StringSet{}
-	// For each cell in the Common Name column
-	doc.Find("body > table table tbody tr > td:nth-of-type(5)").Each(func(i int, t *goquery.Selection) {
-		matches := domainRe.FindAllStringSubmatch(t.Text(), -1)
-		for _, match := range matches {
-			if !strings.HasPrefix(match[1], "website-") { // regions like 'objects-website-us-east-1' are not for Object Storage
-				certCNs.Add(match[1])
-			}
-		}
-	})
-
-	// crt.sh may return old or invalid SSL certs
-	// verify regions found resolve and respond on port 443
-	resolvableRegions := []string{}
-	for _, s := range certCNs.Slice() {
-		timeout := 1 * time.Second
-		_, cerr := net.DialTimeout("tcp", fmt.Sprintf("objects-%s.dream.io:443", s), timeout)
-		if cerr == nil {
-			resolvableRegions = append(resolvableRegions, s)
-		}
-	}
-
-	return resolvableRegions, nil
-}
-
 func GetRegionsScaleway() ([]string, error) {
 	var re = regexp.MustCompile(`Region: \x60(.+)\x60`)
 	requestURL := "https://raw.githubusercontent.com/scaleway/docs-content/main/storage/object/how-to/create-a-bucket.mdx"
@@ -181,7 +132,6 @@ func main() {
 
 	p := map[string]func() ([]string, error){
 		"digitalocean": GetRegionsDO,
-		"dreamhost":    GetRegionsDreamhost,
 		"linode":       GetRegionsLinode,
 		"scaleway":     GetRegionsScaleway,
 	}
@@ -197,6 +147,7 @@ func main() {
 			wg.Done()
 		}(&wg)
 	}
+
 	wg.Wait()
 
 	exit := 0
