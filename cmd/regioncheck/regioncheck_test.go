@@ -18,3 +18,10 @@ func TestGetRegionsLinode(t *testing.T) {
 	assert.GreaterOrEqual(t, len(r), 1)
 	assert.Contains(t, r, "us-east-1")
 }
+
+func TestGetRegionsScaleway(t *testing.T) {
+	r, err := GetRegionsScaleway()
+	assert.Nil(t, err)
+	assert.GreaterOrEqual(t, len(r), 1)
+	assert.Contains(t, r, "fr-par")
+}

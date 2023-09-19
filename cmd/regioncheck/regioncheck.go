@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sa7mon/s3scanner/provider"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -100,24 +102,51 @@ func GetRegionsLinode() ([]string, error) {
 	return regions, nil
 }
 
-func main() {
-	wg := sync.WaitGroup{}
-	wg.Add(2)
+func GetRegionsScaleway() ([]string, error) {
+	var re = regexp.MustCompile(`Region: \x60(.+)\x60`)
+	requestURL := "https://raw.githubusercontent.com/scaleway/docs-content/main/storage/object/how-to/create-a-bucket.mdx"
+	res, err := http.Get(requestURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
+	}
 
+	bytes, bErr := io.ReadAll(res.Body)
+	if bErr != nil {
+		return nil, bErr
+	}
+
+	var regions []string
+	for _, a := range re.FindAllSubmatch(bytes, -1) {
+		regions = append(regions, string(a[1]))
+	}
+	return regions, nil
+}
+
+func main() {
 	results := map[string][]string{}
 	errors := map[string]error{}
 
-	go func(w *sync.WaitGroup) {
-		results["digitalocean"], errors["digitalocean"] = GetRegionsDO()
-		wg.Done()
-	}(&wg)
-	go func(w *sync.WaitGroup) {
-		results["linode"], errors["linode"] = GetRegionsLinode()
-		wg.Done()
-	}(&wg)
+	p := map[string]func() ([]string, error){
+		"digitalocean": GetRegionsDO,
+		"linode":       GetRegionsLinode,
+		"scaleway":     GetRegionsScaleway,
+	}
 
-	// No region check for Dreamhost
-	results["dreamhost"] = provider.ProviderRegions["dreamhost"]
+	wg := sync.WaitGroup{}
+	wg.Add(len(p))
+
+	for name, get := range p {
+		name := name
+		get := get
+		go func(w *sync.WaitGroup) {
+			results[name], errors[name] = get()
+			wg.Done()
+		}(&wg)
+	}
 
 	wg.Wait()
 
@@ -136,7 +165,7 @@ func main() {
 			log.Printf("[%s] regions differ! Existing: %v, found: %v", p, knownRegions, foundRegions)
 			exit = 1
 		} else {
-			log.Printf("[%s} OK", p)
+			log.Printf("[%s] OK", p)
 		}
 	}
 	os.Exit(exit)

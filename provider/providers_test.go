@@ -52,6 +52,12 @@ func TestMain(m *testing.M) {
 	}
 	providers["linode"] = provider
 
+	provider, err = NewProviderScaleway()
+	if err != nil {
+		panic(err)
+	}
+	providers["scaleway"] = provider
+
 	code := m.Run()
 	os.Exit(code)
 }
@@ -114,6 +120,7 @@ func Test_StorageProvider_Statics(t *testing.T) {
 		{name: "Dreamhost", provider: providers["dreamhost"], insecure: false, addressStyle: PathStyle},
 		{name: "GCP", provider: providers["gcp"], insecure: false, addressStyle: PathStyle},
 		{name: "Linode", provider: providers["linode"], insecure: false, addressStyle: VirtualHostStyle},
+		{name: "Scaleway", provider: providers["scaleway"], insecure: false, addressStyle: PathStyle},
 	}
 
 	for _, tt := range tests {
@@ -138,6 +145,7 @@ func Test_StorageProvider_BucketExists(t *testing.T) {
 		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("bitrix24"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("books"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
+		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("2017"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 	}
 
 	for _, tt := range tests {
@@ -170,6 +178,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("bitrix24"), numObjects: 6},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 47},
+		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("3d-builder"), numObjects: 1},
 	}
 
 	for _, tt := range tests {
@@ -202,6 +211,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		{name: "Dreamhost", provider: providers["dreamhost"], bucket: bucket.NewBucket("bitrix24"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("hatrioua"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Linode", provider: providers["linode"], bucket: bucket.NewBucket("vantage"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
+		{name: "Scaleway", provider: providers["scaleway"], bucket: bucket.NewBucket("3d-builder"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 	}
 
 	for _, tt := range tests {

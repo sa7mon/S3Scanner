@@ -40,13 +40,14 @@ type bucketCheckResult struct {
 }
 
 var AllProviders = []string{
-	"aws", "custom", "digitalocean", "dreamhost", "gcp", "linode",
+	"aws", "custom", "digitalocean", "dreamhost", "gcp", "linode", "scaleway",
 }
 
 var ProviderRegions = map[string][]string{
 	"digitalocean": {"ams3", "blr1", "fra1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1"},
 	"dreamhost":    {"us-east-1"},
 	"linode":       {"ap-south-1", "eu-central-1", "fr-par-1", "se-sto-1", "us-east-1", "us-iad-1", "us-ord-1", "us-southeast-1"},
+	"scaleway":     {"fr-par", "nl-ams", "pl-waw"},
 }
 
 func NewProvider(name string) (StorageProvider, error) {
@@ -65,6 +66,8 @@ func NewProvider(name string) (StorageProvider, error) {
 		provider, err = NewProviderGCP()
 	case "linode":
 		provider, err = NewProviderLinode()
+	case "scaleway":
+		provider, err = NewProviderScaleway()
 	default:
 		err = fmt.Errorf("unknown provider: %s", name)
 	}
@@ -203,9 +206,8 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 	return nil
 }
 
+// bucketExists takes a bucket name and checks if it exists in any region contained in clients
 func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string, error) {
-	// TODO: Should this return a client or a region name? If region name, we'll need GetClient(region)
-	// TODO: Add region priority - order in which to check. maps are not ordered
 	results := make(chan bucketCheckResult, clients.Len())
 	e := make(chan error, 1)
 
@@ -216,16 +218,34 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 				"region":      region,
 				"method":      "providers.bucketExists()",
 			}
-			_, regionErr := manager.GetBucketRegion(context.TODO(), client, bucketName)
+			var regionErr error
+
+			// Unlike other APIs, Scaleway returns '200 OK' to a HEAD request sent to the wrong region for a
+			// bucket that does exist in another region. So instead, we send a GET request for a list of 1 object.
+			// Scaleway will return 404 to the GET request in any region other than the one the bucket belongs to.
+			// See https://github.com/sa7mon/S3Scanner/issues/209 for a better way to fix this.
+			if b.Provider == "scaleway" {
+				_, regionErr = client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+					Bucket:  &b.Name,
+					MaxKeys: 1,
+				})
+			} else {
+				_, regionErr = manager.GetBucketRegion(context.TODO(), client, bucketName)
+			}
+
 			if regionErr == nil {
 				log.WithFields(logFields).Debugf("no error - bucket exists")
 				results <- bucketCheckResult{region: region, exists: true}
 				return
 			}
 
-			var bnf manager.BucketNotFound
+			var bnf manager.BucketNotFound // Can be returned from GetBucketRegion()
+			var nsb *types.NoSuchBucket    // Can be returned from ListObjectsV2()
 			var re2 *awshttp.ResponseError
 			if errors.As(regionErr, &bnf) {
+				log.WithFields(logFields).Debugf("BucketNotFound")
+				results <- bucketCheckResult{region: region, exists: false}
+			} else if errors.As(regionErr, &nsb) {
 				log.WithFields(logFields).Debugf("BucketNotFound")
 				results <- bucketCheckResult{region: region, exists: false}
 			} else if errors.As(regionErr, &re2) && re2.HTTPStatusCode() == 403 {
