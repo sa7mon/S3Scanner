@@ -3,15 +3,17 @@ package bucket
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/sa7mon/s3scanner/groups"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
-	"path/filepath"
-	"runtime"
-	"testing"
-	"time"
 )
 
 func TestIsValidS3BucketName_Good(t *testing.T) {
@@ -259,6 +261,41 @@ func TestBucket_ParseAclOutputv2(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestFromReader(t *testing.T) {
+	t.Parallel()
+
+	reader := strings.NewReader(`test
+bar
+bucket
+bar
+test
+foo
+bucket
+foo
+bar`)
+
+	testChan := make(chan Bucket)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	g, _ := errgroup.WithContext(ctx)
+	defer cancel()
+
+	g.Go(func() error {
+		err := FromReader(reader, testChan)
+		close(testChan)
+		return err
+	})
+
+	i := 0
+	for range testChan {
+		i++
+	}
+	assert.Equal(t, 4, i)
+
+	if err := g.Wait(); err != nil {
+		t.Error(err)
 	}
 }
 
