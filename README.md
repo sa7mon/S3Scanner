@@ -137,6 +137,8 @@ assets
 image-uploads
 ```
 
+Bucket names listed multiple times will only be scanned once.
+
 *`-mq`*
 -------
 
