@@ -19,9 +19,9 @@ func TestGetRegionsLinode(t *testing.T) {
 	assert.Contains(t, r, "us-east-1")
 }
 
-func TestGetRegionsDreamhost(t *testing.T) {
-	dor, err := GetRegionsDreamhost()
+func TestGetRegionsScaleway(t *testing.T) {
+	r, err := GetRegionsScaleway()
 	assert.Nil(t, err)
-	assert.GreaterOrEqual(t, len(dor), 1)
-	assert.Contains(t, dor, "us-east-1")
+	assert.GreaterOrEqual(t, len(r), 1)
+	assert.Contains(t, r, "fr-par")
 }

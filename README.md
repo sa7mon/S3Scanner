@@ -79,10 +79,11 @@ Scan a bucket in GCP, enumerate all objects, and save results to database
 
 | Platform                  | Version                                                                                                                                                      | Steps                                                                                      |
 |---------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
-| Homebrew                  | [![homebrew version](https://img.shields.io/homebrew/v/s3scanner)](https://github.com/Homebrew/homebrew-core/blob/master/Formula/s/s3scanner.rb)             | `brew install s3scanner`                                                                   |
+| Homebrew (MacOS)          | [![homebrew version](https://img.shields.io/homebrew/v/s3scanner)](https://github.com/Homebrew/homebrew-core/blob/master/Formula/s/s3scanner.rb)             | `brew install s3scanner`                                                                   |
 | Kali Linux                | [![Kali package](https://repology.org/badge/version-for-repo/kali_rolling/s3scanner.svg?header=Kali+Linux)](https://repology.org/project/s3scanner/versions) | `apt install s3scanner`                                                                    |
 | Parrot OS                 | [![Parrot package](https://repology.org/badge/version-for-repo/parrot/s3scanner.svg?header=Parrot+OS)](https://repology.org/project/s3scanner/versions)      | `apt install s3scanner`                                                                    |
 | Docker                    | ![Docker release](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Docker)                                                                     | `docker run ghcr.io/sa7mon/s3scanner`                                                      |
+| Winget (Windows)          | [![Winget](https://repology.org/badge/version-for-repo/winget/s3scanner.svg?header=Winget)](https://repology.org/project/s3scanner/versions)                 | `winget install s3scanner`                                                                 |
 | Go                        | ![Golang](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Go)                                                                                 | `go install -v github.com/sa7mon/s3scanner@latest`                                         |
 | Other (Build from source) | ![GitHub release](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Git)                                                                        | `git clone git@github.com:sa7mon/S3Scanner.git && cd S3Scanner && go build -o s3scanner .` |
 
@@ -123,6 +124,8 @@ bucket123
 assets
 image-uploads
 ```
+
+Bucket names listed multiple times will only be scanned once.
 
 *`-mq`*
 -------

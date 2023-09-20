@@ -3,15 +3,17 @@ package bucket
 import (
 	"bufio"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/sa7mon/s3scanner/groups"
-	log "github.com/sirupsen/logrus"
+	"io"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/sa7mon/s3scanner/groups"
+	log "github.com/sirupsen/logrus"
 )
 
 var BucketExists = uint8(1)
@@ -148,6 +150,29 @@ func (bucket *Bucket) Permissions() map[*types.Grantee]map[string]uint8 {
 	}
 }
 
+func FromReader(r io.Reader, bucketChan chan Bucket) error {
+	scanner := bufio.NewScanner(r)
+	bucketsSeen := make(map[string]struct{})
+	for scanner.Scan() {
+		bucketName := strings.TrimSpace(scanner.Text())
+		if !IsValidS3BucketName(bucketName) {
+			log.Info(fmt.Sprintf("invalid   | %s", bucketName))
+			continue
+		}
+		bucketName = strings.ToLower(bucketName)
+		if _, seen := bucketsSeen[bucketName]; seen {
+			continue
+		}
+		bucketsSeen[bucketName] = struct{}{}
+		bucketChan <- NewBucket(bucketName)
+	}
+
+	if ferr := scanner.Err(); ferr != nil {
+		return ferr
+	}
+	return nil
+}
+
 func ReadFromFile(bucketFile string, bucketChan chan Bucket) error {
 	file, err := os.Open(bucketFile)
 	if err != nil {
@@ -155,21 +180,10 @@ func ReadFromFile(bucketFile string, bucketChan chan Bucket) error {
 	}
 	defer file.Close()
 
-	fileScanner := bufio.NewScanner(file)
-	for fileScanner.Scan() {
-		bucketName := strings.TrimSpace(fileScanner.Text())
-		if !IsValidS3BucketName(bucketName) {
-			log.Info(fmt.Sprintf("invalid   | %s", bucketName))
-		} else {
-			bucketChan <- NewBucket(strings.ToLower(bucketName))
-		}
+	if err := FromReader(file, bucketChan); err != nil {
+		return err
 	}
-
-	if ferr := fileScanner.Err(); ferr != nil {
-		return ferr
-	}
-
-	return err
+	return nil
 }
 
 // ParseAclOutputv2 TODO: probably move this to providers.go
