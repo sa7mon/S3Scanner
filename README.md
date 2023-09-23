@@ -253,6 +253,20 @@ s3scanner -version
 
 * Will print `dev` if compiled from source.
 
+# Development
+
+A docker compose file is included which creates 4 containers:
+
+* rabbitmq
+* postgres
+* app
+* mitm
+
+To run s3scanner, drop into the `app` container: `docker exec -it app_dev sh` and run `go run .`
+
+The `mitmproxy` container is included for easier observation of HTTP traffic when debugging or adding new providers.
+To use it, 
+
 # Config File
 
 If using flags that require config options, `s3scanner` will search for `config.yml` in:
