@@ -17,12 +17,33 @@ services:
 #      - "rabbitmq_data:/var/lib/rabbitmq"
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
-  app_dev:
+
+  app_dev: &app
     image: golang:1.19-alpine
     container_name: app_dev
     volumes:
       - $PWD:/app
     entrypoint: ["tail", "-f", "/dev/null"]
+    profiles: ["default"]
+
+  app_dev-mitm:
+    <<: *app
+    entrypoint: ["/app/.dev/entrypoint.sh"]
+    environment:
+      - http_proxy=mitmproxy:8080
+      - https_proxy=mitmproxy:8080
+    profiles: ["dev-mitm"]
+
+  mitmproxy:
+    image: mitmproxy/mitmproxy:10.0.0
+    container_name: mitmproxy
+    volumes:
+      - s3scanner_mitmproxy:/home/mitmproxy/.mitmproxy
+    entrypoint: ["mitmweb", "--web-host=0.0.0.0", "--no-web-open-browser"]
+    ports:
+      - "8081:8081"
+    profiles: ["dev-mitm"]
+
   db_dev:
     image: postgres:12-alpine
     container_name: db_dev
@@ -36,3 +57,4 @@ services:
 
 volumes:
   db_dev:
+  s3scanner_mitmproxy:
