@@ -19,6 +19,7 @@ A tool to find open S3 buckets in AWS or other cloud providers:
 - DreamHost
 - GCP
 - Linode
+- Scaleway
 - Custom
 
 <img alt="demo" src="https://github.com/sa7mon/S3Scanner/assets/3712226/cfa16801-2a44-4ae9-ad85-9dd466390cd9">
@@ -46,7 +47,7 @@ OUTPUT:
 
 OPTIONS:
   -enumerate           Enumerate bucket objects (can be time-consuming). Default: "false"
-  -provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode - custom requires config file. Default: "aws"
+  -provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode, scaleway - custom requires config file. Default: "aws"
   -threads     int     Number of threads to scan with. Default: "4"
 
 DEBUG:
@@ -187,7 +188,7 @@ images_staging - us-west-2
 ```
 OPTIONS:
   -enumerate           Enumerate bucket objects (can be time-consuming). Default: "false"
-  -provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode - custom requires config file. Default: "aws"
+  -provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode, scaleway - custom requires config file. Default: "aws"
   -threads     int     Number of threads to scan with. Default: "4"
 ```
 
