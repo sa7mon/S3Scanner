@@ -262,10 +262,12 @@ A docker compose file is included which creates 4 containers:
 * app
 * mitm
 
-To run s3scanner, drop into the `app` container: `docker exec -it app_dev sh` and run `go run .`
+2 profiles are configured:
 
-The `mitmproxy` container is included for easier observation of HTTP traffic when debugging or adding new providers.
-To use it, 
+- `dev` - Standard development environment
+- `dev-mitm` - Environment configured with `mitmproxy` for easier observation of HTTP traffic when debugging or adding new providers.
+
+To bring up the dev environment run `make dev` or `make dev-mitm`. Drop into the `app` container with `docker exec -it -w /app app_dev sh`, then `go run .`
 
 # Config File
 
