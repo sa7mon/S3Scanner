@@ -147,6 +147,7 @@ func main() {
 			wg.Done()
 		}(&wg)
 	}
+
 	wg.Wait()
 
 	exit := 0
