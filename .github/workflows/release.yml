@@ -9,7 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  release:
+    name: release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,10 +20,18 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: stable
-      - uses: goreleaser/goreleaser-action@v4
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser
           version: latest
           args: release -f ./packaging/.goreleaser.yaml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: winget
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: sa7mon.S3Scanner
+          max-versions-to-keep: 5
+          installers-regex: '_Windows_\w+\.zip$'
+          token: ${{ secrets.PACKAGING_TOKEN }}
