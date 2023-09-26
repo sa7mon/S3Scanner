@@ -4,3 +4,9 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/*"
+        update-types: ["version-update:semver-patch"]
+    commit-message:
+      # Prefix all commit messages with "npm: "
+      prefix: "chore"
