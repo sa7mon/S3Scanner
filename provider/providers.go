@@ -40,13 +40,14 @@ type bucketCheckResult struct {
 }
 
 var AllProviders = []string{
-	"aws", "custom", "digitalocean", "dreamhost", "gcp", "linode", "scaleway",
+	"aws", "custom", "digitalocean", "dreamhost", "gcp", "linode", "ovh", "scaleway",
 }
 
 var ProviderRegions = map[string][]string{
 	"digitalocean": {"ams3", "blr1", "fra1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1"},
 	"dreamhost":    {"us-east-1"},
 	"linode":       {"ap-south-1", "eu-central-1", "fr-par-1", "se-sto-1", "us-east-1", "us-iad-1", "us-ord-1", "us-southeast-1"},
+	"ovh":          {"us-east-va", "us-west-or"},
 	"scaleway":     {"fr-par", "nl-ams", "pl-waw"},
 }
 
@@ -66,6 +67,8 @@ func NewProvider(name string) (StorageProvider, error) {
 		provider, err = NewProviderGCP()
 	case "linode":
 		provider, err = NewProviderLinode()
+	case "ovh":
+		provider, err = NewProviderOVH()
 	case "scaleway":
 		provider, err = NewProviderScaleway()
 	default:
@@ -92,6 +95,7 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 		context.TODO(),
 		config.WithEndpointResolverWithOptions(
 			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+
 				return aws.Endpoint{
 					URL: regionURL,
 				}, nil
@@ -224,7 +228,8 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 			// bucket that does exist in another region. So instead, we send a GET request for a list of 1 object.
 			// Scaleway will return 404 to the GET request in any region other than the one the bucket belongs to.
 			// See https://github.com/sa7mon/S3Scanner/issues/209 for a better way to fix this.
-			if b.Provider == "scaleway" {
+			// TODO: Add method parameter like 'MethodGET/MethodHEAD' instead of checking the provider here
+			if b.Provider == "scaleway" || b.Provider == "ovh" {
 				_, regionErr = client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 					Bucket:  &b.Name,
 					MaxKeys: 1,
