@@ -95,7 +95,7 @@ func GetRegionsLinode() ([]string, error) {
 	}
 
 	regions := []string{}
-	doc.Find("h2#availability + p + table tbody tr td:nth-of-type(2)").Each(func(i int, t *goquery.Selection) {
+	doc.Find("h2#availability ~ div:nth-of-type(1) table tbody tr td:nth-of-type(2)").Each(func(i int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
 	})
 
