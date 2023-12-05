@@ -98,6 +98,7 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 			})),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
 		config.WithHTTPClient(httpClient),
+		config.WithRegion("auto"),
 	)
 	if err != nil {
 		return nil, err
@@ -225,11 +226,9 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 			// Scaleway will return 404 to the GET request in any region other than the one the bucket belongs to.
 			// See https://github.com/sa7mon/S3Scanner/issues/209 for a better way to fix this.
 			if b.Provider == "scaleway" {
-				one := new(int32)
-				*one = 1
 				_, regionErr = client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 					Bucket:  &b.Name,
-					MaxKeys: one,
+					MaxKeys: aws.Int32(1),
 				})
 			} else {
 				_, regionErr = manager.GetBucketRegion(context.TODO(), client, bucketName)
