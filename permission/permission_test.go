@@ -13,6 +13,7 @@ import (
 
 var east2AnonClient *s3.Client
 var east1AnonClient *s3.Client
+var euNorth1Client *s3.Client
 
 func failIfError(t *testing.T, err error) {
 	if err != nil {
@@ -42,6 +43,16 @@ func TestMain(m *testing.M) {
 	}
 	east2Cfg.Credentials = nil
 	east2AnonClient = s3.NewFromConfig(east2Cfg)
+
+	euCfg, err := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithRegion("eu-north-1"),
+		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
+	)
+	if err != nil {
+		panic(err)
+	}
+	euNorth1Client = s3.NewFromConfig(euCfg)
 
 	code := m.Run()
 	os.Exit(code)
@@ -105,11 +116,11 @@ func TestCheckPermRead(t *testing.T) {
 	// Bucket without READ permission
 	readNotAllowedBucket := bucket.Bucket{
 		Name:   "test",
-		Region: "us-east-2",
+		Region: "eu-north-1",
 	}
 
 	// Assert we can't read the bucket without creds
-	permReadAllowed, err = CheckPermRead(east2AnonClient, &readNotAllowedBucket)
+	permReadAllowed, err = CheckPermRead(euNorth1Client, &readNotAllowedBucket)
 	failIfError(t, err)
 	assert.False(t, permReadAllowed)
 

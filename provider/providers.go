@@ -98,6 +98,7 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 			})),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
 		config.WithHTTPClient(httpClient),
+		config.WithRegion("auto"),
 	)
 	if err != nil {
 		return nil, err
@@ -137,11 +138,11 @@ func enumerateListObjectsV2(client *s3.Client, b *bucket.Bucket) error {
 		}
 
 		for _, obj := range output.Contents {
-			b.Objects = append(b.Objects, bucket.BucketObject{Key: *obj.Key, Size: uint64(obj.Size)})
-			b.BucketSize += uint64(obj.Size)
+			b.Objects = append(b.Objects, bucket.BucketObject{Key: *obj.Key, Size: uint64(*obj.Size)})
+			b.BucketSize += uint64(*obj.Size)
 		}
 
-		if !output.IsTruncated {
+		if !*output.IsTruncated {
 			b.ObjectsEnumerated = true
 			break
 		}
@@ -227,7 +228,7 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 			if b.Provider == "scaleway" {
 				_, regionErr = client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 					Bucket:  &b.Name,
-					MaxKeys: 1,
+					MaxKeys: aws.Int32(1),
 				})
 			} else {
 				_, regionErr = manager.GetBucketRegion(context.TODO(), client, bucketName)
