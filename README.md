@@ -33,6 +33,13 @@ A tool to find open S3 buckets in AWS or other cloud providers:
 * 🐇 Connect to RabbitMQ for automated scanning at scale
 * 🐳 Docker support
 
+# Used By
+
+<p align="center">
+  <a href="https://github.com/six2dez/reconftw"><img src="https://github.com/six2dez/reconftw/blob/main/images/banner.png" alt="reconftw" width="50"></a>
+  <a href="https://github.com/yogeshojha/rengine"><img src="https://github.com/yogeshojha/rengine/blob/master/.github/screenshots/banner.gif" alt="" width="50"/></a>
+</p>
+
 # Usage
 
 ```
