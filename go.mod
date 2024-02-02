@@ -13,7 +13,7 @@ require (
 	github.com/spf13/viper v1.17.0
 	github.com/streadway/amqp v1.1.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/sync v0.5.0
+	golang.org/x/sync v0.6.0
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/gorm v1.25.5
 )
