@@ -29,7 +29,7 @@ func eq(f []string, s []string) bool {
 
 // GetRegionsDO fetches regions from the DigitalOcean docs HTML page.
 func GetRegionsDO() ([]string, error) {
-	requestURL := "https://docs.digitalocean.com/products/platform/availability-matrix/#other-product-availability"
+	requestURL := "https://docs.digitalocean.com/platform/regional-availability/"
 	res, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
@@ -45,12 +45,12 @@ func GetRegionsDO() ([]string, error) {
 	}
 
 	regions := []string{}
-	doc.Find("h2#other-product-availability + table thead tr th").Each(func(i int, t *goquery.Selection) {
+	doc.Find("h3#other-products + table thead tr th").Each(func(i int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
 	})
 
 	spaces_supported := []bool{}
-	doc.Find("h2#other-product-availability + table tbody tr").Each(func(i int, t *goquery.Selection) {
+	doc.Find("h3#other-products + table tbody tr").Each(func(i int, t *goquery.Selection) {
 		// For each row, check the first cell for a value of "Spaces"
 		rowHeader := t.Find("td").First().Text()
 		if rowHeader == "Spaces" {

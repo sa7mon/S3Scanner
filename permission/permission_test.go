@@ -115,12 +115,12 @@ func TestCheckPermRead(t *testing.T) {
 
 	// Bucket without READ permission
 	readNotAllowedBucket := bucket.Bucket{
-		Name:   "test",
-		Region: "eu-north-1",
+		Name:   "s3scanner-private",
+		Region: "us-east-1",
 	}
 
 	// Assert we can't read the bucket without creds
-	permReadAllowed, err = CheckPermRead(euNorth1Client, &readNotAllowedBucket)
+	permReadAllowed, err = CheckPermRead(east1AnonClient, &readNotAllowedBucket)
 	failIfError(t, err)
 	assert.False(t, permReadAllowed)
 
