@@ -33,7 +33,7 @@ func (g GCP) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 		return nil, errors.New("invalid bucket name")
 	}
 	clients := clientmap.New()
-	clients.Set("default", g.client)
+	clients.Set("default", false, g.client)
 	exists, region, err := bucketExists(clients, b)
 	if err != nil {
 		return b, err

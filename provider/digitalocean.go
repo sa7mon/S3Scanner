@@ -66,14 +66,14 @@ func (pdo *providerDO) newClients() (*clientmap.ClientMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		clients.Set(r, client)
+		clients.Set(r, false, client)
 	}
 
 	return clients, nil
 }
 
 func (pdo *providerDO) getRegionClient(region string) *s3.Client {
-	return pdo.clients.Get(region)
+	return pdo.clients.Get(region, false)
 }
 
 func NewProviderDO() (*providerDO, error) {

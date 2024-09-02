@@ -25,7 +25,7 @@ func NewProviderLinode() (*providerLinode, error) {
 }
 
 func (pl *providerLinode) getRegionClient(region string) *s3.Client {
-	return pl.clients.Get(region)
+	return pl.clients.Get(region, false)
 }
 
 func (pl *providerLinode) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
@@ -64,7 +64,7 @@ func (pl *providerLinode) newClients() (*clientmap.ClientMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		clients.Set(r, client)
+		clients.Set(r, false, client)
 	}
 
 	return clients, nil
