@@ -3,9 +3,12 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/sa7mon/s3scanner/permission"
 	"net/http"
+	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
@@ -16,8 +19,9 @@ import (
 )
 
 type providerAWS struct {
-	existsClient *s3.Client
-	clients      *clientmap.ClientMap
+	existsClient   *s3.Client
+	clients        *clientmap.ClientMap
+	hasCredentials bool
 }
 
 func (a *providerAWS) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
@@ -53,16 +57,27 @@ func (a *providerAWS) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 }
 
 func (a *providerAWS) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
-	client, err := a.getRegionClient(b.Region)
-	if err != nil {
-		return err
+	anonClient, anonErr := a.getRegionClient(b.Region, false)
+	if anonErr != nil {
+		return anonErr
 	}
 
-	return checkPermissions(client, b, doDestructiveChecks)
+	if a.hasCredentials {
+		authClient, authClientErr := a.getRegionClient(b.Region, true)
+		if authClientErr != nil {
+			return authClientErr
+		}
+		return checkPermissionsWithAuth(anonClient, authClient, b, doDestructiveChecks)
+	}
+	return checkPermissionsWithAuth(anonClient, nil, b, doDestructiveChecks)
 }
 
 func (a *providerAWS) Enumerate(b *bucket.Bucket) error {
-	client, err := a.getRegionClient(b.Region)
+	useCreds := false
+	if b.PermAuthUsersRead == bucket.PermissionAllowed {
+		useCreds = true
+	}
+	client, err := a.getRegionClient(b.Region, useCreds)
 	if err != nil {
 		return err
 	}
@@ -83,12 +98,16 @@ func NewProviderAWS() (*providerAWS, error) {
 	pa.existsClient = client
 
 	// Seed the clients map with a common region
-	usEastClient, usErr := pa.newClient("us-east-1")
+	usEastClient, usErr := pa.newClient("us-east-1", nil)
 	if usErr != nil {
 		return nil, usErr
 	}
+
+	// check if the user has properly configured credentials for scanning
+	clientHasCreds := ClientHasCredentials(usEastClient)
+	pa.hasCredentials = clientHasCreds
 	pa.clients = clientmap.New()
-	pa.clients.Set("us-east-1", usEastClient)
+	pa.clients.Set("us-east-1", clientHasCreds, usEastClient)
 	return pa, nil
 }
 
@@ -109,7 +128,6 @@ func (*providerAWS) newAnonClientNoRegion() (*s3.Client, error) {
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
 		config.WithDefaultRegion("us-west-2"),
-		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
 		config.WithHTTPClient(&http.Client{Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
 		}}),
@@ -126,35 +144,125 @@ func (*providerAWS) newAnonClientNoRegion() (*s3.Client, error) {
 	return s3ClientNoRegion, nil
 }
 
-func (a *providerAWS) newClient(region string) (*s3.Client, error) {
-	cfg, err := config.LoadDefaultConfig(
-		context.TODO(),
-		config.WithRegion(region),
-		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
+func (a *providerAWS) newClient(region string, profile *string) (*s3.Client, error) {
+	logFields := log.Fields{"profile": profile, "method": "aws.newClient", "region": region}
+
+	configOpts := []func(*config.LoadOptions) error{
 		config.WithHTTPClient(&http.Client{Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
-		}}))
+		}}),
+		config.WithRegion(region),
+		config.WithEC2IMDSClientEnableState(imds.ClientDisabled), // Otherwise we wait 4 seconds to IMDSv2 to timeout
+	}
+	if profile != nil {
+		configOpts = append(configOpts, config.WithSharedConfigProfile(*profile))
+	}
 
+	cfg, err := config.LoadDefaultConfig(
+		context.TODO(),
+		configOpts...,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg.Credentials = nil
+	hasCreds, accessKeyID := HasCredentials(cfg)
+	if hasCreds {
+		log.WithFields(logFields).Debugf("using access key ID: %s", accessKeyID)
+	} else {
+		log.WithFields(logFields).Debugf("no credentials found")
+	}
+
 	return s3.NewFromConfig(cfg), nil
 }
 
 // TODO: This method is copied from providerLinode
-func (a *providerAWS) getRegionClient(region string) (*s3.Client, error) {
-	c := a.clients.Get(region)
+func (a *providerAWS) getRegionClient(region string, useCreds bool) (*s3.Client, error) {
+	c := a.clients.Get(region, useCreds)
 	if c != nil {
 		return c, nil
 	}
 
 	// No client for this region yet - create one
-	c, err := a.newClient(region)
-	if err != nil {
-		return nil, err
+	var newClient *s3.Client
+	var newClientErr error
+	if useCreds {
+		newClient, newClientErr = a.newClient(region, nil)
+	} else {
+		newClient, newClientErr = a.newAnonClientNoRegion()
 	}
-	a.clients.Set(region, c)
-	return c, nil
+	if newClientErr != nil {
+		return nil, newClientErr
+	}
+	a.clients.Set(region, useCreds, newClient)
+	return newClient, nil
+}
+
+func checkPermissionsWithAuth(anonClient *s3.Client, authClient *s3.Client, b *bucket.Bucket, doDestructiveChecks bool) error {
+	/*
+		// 1. Check if b exists
+		// 2. Check for READ_ACP
+		// 3. If FullControl is allowed for either AllUsers or AuthorizedUsers, skip the remainder of those tests
+		// 4. Check for READ
+		// 5. If doing destructive checks:
+		// 5a. Check for Write
+		// 5b. Check for WriteACP
+	*/
+
+	b.DateScanned = time.Now()
+
+	// Check for anon READ_ACP permission. If allowed, exit
+	anonReadACL, err := permission.CheckPermReadACL(anonClient, b)
+	if err != nil {
+		return fmt.Errorf("error occurred while checking for anon ReadACL: %v", err.Error())
+	}
+	b.PermAllUsersReadACL = bucket.Permission(anonReadACL)
+	if b.PermAllUsersReadACL == bucket.PermissionAllowed {
+		return nil
+	}
+
+	// Check for auth READ_ACP permission. If allowed, exit
+	if authClient != nil {
+		authReadACL, authAclErr := permission.CheckPermReadACL(authClient, b)
+		if authAclErr != nil {
+			return fmt.Errorf("error occured while checking for auth ReadACL: %v", authAclErr.Error())
+		}
+		b.PermAuthUsersReadACL = bucket.Permission(authReadACL)
+		if b.PermAuthUsersReadACL == bucket.PermissionAllowed {
+			return nil
+		}
+	}
+
+	// Check for anon READ
+	canRead, err := permission.CheckPermRead(anonClient, b)
+	if err != nil {
+		return fmt.Errorf("error occured while checking for anon READ: %v", err.Error())
+	}
+	b.PermAllUsersRead = bucket.Permission(canRead)
+
+	// Check for auth READ
+	if authClient != nil {
+		authCanRead, authReadErr := permission.CheckPermRead(authClient, b)
+		if authReadErr != nil {
+			return fmt.Errorf("error occured while checking for auth READ: %v", authReadErr.Error())
+		}
+		b.PermAuthUsersRead = bucket.Permission(authCanRead)
+	}
+
+	if doDestructiveChecks {
+		// Check for WRITE permission
+		permWrite, writeErr := permission.CheckPermWrite(anonClient, b)
+		if writeErr != nil {
+			return fmt.Errorf("%v | error occured while checking for WRITE: %v", b.Name, writeErr.Error())
+		}
+		b.PermAllUsersWrite = bucket.Permission(permWrite)
+
+		// Check for WRITE_ACP permission
+		permWriteAcl, writeAclErr := permission.CheckPermWriteAcl(anonClient, b)
+		if writeAclErr != nil {
+			return fmt.Errorf("error occured while checking for WriteACL: %v", writeAclErr.Error())
+		}
+		b.PermAllUsersWriteACL = bucket.Permission(permWriteAcl)
+	}
+	return nil
 }

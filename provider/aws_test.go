@@ -137,3 +137,19 @@ func TestProviderAWS_Enumerate(t *testing.T) {
 	assert.EqualValues(t, 1, b2.NumObjects)
 	assert.EqualValues(t, 1, len(b2.Objects))
 }
+
+func TestProviderAWS_Refactor(t *testing.T) {
+	p, perr := NewProviderAWS()
+	if perr != nil {
+		t.Error(perr)
+	}
+
+	b := bucket.NewBucket("level2-c8b217a33fcf1f839f6f1f73a00a9ae7.flaws.cloud")
+	b2, err := p.BucketExists(&b)
+	err = p.Scan(b2, false)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, bucket.PermissionDenied, b2.PermAllUsersRead)
+	assert.Equal(t, bucket.PermissionAllowed, b2.PermAuthUsersRead)
+}
