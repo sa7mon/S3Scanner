@@ -3,29 +3,37 @@ package provider
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/smithy-go"
+	log "github.com/sirupsen/logrus"
 )
 
 // TODO: If user explicitly set profile name and we don't find creds, probably blow up
-func HasCredentials(profile string) bool {
-	cfg, err := config.LoadDefaultConfig(
-		context.TODO(),
-		config.WithSharedConfigProfile(profile),
-		config.WithEC2IMDSClientEnableState(imds.ClientDisabled), // Otherwise we wait 4 seconds to IMDSv2 to timeout
-	)
-	if err != nil {
-		// TODO: log.debug(err)
-		return false
-	}
-
-	_, credsErr := cfg.Credentials.Retrieve(context.TODO())
+// returns:
+//   - bool    - if there are credentials configured
+//   - string - AccessKeyID if credentials loaded
+func HasCredentials(cfg aws.Config) (bool, string) {
+	credentials, credsErr := cfg.Credentials.Retrieve(context.TODO())
 	if credsErr != nil {
 		var oe *smithy.OperationError
 		if errors.As(credsErr, &oe) {
 			if !(oe.ServiceID == "ec2imds" && oe.OperationName == "GetMetadata") {
-				// TODO: log.debug("something bad happened")
+				log.WithFields(log.Fields{"method": "provider.HasCredentials"}).Error(oe.Error())
+			}
+			return false, ""
+		}
+	}
+	return true, credentials.AccessKeyID
+}
+
+func ClientHasCredentials(client *s3.Client) bool {
+	_, credsErr := client.Options().Credentials.Retrieve(context.TODO())
+	if credsErr != nil {
+		var oe *smithy.OperationError
+		if errors.As(credsErr, &oe) {
+			if !(oe.ServiceID == "ec2imds" && oe.OperationName == "GetMetadata") {
+				log.WithFields(log.Fields{"method": "provider.ClientHasCredentials"}).Error(oe.Error())
 			}
 			return false
 		}
