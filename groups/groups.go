@@ -11,7 +11,7 @@ var AllUsersv2 = &types.Grantee{
 
 var AuthenticatedUsersv2 = &types.Grantee{
 	Type: types.TypeGroup,
-	URI:  aws.String("http://acs.amazonaws.com/groups/global/AllUsers")}
+	URI:  aws.String("http://acs.amazonaws.com/groups/global/AuthenticatedUsers")}
 
 const ALL_USERS_URI = "uri=http://acs.amazonaws.com/groups/global/AllUsers"
 const AUTH_USERS_URI = "uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
