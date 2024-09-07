@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/sa7mon/s3scanner/permission"
 	"net/http"
@@ -91,7 +92,7 @@ func (a *providerAWS) Enumerate(b *bucket.Bucket) error {
 
 func NewProviderAWS() (*providerAWS, error) {
 	pa := new(providerAWS)
-	client, err := pa.newAnonClientNoRegion()
+	client, err := pa.newAnonClient("us-east-1")
 	if err != nil {
 		return nil, err
 	}
@@ -124,24 +125,20 @@ func (*providerAWS) Name() string {
 	return "aws"
 }
 
-func (*providerAWS) newAnonClientNoRegion() (*s3.Client, error) {
+func (*providerAWS) newAnonClient(region string) (*s3.Client, error) {
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
-		config.WithDefaultRegion("us-west-2"),
 		config.WithHTTPClient(&http.Client{Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
 		}}),
+		config.WithRegion(region),
+		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg.Credentials = nil
-	s3ClientNoRegion := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = false
-	})
-
-	return s3ClientNoRegion, nil
+	return s3.NewFromConfig(cfg), nil
 }
 
 func (a *providerAWS) newClient(region string, profile *string) (*s3.Client, error) {
@@ -189,7 +186,7 @@ func (a *providerAWS) getRegionClient(region string, useCreds bool) (*s3.Client,
 	if useCreds {
 		newClient, newClientErr = a.newClient(region, nil)
 	} else {
-		newClient, newClientErr = a.newAnonClientNoRegion()
+		newClient, newClientErr = a.newAnonClient(region)
 	}
 	if newClientErr != nil {
 		return nil, newClientErr

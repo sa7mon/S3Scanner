@@ -46,6 +46,7 @@ type bucketPermissionTestCase struct {
 
 func TestProviderAWS_BucketExists(t *testing.T) {
 	t.Parallel()
+	p := providers["aws"]
 
 	testCases := []struct {
 		b           bucket.Bucket
@@ -55,11 +56,6 @@ func TestProviderAWS_BucketExists(t *testing.T) {
 		{bucket.NewBucket("asdfasdfdoesnotexist"), bucket.BucketNotExist},      // Bucket that doesn't exist
 		{bucket.NewBucket("flaws.cloud"), bucket.BucketExists},                 // Bucket with dot that exists
 		{bucket.NewBucket("asdfasdf.danthesalmon.com"), bucket.BucketNotExist}, // Bucket with dot that doesn't exist
-	}
-
-	p, perr := NewProviderAWS()
-	if perr != nil {
-		t.Error(perr)
 	}
 
 	for _, testCase := range testCases {
@@ -81,51 +77,67 @@ func TestProviderAWS_BucketExists(t *testing.T) {
 
 func TestProviderAWS_Scan(t *testing.T) {
 	t.Parallel()
-	var testCases []bucketPermissionTestCase
-	testCases = append(testCases, bucketPermissionTestCase{ // Bucket exists but isn't open
-		b:                           bucket.NewBucket("test"),
-		ExpectedPermAllUsersRead:    bucket.PermissionDenied,
-		ExpectedPermAllUsersReadACL: bucket.PermissionDenied,
-	})
-	testCases = append(testCases, bucketPermissionTestCase{ // Bucket exists and has READ open for auth and all
-		b:                           bucket.NewBucket("s3scanner-bucketsize"),
-		ExpectedPermAllUsersRead:    bucket.PermissionAllowed,
-		ExpectedPermAllUsersReadACL: bucket.PermissionDenied,
-	})
-	testCases = append(testCases, bucketPermissionTestCase{ // Bucket exists and has READ and READ_ACL open for auth and all
-		b:                            bucket.NewBucket("s3scanner-all-read-readacl"),
-		ExpectedPermAllUsersRead:     bucket.PermissionAllowed,
-		ExpectedPermAllUsersReadACL:  bucket.PermissionAllowed,
-		ExpectedPermAuthUsersRead:    bucket.PermissionAllowed,
-		ExpectedPermAuthUsersReadACL: bucket.PermissionAllowed,
-	})
+	p := providers["aws"]
 
-	p, perr := NewProviderAWS()
-	if perr != nil {
-		t.Error(perr)
+	testCases := []bucketPermissionTestCase{
+		{
+			b:                            bucket.NewBucket("test"), // Bucket exists but isn't open
+			ExpectedPermAllUsersRead:     bucket.PermissionDenied,
+			ExpectedPermAllUsersReadACL:  bucket.PermissionDenied,
+			ExpectedPermAuthUsersRead:    bucket.PermissionDenied,
+			ExpectedPermAuthUsersReadACL: bucket.PermissionDenied,
+		},
+		{
+			b:                            bucket.NewBucket("s3scanner-bucketsize"), // Bucket exists and has READ open for auth and all
+			ExpectedPermAllUsersRead:     bucket.PermissionAllowed,
+			ExpectedPermAllUsersReadACL:  bucket.PermissionDenied,
+			ExpectedPermAuthUsersRead:    bucket.PermissionAllowed,
+			ExpectedPermAuthUsersReadACL: bucket.PermissionDenied,
+		},
+		{
+			b:                            bucket.NewBucket("s3scanner-all-read-readacl"), // Bucket exists and has READ and READ_ACL open for auth and all
+			ExpectedPermAllUsersRead:     bucket.PermissionAllowed,
+			ExpectedPermAllUsersReadACL:  bucket.PermissionAllowed,
+			ExpectedPermAuthUsersRead:    bucket.PermissionDenied,
+			ExpectedPermAuthUsersReadACL: bucket.PermissionDenied,
+		},
+		{
+			b:                            bucket.NewBucket("s3scanner-auth-read"), // AuthUsers: [READ] | AllUsers: []
+			ExpectedPermAllUsersRead:     bucket.PermissionDenied,
+			ExpectedPermAllUsersReadACL:  bucket.PermissionDenied,
+			ExpectedPermAuthUsersRead:    bucket.PermissionAllowed,
+			ExpectedPermAuthUsersReadACL: bucket.PermissionDenied,
+		},
+		{
+			b:                            bucket.NewBucket("s3scanner-auth-read-acl"), // AuthUsers: [READ_ACP] | AllUsers: []
+			ExpectedPermAllUsersRead:     bucket.PermissionDenied,
+			ExpectedPermAllUsersReadACL:  bucket.PermissionDenied,
+			ExpectedPermAuthUsersRead:    bucket.PermissionDenied,
+			ExpectedPermAuthUsersReadACL: bucket.PermissionAllowed,
+		},
 	}
 
 	for _, testCase := range testCases {
-		b, err := p.BucketExists(&testCase.b)
-		if err != nil {
-			t.Error(err)
-		}
-		scanErr := p.Scan(b, true)
-		if scanErr != nil {
-			t.Error(scanErr)
-		}
-		assert.Equal(t, testCase.ExpectedPermAllUsersRead, b.PermAllUsersRead)
-		assert.Equal(t, testCase.ExpectedPermAllUsersReadACL, b.PermAllUsersReadACL)
+		t.Run(testCase.b.Name, func(t2 *testing.T) {
+			b, err := p.BucketExists(&testCase.b)
+			if err != nil {
+				t2.Error(err)
+			}
+			scanErr := p.Scan(b, false)
+			if scanErr != nil {
+				t2.Error(scanErr)
+			}
+			assert.Equal(t2, testCase.ExpectedPermAllUsersRead, b.PermAllUsersRead)
+			assert.Equal(t2, testCase.ExpectedPermAllUsersReadACL, b.PermAllUsersReadACL)
+			assert.Equal(t2, testCase.ExpectedPermAuthUsersRead, b.PermAuthUsersRead)
+			assert.Equal(t2, testCase.ExpectedPermAuthUsersReadACL, b.PermAuthUsersReadACL)
+		})
 	}
 }
 
 func TestProviderAWS_Enumerate(t *testing.T) {
 	t.Parallel()
-
-	p, perr := NewProviderAWS()
-	if perr != nil {
-		t.Error(perr)
-	}
+	p := providers["aws"]
 
 	b := bucket.NewBucket("s3scanner-bucketsize")
 	b2, err := p.BucketExists(&b)
@@ -139,12 +151,9 @@ func TestProviderAWS_Enumerate(t *testing.T) {
 }
 
 func TestProviderAWS_Refactor(t *testing.T) {
-	p, perr := NewProviderAWS()
-	if perr != nil {
-		t.Error(perr)
-	}
+	p := providers["aws"]
 
-	b := bucket.NewBucket("level2-c8b217a33fcf1f839f6f1f73a00a9ae7.flaws.cloud")
+	b := bucket.NewBucket("prod-c2i")
 	b2, err := p.BucketExists(&b)
 	err = p.Scan(b2, false)
 	if err != nil {

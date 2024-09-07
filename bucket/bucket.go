@@ -27,6 +27,9 @@ var PermissionUnknown = uint8(2)
 // var bucketReIP = regexp.MustCompile(`^[0-9]{1-3}\.[0-9]{1-3}\.[0-9]{1-3}\.[0-9]{1-3}$`)
 var bucketRe = regexp.MustCompile(`[^.\-a-z0-9]`)
 
+const authUsersGroup = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
+const allUsersGroup = "http://acs.amazonaws.com/groups/global/AllUsers"
+
 // Pattern from https://blogs.easydynamics.com/2016/10/24/aws-s3-bucket-name-validation-regex/
 // Missing:
 // No xn-- prefix
@@ -193,8 +196,10 @@ func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
 		bucket.OwnerDisplayName = *aclOutput.Owner.DisplayName
 	}
 
+	bucket.DenyAll()
+
 	for _, b := range aclOutput.Grants {
-		if b.Grantee == groups.AllUsersv2 {
+		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == allUsersGroup {
 			switch b.Permission {
 			case types.PermissionRead:
 				bucket.PermAllUsersRead = PermissionAllowed
@@ -210,7 +215,7 @@ func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
 				break
 			}
 		}
-		if b.Grantee == groups.AuthenticatedUsersv2 {
+		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == authUsersGroup {
 			switch b.Permission {
 			case types.PermissionRead:
 				bucket.PermAuthUsersRead = PermissionAllowed
@@ -276,4 +281,17 @@ func IsValidS3BucketName(bucketName string) bool {
 	}
 
 	return true
+}
+
+func (b *Bucket) DenyAll() {
+	b.PermAllUsersRead = PermissionDenied
+	b.PermAllUsersWrite = PermissionDenied
+	b.PermAllUsersReadACL = PermissionDenied
+	b.PermAllUsersWriteACL = PermissionDenied
+	b.PermAllUsersFullControl = PermissionDenied
+	b.PermAuthUsersRead = PermissionDenied
+	b.PermAuthUsersWrite = PermissionDenied
+	b.PermAuthUsersReadACL = PermissionDenied
+	b.PermAuthUsersWriteACL = PermissionDenied
+	b.PermAuthUsersFullControl = PermissionDenied
 }
