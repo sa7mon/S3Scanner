@@ -58,7 +58,7 @@ func (p ProviderDreamhost) Scan(bucket *bucket.Bucket, doDestructiveChecks bool)
 }
 
 func (p ProviderDreamhost) getRegionClient(region string) *s3.Client {
-	return p.clients.Get(region)
+	return p.clients.Get(region, false)
 }
 
 func (p ProviderDreamhost) Enumerate(b *bucket.Bucket) error {
@@ -81,7 +81,7 @@ func (p *ProviderDreamhost) newClients() (*clientmap.ClientMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		clients.Set(r, client)
+		clients.Set(r, false, client)
 	}
 
 	return clients, nil

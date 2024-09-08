@@ -37,6 +37,9 @@ jobs:
       - name: Test
         run: TEST_DB=1 TEST_MQ=1 go test ./... -coverprofile=cover.out
         timeout-minutes: 5
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TESTING_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TESTING_AWS_SECRET_KEY }}
       - name: Install dependencies
         run: go install github.com/axw/gocov/gocov@v1.1.0 && go install github.com/AlekSi/gocov-xml@v1.1.0
       - run: gocov convert cover.out | gocov-xml > coverage.xml

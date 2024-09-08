@@ -71,7 +71,7 @@ func TestProvider_EnumerateListObjectsV2_short(t *testing.T) {
 	t.Parallel()
 	p, pErr := NewProviderAWS()
 	failIfError(t, pErr)
-	c, cErr := p.newClient("us-east-1")
+	c, cErr := p.newClient("us-east-1", nil)
 	failIfError(t, cErr)
 
 	// Bucket with "page" of objects (<1k keys)
@@ -91,7 +91,7 @@ func Test_EnumerateListObjectsV2_long(t *testing.T) {
 	t.Parallel()
 	p, pErr := NewProviderAWS()
 	failIfError(t, pErr)
-	c, cErr := p.newClient("us-east-1")
+	c, cErr := p.newClient("us-east-1", nil)
 	failIfError(t, cErr)
 
 	// Bucket with more than 1k objects
@@ -204,7 +204,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		bucket      bucket.Bucket
 		permissions string
 	}{
-		{name: "AWS", provider: providers["aws"], bucket: bucket.NewBucket("s3scanner-empty"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
+		{name: "AWS", provider: providers["aws"], bucket: bucket.NewBucket("s3scanner-bucketsize"), permissions: "AuthUsers: [READ] | AllUsers: [READ]"},
 		{name: "Custom public-read-write", provider: providers["custom"], bucket: bucket.NewBucket("nurse-virtual-assistants"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Custom no public-read", provider: providers["custom"], bucket: bucket.NewBucket("assets"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "DO", provider: providers["digitalocean"], bucket: bucket.NewBucket("logo"), permissions: "AuthUsers: [] | AllUsers: [READ]"},

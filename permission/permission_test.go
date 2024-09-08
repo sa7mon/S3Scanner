@@ -153,7 +153,7 @@ func TestCheckPermWrite(t *testing.T) {
 func TestCheckPermWriteACL(t *testing.T) {
 	t.Parallel()
 	if !doDestructiveChecks {
-		t.Skip("skipped destructive check TestCheckPermWrite")
+		t.Skip("skipped destructive check TestCheckPermWriteACL")
 	}
 
 	// Bucket with READ permission

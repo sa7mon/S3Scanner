@@ -29,14 +29,14 @@ func (sc *providerScaleway) newClients() (*clientmap.ClientMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		clients.Set(r, client)
+		clients.Set(r, false, client)
 	}
 
 	return clients, nil
 }
 
 func (sc *providerScaleway) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
-	client := sc.clients.Get(b.Region)
+	client := sc.clients.Get(b.Region, false)
 	return checkPermissions(client, b, doDestructiveChecks)
 }
 
@@ -73,7 +73,7 @@ func (sc *providerScaleway) Enumerate(b *bucket.Bucket) error {
 		return errors.New("bucket might not exist")
 	}
 
-	client := sc.clients.Get(b.Region)
+	client := sc.clients.Get(b.Region, false)
 	enumErr := enumerateListObjectsV2(client, b)
 	if enumErr != nil {
 		return enumErr
