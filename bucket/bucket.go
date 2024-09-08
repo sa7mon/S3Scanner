@@ -24,17 +24,7 @@ var PermissionAllowed = uint8(1)
 var PermissionDenied = uint8(0)
 var PermissionUnknown = uint8(2)
 
-// var bucketReIP = regexp.MustCompile(`^[0-9]{1-3}\.[0-9]{1-3}\.[0-9]{1-3}\.[0-9]{1-3}$`)
 var bucketRe = regexp.MustCompile(`[^.\-a-z0-9]`)
-
-const authUsersGroup = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
-const allUsersGroup = "http://acs.amazonaws.com/groups/global/AllUsers"
-
-// Pattern from https://blogs.easydynamics.com/2016/10/24/aws-s3-bucket-name-validation-regex/
-// Missing:
-// No xn-- prefix
-// No -s3alias suffix
-// https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
 
 type Bucket struct {
 	//gorm.Model
@@ -195,11 +185,12 @@ func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
 	if aclOutput.Owner.DisplayName != nil {
 		bucket.OwnerDisplayName = *aclOutput.Owner.DisplayName
 	}
-
+	// Since we can read the permissions, there should be no unknowns. Set all to denied, then read each grant and
+	// set the corresponding permission to allowed.
 	bucket.DenyAll()
 
 	for _, b := range aclOutput.Grants {
-		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == allUsersGroup {
+		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == groups.AllUsersGroup {
 			switch b.Permission {
 			case types.PermissionRead:
 				bucket.PermAllUsersRead = PermissionAllowed
@@ -215,7 +206,7 @@ func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
 				break
 			}
 		}
-		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == authUsersGroup {
+		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == groups.AuthUsersGroup {
 			switch b.Permission {
 			case types.PermissionRead:
 				bucket.PermAuthUsersRead = PermissionAllowed
