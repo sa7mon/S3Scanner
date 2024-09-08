@@ -110,7 +110,7 @@ func TestProviderAWS_Scan(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		scanErr := p.Scan(b, true)
+		scanErr := p.Scan(b, false)
 		if scanErr != nil {
 			t.Error(scanErr)
 		}
