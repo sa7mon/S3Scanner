@@ -23,6 +23,7 @@ services:
     container_name: app_dev
     volumes:
       - $PWD:/app
+      - ~/.aws:/root/.aws
     entrypoint: ["tail", "-f", "/dev/null"]
     profiles: ["default"]
 
