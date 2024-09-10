@@ -29,7 +29,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: winget
-        uses: vedantmgoyal2009/winget-releaser@v2
+        uses: vedantmgoyal2009/winget-releaser@main
         with:
           identifier: sa7mon.S3Scanner
           max-versions-to-keep: 5
