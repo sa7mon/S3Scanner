@@ -19,7 +19,7 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
 
   app_dev: &app
-    image: golang:1.19.13-alpine
+    image: golang:1.22-alpine
     container_name: app_dev
     volumes:
       - $PWD:/app
