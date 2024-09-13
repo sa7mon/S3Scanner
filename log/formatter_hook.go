@@ -18,7 +18,6 @@ type FormatterHook struct {
 // Fire will be called when some logging function is called with current hook
 // It will format log entry and write it to appropriate writer
 func (hook *FormatterHook) Fire(entry *log.Entry) error {
-
 	// Add default fields to any set by the user (entry.Data)
 	newFieldsMap := make(log.Fields, len(hook.DefaultFields)+len(entry.Data))
 	for k, v := range entry.Data {

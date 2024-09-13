@@ -119,5 +119,4 @@ func main() {
 	}
 
 	log.Printf("%v bucket names published to queue %v\n", msgsPublished, queueName)
-
 }

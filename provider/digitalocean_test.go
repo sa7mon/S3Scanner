@@ -56,5 +56,4 @@ func TestScanBucketPermissions_DO(t *testing.T) {
 	//}
 	//assert.Equal(t, bucket.BucketExists, dotBucket.Exists)
 	//assert.Equal(t, bucket.PermissionAllowed, dotBucket.PermAllUsersRead)
-
 }

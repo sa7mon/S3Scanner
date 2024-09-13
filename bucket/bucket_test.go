@@ -387,5 +387,4 @@ func TestBucket_String(t *testing.T) {
 			assert.Equal(t2, tt.string, tt.bucket.String())
 		})
 	}
-
 }

@@ -159,7 +159,6 @@ func Test_StorageProvider_BucketExists(t *testing.T) {
 			bb, err := tt.provider.BucketExists(&tt.badBucket)
 			assert.Nil(t2, err)
 			assert.Equal(t2, bucket.BucketNotExist, bb.Exists)
-
 		})
 	}
 }

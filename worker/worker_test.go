@@ -79,5 +79,4 @@ func TestLogs(t *testing.T) {
 			assert.Contains(t2, buf.String(), tt.expected)
 		})
 	}
-
 }
