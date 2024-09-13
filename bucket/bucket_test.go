@@ -246,6 +246,7 @@ func TestBucket_ParseAclOutputv2(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			b := NewBucket("mytestbucket")
 			err := b.ParseAclOutputv2(&tt.acl)
 			assert.Nil(t2, err)
@@ -382,6 +383,7 @@ func TestBucket_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			assert.Equal(t2, tt.string, tt.bucket.String())
 		})
 	}
