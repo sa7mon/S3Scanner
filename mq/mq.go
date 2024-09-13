@@ -6,8 +6,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func Connect(conn *amqp.Connection, queue string, threads int, threadId int) (*amqp.Channel, error) {
-	log.Debugf("{thread%v} Opening channel...", threadId)
+func Connect(conn *amqp.Connection, queue string, threads int, threadID int) (*amqp.Channel, error) {
+	log.Debugf("{thread%v} Opening channel...", threadID)
 	ch, channelErr := conn.Channel()
 	if channelErr != nil {
 		return nil, fmt.Errorf("[Connect()] failed to open a channel: %w", channelErr)

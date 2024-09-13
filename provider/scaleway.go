@@ -7,12 +7,12 @@ import (
 	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
-type providerScaleway struct {
+type Scaleway struct {
 	clients *clientmap.ClientMap
 }
 
-func NewProviderScaleway() (*providerScaleway, error) {
-	sc := new(providerScaleway)
+func NewProviderScaleway() (*Scaleway, error) {
+	sc := new(Scaleway)
 
 	clients, err := sc.newClients()
 	if err != nil {
@@ -22,7 +22,7 @@ func NewProviderScaleway() (*providerScaleway, error) {
 	return sc, nil
 }
 
-func (sc *providerScaleway) newClients() (*clientmap.ClientMap, error) {
+func (sc *Scaleway) newClients() (*clientmap.ClientMap, error) {
 	clients := clientmap.WithCapacity(len(ProviderRegions[sc.Name()]))
 	for _, r := range ProviderRegions[sc.Name()] {
 		client, err := newNonAWSClient(sc, fmt.Sprintf("https://s3.%s.scw.cloud", r))
@@ -35,24 +35,24 @@ func (sc *providerScaleway) newClients() (*clientmap.ClientMap, error) {
 	return clients, nil
 }
 
-func (sc *providerScaleway) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
+func (sc *Scaleway) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
 	client := sc.clients.Get(b.Region, false)
 	return checkPermissions(client, b, doDestructiveChecks)
 }
 
-func (*providerScaleway) Insecure() bool {
+func (*Scaleway) Insecure() bool {
 	return false
 }
 
-func (*providerScaleway) Name() string {
+func (*Scaleway) Name() string {
 	return "scaleway"
 }
 
-func (*providerScaleway) AddressStyle() int {
+func (*Scaleway) AddressStyle() int {
 	return PathStyle
 }
 
-func (sc *providerScaleway) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
+func (sc *Scaleway) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 	b.Provider = sc.Name()
 	exists, region, err := bucketExists(sc.clients, b)
 	if err != nil {
@@ -68,7 +68,7 @@ func (sc *providerScaleway) BucketExists(b *bucket.Bucket) (*bucket.Bucket, erro
 	return b, nil
 }
 
-func (sc *providerScaleway) Enumerate(b *bucket.Bucket) error {
+func (sc *Scaleway) Enumerate(b *bucket.Bucket) error {
 	if b.Exists != bucket.BucketExists {
 		return errors.New("bucket might not exist")
 	}

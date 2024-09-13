@@ -59,7 +59,7 @@ func NewProvider(name string) (StorageProvider, error) {
 	case "aws":
 		provider, err = NewProviderAWS()
 	case "digitalocean":
-		provider, err = NewProviderDO()
+		provider, err = NewDigitalOcean()
 	case "dreamhost":
 		provider, err = NewProviderDreamhost()
 	case "gcp":
@@ -147,7 +147,7 @@ func enumerateListObjectsV2(client *s3.Client, b *bucket.Bucket) error {
 			break
 		}
 		continuationToken = output.NextContinuationToken
-		page += 1
+		page++
 		if page >= 5000 { // TODO: Should this limit be lowered?
 			return errors.New("more than 5000 pages of objects found. Skipping for now")
 		}
@@ -198,11 +198,11 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 		b.PermAllUsersWrite = bucket.Permission(permWrite)
 
 		// Check for WRITE_ACP permission
-		permWriteAcl, writeAclErr := permission.CheckPermWriteACL(client, b)
-		if writeAclErr != nil {
-			return fmt.Errorf("error occurred while checking for WriteACL: %v", writeAclErr.Error())
+		permWriteACL, writeACLErr := permission.CheckPermWriteACL(client, b)
+		if writeACLErr != nil {
+			return fmt.Errorf("error occurred while checking for WriteACL: %v", writeACLErr.Error())
 		}
-		b.PermAllUsersWriteACL = bucket.Permission(permWriteAcl)
+		b.PermAllUsersWriteACL = bucket.Permission(permWriteACL)
 	}
 	return nil
 }

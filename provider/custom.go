@@ -99,8 +99,8 @@ func NewCustomProvider(addressStyle string, insecure bool, regions []string, end
 func (cp *CustomProvider) newClients() (*clientmap.ClientMap, error) {
 	clients := clientmap.WithCapacity(len(cp.regions))
 	for _, r := range cp.regions {
-		regionUrl := strings.Replace(cp.endpointFormat, "$REGION", r, -1)
-		client, err := newNonAWSClient(cp, regionUrl)
+		regionURL := strings.Replace(cp.endpointFormat, "$REGION", r, -1)
+		client, err := newNonAWSClient(cp, regionURL)
 		if err != nil {
 			return nil, err
 		}

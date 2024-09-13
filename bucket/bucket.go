@@ -40,7 +40,7 @@ type Bucket struct {
 
 	// Total size of all bucket objects in bytes
 	BucketSize       uint64 `json:"bucket_size"`
-	OwnerId          string `json:"owner_id"`
+	OwnerID          string `json:"owner_id"`
 	OwnerDisplayName string `json:"owner_display_name"`
 
 	PermAuthUsersRead        uint8 `json:"perm_auth_users_read"`
@@ -82,63 +82,63 @@ func NewBucket(name string) Bucket {
 	}
 }
 
-func (bucket *Bucket) String() string {
-	if bucket.Exists == BucketNotExist {
-		return fmt.Sprintf("%v | bucket_not_exist", bucket.Name)
+func (b *Bucket) String() string {
+	if b.Exists == BucketNotExist {
+		return fmt.Sprintf("%v | bucket_not_exist", b.Name)
 	}
 
 	var authUserPerms []string
-	if bucket.PermAuthUsersRead == PermissionAllowed {
+	if b.PermAuthUsersRead == PermissionAllowed {
 		authUserPerms = append(authUserPerms, "READ")
 	}
-	if bucket.PermAuthUsersWrite == PermissionAllowed {
+	if b.PermAuthUsersWrite == PermissionAllowed {
 		authUserPerms = append(authUserPerms, "WRITE")
 	}
-	if bucket.PermAuthUsersReadACL == PermissionAllowed {
+	if b.PermAuthUsersReadACL == PermissionAllowed {
 		authUserPerms = append(authUserPerms, "READ_ACP")
 	}
-	if bucket.PermAuthUsersWriteACL == PermissionAllowed {
+	if b.PermAuthUsersWriteACL == PermissionAllowed {
 		authUserPerms = append(authUserPerms, "WRITE_ACP")
 	}
-	if bucket.PermAuthUsersFullControl == PermissionAllowed {
+	if b.PermAuthUsersFullControl == PermissionAllowed {
 		authUserPerms = append(authUserPerms, "FULL_CONTROL")
 	}
 
 	var allUsersPerms []string
-	if bucket.PermAllUsersRead == PermissionAllowed {
+	if b.PermAllUsersRead == PermissionAllowed {
 		allUsersPerms = append(allUsersPerms, "READ")
 	}
-	if bucket.PermAllUsersWrite == PermissionAllowed {
+	if b.PermAllUsersWrite == PermissionAllowed {
 		allUsersPerms = append(allUsersPerms, "WRITE")
 	}
-	if bucket.PermAllUsersReadACL == PermissionAllowed {
+	if b.PermAllUsersReadACL == PermissionAllowed {
 		allUsersPerms = append(allUsersPerms, "READ_ACP")
 	}
-	if bucket.PermAllUsersWriteACL == PermissionAllowed {
+	if b.PermAllUsersWriteACL == PermissionAllowed {
 		allUsersPerms = append(allUsersPerms, "WRITE_ACP")
 	}
-	if bucket.PermAllUsersFullControl == PermissionAllowed {
+	if b.PermAllUsersFullControl == PermissionAllowed {
 		allUsersPerms = append(allUsersPerms, "FULL_CONTROL")
 	}
 
 	return fmt.Sprintf("AuthUsers: [%v] | AllUsers: [%v]", strings.Join(authUserPerms, ", "), strings.Join(allUsersPerms, ", "))
 }
 
-func (bucket *Bucket) Permissions() map[*types.Grantee]map[string]uint8 {
+func (b *Bucket) Permissions() map[*types.Grantee]map[string]uint8 {
 	return map[*types.Grantee]map[string]uint8{
 		groups.AllUsersv2: {
-			"READ":         bucket.PermAllUsersRead,
-			"WRITE":        bucket.PermAllUsersWrite,
-			"READ_ACP":     bucket.PermAllUsersReadACL,
-			"WRITE_ACP":    bucket.PermAllUsersWriteACL,
-			"FULL_CONTROL": bucket.PermAllUsersFullControl,
+			"READ":         b.PermAllUsersRead,
+			"WRITE":        b.PermAllUsersWrite,
+			"READ_ACP":     b.PermAllUsersReadACL,
+			"WRITE_ACP":    b.PermAllUsersWriteACL,
+			"FULL_CONTROL": b.PermAllUsersFullControl,
 		},
 		groups.AuthenticatedUsersv2: {
-			"READ":         bucket.PermAuthUsersRead,
-			"WRITE":        bucket.PermAuthUsersWrite,
-			"READ_ACP":     bucket.PermAuthUsersReadACL,
-			"WRITE_ACP":    bucket.PermAuthUsersWriteACL,
-			"FULL_CONTROL": bucket.PermAuthUsersFullControl,
+			"READ":         b.PermAuthUsersRead,
+			"WRITE":        b.PermAuthUsersWrite,
+			"READ_ACP":     b.PermAuthUsersReadACL,
+			"WRITE_ACP":    b.PermAuthUsersWriteACL,
+			"FULL_CONTROL": b.PermAuthUsersFullControl,
 		},
 	}
 }
@@ -179,45 +179,45 @@ func ReadFromFile(bucketFile string, bucketChan chan Bucket) error {
 	return nil
 }
 
-// ParseAclOutputv2 TODO: probably move this to providers.go
-func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
-	bucket.OwnerId = *aclOutput.Owner.ID
+// ParseACLOutputV2 TODO: probably move this to providers.go
+func (b *Bucket) ParseACLOutputV2(aclOutput *s3.GetBucketAclOutput) error {
+	b.OwnerID = *aclOutput.Owner.ID
 	if aclOutput.Owner.DisplayName != nil {
-		bucket.OwnerDisplayName = *aclOutput.Owner.DisplayName
+		b.OwnerDisplayName = *aclOutput.Owner.DisplayName
 	}
 	// Since we can read the permissions, there should be no unknowns. Set all to denied, then read each grant and
 	// set the corresponding permission to allowed.
-	bucket.DenyAll()
+	b.DenyAll()
 
-	for _, b := range aclOutput.Grants {
-		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == groups.AllUsersGroup {
-			switch b.Permission {
+	for _, g := range aclOutput.Grants {
+		if g.Grantee != nil && g.Grantee.Type == "Group" && *g.Grantee.URI == groups.AllUsersGroup {
+			switch g.Permission {
 			case types.PermissionRead:
-				bucket.PermAllUsersRead = PermissionAllowed
+				b.PermAllUsersRead = PermissionAllowed
 			case types.PermissionWrite:
-				bucket.PermAllUsersWrite = PermissionAllowed
+				b.PermAllUsersWrite = PermissionAllowed
 			case types.PermissionReadAcp:
-				bucket.PermAllUsersReadACL = PermissionAllowed
+				b.PermAllUsersReadACL = PermissionAllowed
 			case types.PermissionWriteAcp:
-				bucket.PermAllUsersWriteACL = PermissionAllowed
+				b.PermAllUsersWriteACL = PermissionAllowed
 			case types.PermissionFullControl:
-				bucket.PermAllUsersFullControl = PermissionAllowed
+				b.PermAllUsersFullControl = PermissionAllowed
 			default:
 				break
 			}
 		}
-		if b.Grantee != nil && b.Grantee.Type == "Group" && *b.Grantee.URI == groups.AuthUsersGroup {
-			switch b.Permission {
+		if g.Grantee != nil && g.Grantee.Type == "Group" && *g.Grantee.URI == groups.AuthUsersGroup {
+			switch g.Permission {
 			case types.PermissionRead:
-				bucket.PermAuthUsersRead = PermissionAllowed
+				b.PermAuthUsersRead = PermissionAllowed
 			case types.PermissionWrite:
-				bucket.PermAuthUsersWrite = PermissionAllowed
+				b.PermAuthUsersWrite = PermissionAllowed
 			case types.PermissionReadAcp:
-				bucket.PermAuthUsersReadACL = PermissionAllowed
+				b.PermAuthUsersReadACL = PermissionAllowed
 			case types.PermissionWriteAcp:
-				bucket.PermAuthUsersWriteACL = PermissionAllowed
+				b.PermAuthUsersWriteACL = PermissionAllowed
 			case types.PermissionFullControl:
-				bucket.PermAuthUsersFullControl = PermissionAllowed
+				b.PermAuthUsersFullControl = PermissionAllowed
 			default:
 				break
 			}
@@ -230,9 +230,8 @@ func (bucket *Bucket) ParseAclOutputv2(aclOutput *s3.GetBucketAclOutput) error {
 func Permission(canDo bool) uint8 {
 	if canDo {
 		return PermissionAllowed
-	} else {
-		return PermissionDenied
 	}
+	return PermissionDenied
 }
 
 func IsValidS3BucketName(bucketName string) bool {

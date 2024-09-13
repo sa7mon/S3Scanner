@@ -32,7 +32,7 @@ func CheckPermReadACL(s3Client *s3.Client, bucket *bucket.Bucket) (bool, error) 
 		}
 		return false, err
 	}
-	err = bucket.ParseAclOutputv2(aclOutput)
+	err = bucket.ParseACLOutputV2(aclOutput)
 	if err != nil {
 		return false, err
 	}
@@ -140,9 +140,8 @@ func CheckPermRead(svc *s3.Client, bucket *bucket.Bucket) (bool, error) {
 		if errors.As(err, &re) {
 			if re.HTTPStatusCode() == 403 { // No permission
 				return false, nil
-			} else {
-				return false, fmt.Errorf("[CheckPermRead] %s : %s : %w", bucket.Name, bucket.Region, err)
 			}
+			return false, fmt.Errorf("[CheckPermRead] %s : %s : %w", bucket.Name, bucket.Region, err)
 		}
 		return false, fmt.Errorf("[CheckPermRead] %s : %s : %w", bucket.Name, bucket.Region, err)
 	}

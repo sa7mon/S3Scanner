@@ -248,7 +248,7 @@ func TestBucket_ParseAclOutputv2(t *testing.T) {
 		t.Run(tt.name, func(t2 *testing.T) {
 			t.Parallel()
 			b := NewBucket("mytestbucket")
-			err := b.ParseAclOutputv2(&tt.acl)
+			err := b.ParseACLOutputV2(&tt.acl)
 			assert.Nil(t2, err)
 
 			for grantee, perms := range tt.expectedAllowed {

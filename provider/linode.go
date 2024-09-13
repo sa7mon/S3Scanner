@@ -9,12 +9,12 @@ import (
 	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
-type providerLinode struct {
+type Linode struct {
 	clients *clientmap.ClientMap
 }
 
-func NewProviderLinode() (*providerLinode, error) {
-	pl := new(providerLinode)
+func NewProviderLinode() (*Linode, error) {
+	pl := new(Linode)
 
 	clients, err := pl.newClients()
 	if err != nil {
@@ -24,11 +24,11 @@ func NewProviderLinode() (*providerLinode, error) {
 	return pl, nil
 }
 
-func (pl *providerLinode) getRegionClient(region string) *s3.Client {
+func (pl *Linode) getRegionClient(region string) *s3.Client {
 	return pl.clients.Get(region, false)
 }
 
-func (pl *providerLinode) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
+func (pl *Linode) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 	b.Provider = pl.Name()
 	exists, region, err := bucketExists(pl.clients, b)
 	if err != nil {
@@ -44,7 +44,7 @@ func (pl *providerLinode) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error)
 	return b, nil
 }
 
-func (pl *providerLinode) Enumerate(b *bucket.Bucket) error {
+func (pl *Linode) Enumerate(b *bucket.Bucket) error {
 	if b.Exists != bucket.BucketExists {
 		return errors.New("bucket might not exist")
 	}
@@ -57,7 +57,7 @@ func (pl *providerLinode) Enumerate(b *bucket.Bucket) error {
 	return nil
 }
 
-func (pl *providerLinode) newClients() (*clientmap.ClientMap, error) {
+func (pl *Linode) newClients() (*clientmap.ClientMap, error) {
 	clients := clientmap.WithCapacity(len(ProviderRegions[pl.Name()]))
 	for _, r := range ProviderRegions[pl.Name()] {
 		client, err := newNonAWSClient(pl, fmt.Sprintf("https://%s.linodeobjects.com", r))
@@ -70,19 +70,19 @@ func (pl *providerLinode) newClients() (*clientmap.ClientMap, error) {
 	return clients, nil
 }
 
-func (pl *providerLinode) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
+func (pl *Linode) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
 	client := pl.getRegionClient(b.Region)
 	return checkPermissions(client, b, doDestructiveChecks)
 }
 
-func (*providerLinode) Insecure() bool {
+func (*Linode) Insecure() bool {
 	return false
 }
 
-func (*providerLinode) Name() string {
+func (*Linode) Name() string {
 	return "linode"
 }
 
-func (*providerLinode) AddressStyle() int {
+func (*Linode) AddressStyle() int {
 	return VirtualHostStyle
 }

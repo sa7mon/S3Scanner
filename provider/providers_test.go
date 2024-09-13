@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 	}
 	providers["custom"] = provider
 
-	provider, err = NewProviderDO()
+	provider, err = NewDigitalOcean()
 	if err != nil {
 		panic(err)
 	}

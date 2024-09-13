@@ -12,23 +12,23 @@ import (
 // Dreamhost responds strangely if you attempt to access a bucket named 'auth'
 var forbiddenBuckets = []string{"auth"}
 
-type ProviderDreamhost struct {
+type Dreamhost struct {
 	clients *clientmap.ClientMap
 }
 
-func (p ProviderDreamhost) Insecure() bool {
+func (p Dreamhost) Insecure() bool {
 	return false
 }
 
-func (ProviderDreamhost) Name() string {
+func (Dreamhost) Name() string {
 	return "dreamhost"
 }
 
-func (p ProviderDreamhost) AddressStyle() int {
+func (p Dreamhost) AddressStyle() int {
 	return PathStyle
 }
 
-func (p ProviderDreamhost) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
+func (p Dreamhost) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 	// Check for forbidden name
 	for _, fb := range forbiddenBuckets {
 		if strings.ToLower(b.Name) == fb {
@@ -52,16 +52,16 @@ func (p ProviderDreamhost) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error
 	return b, nil
 }
 
-func (p ProviderDreamhost) Scan(bucket *bucket.Bucket, doDestructiveChecks bool) error {
+func (p Dreamhost) Scan(bucket *bucket.Bucket, doDestructiveChecks bool) error {
 	client := p.getRegionClient(bucket.Region)
 	return checkPermissions(client, bucket, doDestructiveChecks)
 }
 
-func (p ProviderDreamhost) getRegionClient(region string) *s3.Client {
+func (p Dreamhost) getRegionClient(region string) *s3.Client {
 	return p.clients.Get(region, false)
 }
 
-func (p ProviderDreamhost) Enumerate(b *bucket.Bucket) error {
+func (p Dreamhost) Enumerate(b *bucket.Bucket) error {
 	if b.Exists != bucket.BucketExists {
 		return errors.New("bucket might not exist")
 	}
@@ -74,7 +74,7 @@ func (p ProviderDreamhost) Enumerate(b *bucket.Bucket) error {
 	return nil
 }
 
-func (p *ProviderDreamhost) newClients() (*clientmap.ClientMap, error) {
+func (p *Dreamhost) newClients() (*clientmap.ClientMap, error) {
 	clients := clientmap.WithCapacity(len(ProviderRegions[p.Name()]))
 	for _, r := range ProviderRegions[p.Name()] {
 		client, err := newNonAWSClient(p, fmt.Sprintf("https://objects-%s.dream.io", r))
@@ -87,8 +87,8 @@ func (p *ProviderDreamhost) newClients() (*clientmap.ClientMap, error) {
 	return clients, nil
 }
 
-func NewProviderDreamhost() (*ProviderDreamhost, error) {
-	pd := new(ProviderDreamhost)
+func NewProviderDreamhost() (*Dreamhost, error) {
+	pd := new(Dreamhost)
 
 	clients, err := pd.newClients()
 	if err != nil {
