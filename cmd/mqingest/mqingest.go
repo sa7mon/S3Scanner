@@ -33,15 +33,15 @@ type BucketMessage struct {
 func main() {
 	var filename string
 	var url string
-	var queue_name string
+	var queueName string
 
 	flag.StringVar(&filename, "file", "", "File name of buckets to send to MQ")
 	flag.StringVar(&url, "url", "amqp://guest:guest@localhost:5672/", "AMQP URI of RabbitMQ server")
-	flag.StringVar(&queue_name, "queue", "", "Name of message queue to publish buckets to")
+	flag.StringVar(&queueName, "queue", "", "Name of message queue to publish buckets to")
 
 	flag.Parse()
 
-	if filename == "" || queue_name == "" {
+	if filename == "" || queueName == "" {
 		fmt.Println("Flags 'file' and 'queue' are required")
 		printUsage()
 		os.Exit(1)
@@ -56,16 +56,16 @@ func main() {
 	defer ch.Close()
 
 	// Declare dead letter queue
-	dlq, dlErr := ch.QueueDeclare(queue_name+"_dead", true, false, false,
+	dlq, dlErr := ch.QueueDeclare(queueName+"_dead", true, false, false,
 		false, nil)
 	failOnError(dlErr, "Failed to declare dead letter queue")
 
 	q, err := ch.QueueDeclare(
-		queue_name, // name
-		true,       // durable
-		false,      // delete when unused
-		false,      // exclusive
-		false,      // no-wait
+		queueName, // name
+		true,      // durable
+		false,     // delete when unused
+		false,     // exclusive
+		false,     // no-wait
 		amqp.Table{
 			"x-dead-letter-exchange":    "",
 			"x-dead-letter-routing-key": dlq.Name,
@@ -112,12 +112,12 @@ func main() {
 		if err != nil {
 			failOnError(err, "Failed to publish to channel")
 		}
-		msgsPublished += 1
+		msgsPublished++
 	}
 	if err := fileScanner.Err(); err != nil {
 		failOnError(err, "fileScanner failed")
 	}
 
-	log.Printf("%v bucket names published to queue %v\n", msgsPublished, queue_name)
+	log.Printf("%v bucket names published to queue %v\n", msgsPublished, queueName)
 
 }

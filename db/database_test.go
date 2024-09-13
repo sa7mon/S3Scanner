@@ -1,10 +1,11 @@
 package db
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/stretchr/testify/assert"
-	"math/rand"
+	"math/big"
 	"os"
 	"testing"
 	"time"
@@ -12,10 +13,16 @@ import (
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_/0123456789.")
 
+func randPermission() uint8 {
+	randInt, _ := rand.Int(rand.Reader, big.NewInt(2))
+	return uint8(randInt.Int64())
+}
+
 func RandStringRunes(n int) string {
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		randInt, _ := rand.Int(rand.Reader, big.NewInt(int64(len(letterRunes))))
+		b[i] = letterRunes[randInt.Int64()]
 	}
 	return string(b)
 }
@@ -29,22 +36,24 @@ func makeRandomBucket(numObjects int) bucket.Bucket {
 		ObjectsEnumerated:        true,
 		Provider:                 "aws",
 		BucketSize:               0,
-		PermAuthUsersRead:        uint8(rand.Intn(2)),
-		PermAuthUsersWrite:       uint8(rand.Intn(2)),
-		PermAuthUsersReadACL:     uint8(rand.Intn(2)),
-		PermAuthUsersWriteACL:    uint8(rand.Intn(2)),
-		PermAuthUsersFullControl: uint8(rand.Intn(2)),
-		PermAllUsersRead:         uint8(rand.Intn(2)),
-		PermAllUsersWrite:        uint8(rand.Intn(2)),
-		PermAllUsersReadACL:      uint8(rand.Intn(2)),
-		PermAllUsersWriteACL:     uint8(rand.Intn(2)),
-		PermAllUsersFullControl:  uint8(rand.Intn(2)),
+		PermAuthUsersRead:        randPermission(),
+		PermAuthUsersWrite:       randPermission(),
+		PermAuthUsersReadACL:     randPermission(),
+		PermAuthUsersWriteACL:    randPermission(),
+		PermAuthUsersFullControl: randPermission(),
+		PermAllUsersRead:         randPermission(),
+		PermAllUsersWrite:        randPermission(),
+		PermAllUsersReadACL:      randPermission(),
+		PermAllUsersWriteACL:     randPermission(),
+		PermAllUsersFullControl:  randPermission(),
 	}
 	bucketObjects := make([]bucket.BucketObject, numObjects)
 	for j := 0; j < numObjects; j++ {
+		randSize, _ := rand.Int(rand.Reader, big.NewInt(250000000000))
+
 		obj := bucket.BucketObject{
 			Key:  RandStringRunes(50),
-			Size: uint64(rand.Intn(250000000000)), // 25GB max
+			Size: randSize.Uint64(), // 25GB max
 		}
 		c.BucketSize += obj.Size
 		bucketObjects[j] = obj
@@ -54,8 +63,6 @@ func makeRandomBucket(numObjects int) bucket.Bucket {
 }
 
 func BenchmarkStoreBucket(b *testing.B) {
-	rand.Seed(time.Now().UnixNano())
-
 	// Connect to database
 	err := Connect("host=localhost user=postgres password=example dbname=postgres port=5432 sslmode=disable TimeZone=America/Chicago", false)
 	if err != nil {

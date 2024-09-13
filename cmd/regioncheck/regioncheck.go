@@ -45,35 +45,35 @@ func GetRegionsDO() ([]string, error) {
 	}
 
 	regions := []string{}
-	doc.Find("h3#other-products + table thead tr th").Each(func(i int, t *goquery.Selection) {
+	doc.Find("h3#other-products + table thead tr th").Each(func(_ int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
 	})
 
-	spaces_supported := []bool{}
-	doc.Find("h3#other-products + table tbody tr").Each(func(i int, t *goquery.Selection) {
+	spacesSupported := []bool{}
+	doc.Find("h3#other-products + table tbody tr").Each(func(_ int, t *goquery.Selection) {
 		// For each row, check the first cell for a value of "Spaces"
 		rowHeader := t.Find("td").First().Text()
 		if rowHeader == "Spaces" {
 			// For each cell in the "Spaces" row, check if the contents are not empty - meaning Spaces is supported
-			t.Find("td").Each(func(j int, v *goquery.Selection) {
+			t.Find("td").Each(func(_ int, v *goquery.Selection) {
 				supported := v.Text() != ""
-				spaces_supported = append(spaces_supported, supported)
+				spacesSupported = append(spacesSupported, supported)
 			})
 		}
 	})
 
-	supported_regions := []string{}
+	supportedRegions := []string{}
 	for i := 0; i < len(regions); i++ {
 		if regions[i] == "Product" {
 			continue
 		}
-		if spaces_supported[i] {
-			supported_regions = append(supported_regions, strings.ToLower(regions[i]))
+		if spacesSupported[i] {
+			supportedRegions = append(supportedRegions, strings.ToLower(regions[i]))
 		}
 	}
 
 	// Return slice of region names
-	return supported_regions, nil
+	return supportedRegions, nil
 }
 
 // GetRegionsLinode fetches region names from Linode docs HTML page. Linode also provides this info via
@@ -105,7 +105,7 @@ func GetRegionsLinode() ([]string, error) {
 	}
 
 	regions := []string{}
-	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(2)").Each(func(i int, t *goquery.Selection) {
+	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(2)").Each(func(_ int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
 	})
 
@@ -152,7 +152,7 @@ func main() {
 	for name, get := range p {
 		name := name
 		get := get
-		go func(w *sync.WaitGroup) {
+		go func(_ *sync.WaitGroup) {
 			results[name], errors[name] = get()
 			wg.Done()
 		}(&wg)

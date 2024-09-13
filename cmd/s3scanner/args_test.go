@@ -60,7 +60,7 @@ func TestArgCollection_Validate(t *testing.T) {
 func TestValidateConfig(t *testing.T) {
 	a := ArgCollection{
 		DoEnumerate:  false,
-		Json:         false,
+		JSON:         false,
 		ProviderFlag: "custom",
 		UseMq:        true,
 		WriteToDB:    true,
@@ -75,7 +75,7 @@ func TestValidateConfig(t *testing.T) {
 func TestValidateConfig_NotFound(t *testing.T) {
 	a := ArgCollection{
 		DoEnumerate:  false,
-		Json:         false,
+		JSON:         false,
 		ProviderFlag: "custom",
 		UseMq:        true,
 		WriteToDB:    true,

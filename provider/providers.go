@@ -185,7 +185,7 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 	// Check for READ permission
 	canRead, err := permission.CheckPermRead(client, b)
 	if err != nil {
-		return fmt.Errorf("%v | error occured while checking for READ: %v", b.Name, err.Error())
+		return fmt.Errorf("%v | error occurred while checking for READ: %v", b.Name, err.Error())
 	}
 	b.PermAllUsersRead = bucket.Permission(canRead)
 
@@ -193,14 +193,14 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 		// Check for WRITE permission
 		permWrite, writeErr := permission.CheckPermWrite(client, b)
 		if writeErr != nil {
-			return fmt.Errorf("%v | error occured while checking for WRITE: %v", b.Name, writeErr.Error())
+			return fmt.Errorf("%v | error occurred while checking for WRITE: %v", b.Name, writeErr.Error())
 		}
 		b.PermAllUsersWrite = bucket.Permission(permWrite)
 
 		// Check for WRITE_ACP permission
 		permWriteAcl, writeAclErr := permission.CheckPermWriteACL(client, b)
 		if writeAclErr != nil {
-			return fmt.Errorf("error occured while checking for WriteACL: %v", writeAclErr.Error())
+			return fmt.Errorf("error occurred while checking for WriteACL: %v", writeAclErr.Error())
 		}
 		b.PermAllUsersWriteACL = bucket.Permission(permWriteAcl)
 	}
