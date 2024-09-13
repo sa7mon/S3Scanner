@@ -255,7 +255,7 @@ func checkPermissionsWithAuth(anonClient *s3.Client, authClient *s3.Client, b *b
 		b.PermAllUsersWrite = bucket.Permission(permWrite)
 
 		// Check for WRITE_ACP permission
-		permWriteAcl, writeAclErr := permission.CheckPermWriteAcl(anonClient, b)
+		permWriteAcl, writeAclErr := permission.CheckPermWriteACL(anonClient, b)
 		if writeAclErr != nil {
 			return fmt.Errorf("error occured while checking for WriteACL: %v", writeAclErr.Error())
 		}

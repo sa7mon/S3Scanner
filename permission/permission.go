@@ -7,14 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	. "github.com/sa7mon/s3scanner/bucket"
-	. "github.com/sa7mon/s3scanner/groups"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/groups"
 	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
 
-func CheckPermReadACL(s3Client *s3.Client, bucket *Bucket) (bool, error) {
+func CheckPermReadACL(s3Client *s3.Client, bucket *bucket.Bucket) (bool, error) {
 	aclOutput, err := s3Client.GetBucketAcl(context.TODO(),
 		&s3.GetBucketAclInput{Bucket: &bucket.Name})
 	if err != nil {
@@ -27,9 +27,8 @@ func CheckPermReadACL(s3Client *s3.Client, bucket *Bucket) (bool, error) {
 			if re.HTTPStatusCode() == 403 {
 				//fmt.Println("Access Denied!")
 				return false, nil
-			} else {
-				return false, err
 			}
+			return false, err
 		}
 		return false, err
 	}
@@ -40,41 +39,41 @@ func CheckPermReadACL(s3Client *s3.Client, bucket *Bucket) (bool, error) {
 	return true, nil
 }
 
-func CheckPermWriteAcl(svc *s3.Client, b *Bucket) (bool, error) {
+func CheckPermWriteACL(svc *s3.Client, b *bucket.Bucket) (bool, error) {
 	// TODO: Ensure bucket exists
 	// TODO: Make sure this works with a bucket that allows PutACL. 400's returned always right now, is that because no creds?
 
 	grants := map[string][]string{}
-	if b.PermAuthUsersFullControl == PermissionAllowed {
-		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], AuthUsersURI)
+	if b.PermAuthUsersFullControl == bucket.PermissionAllowed {
+		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], groups.AuthUsersURI)
 	}
-	if b.PermAuthUsersWriteACL == PermissionAllowed {
-		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], AuthUsersURI)
+	if b.PermAuthUsersWriteACL == bucket.PermissionAllowed {
+		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], groups.AuthUsersURI)
 	}
-	if b.PermAuthUsersWrite == PermissionAllowed {
-		grants["WRITE"] = append(grants["WRITE"], AuthUsersURI)
+	if b.PermAuthUsersWrite == bucket.PermissionAllowed {
+		grants["WRITE"] = append(grants["WRITE"], groups.AuthUsersURI)
 	}
-	if b.PermAuthUsersReadACL == PermissionAllowed {
-		grants["READ_ACP"] = append(grants["READ_ACP"], AuthUsersURI)
+	if b.PermAuthUsersReadACL == bucket.PermissionAllowed {
+		grants["READ_ACP"] = append(grants["READ_ACP"], groups.AuthUsersURI)
 	}
-	if b.PermAuthUsersRead == PermissionAllowed {
-		grants["READ"] = append(grants["READ"], AuthUsersURI)
+	if b.PermAuthUsersRead == bucket.PermissionAllowed {
+		grants["READ"] = append(grants["READ"], groups.AuthUsersURI)
 	}
 
-	if b.PermAllUsersFullControl == PermissionAllowed {
-		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], AllUsersURI)
+	if b.PermAllUsersFullControl == bucket.PermissionAllowed {
+		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], groups.AllUsersURI)
 	}
-	if b.PermAllUsersWriteACL == PermissionAllowed {
-		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], AllUsersURI)
+	if b.PermAllUsersWriteACL == bucket.PermissionAllowed {
+		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], groups.AllUsersURI)
 	}
-	if b.PermAllUsersWrite == PermissionAllowed {
-		grants["WRITE"] = append(grants["WRITE"], AllUsersURI)
+	if b.PermAllUsersWrite == bucket.PermissionAllowed {
+		grants["WRITE"] = append(grants["WRITE"], groups.AllUsersURI)
 	}
-	if b.PermAllUsersReadACL == PermissionAllowed {
-		grants["READ_ACP"] = append(grants["READ_ACP"], AllUsersURI)
+	if b.PermAllUsersReadACL == bucket.PermissionAllowed {
+		grants["READ_ACP"] = append(grants["READ_ACP"], groups.AllUsersURI)
 	}
-	if b.PermAllUsersRead == PermissionAllowed {
-		grants["READ"] = append(grants["READ"], AllUsersURI)
+	if b.PermAllUsersRead == bucket.PermissionAllowed {
+		grants["READ"] = append(grants["READ"], groups.AllUsersURI)
 	}
 
 	_, err := svc.PutBucketAcl(context.TODO(), &s3.PutBucketAclInput{
@@ -91,9 +90,8 @@ func CheckPermWriteAcl(svc *s3.Client, b *Bucket) (bool, error) {
 			if re.HTTPStatusCode() == 400 || re.HTTPStatusCode() == 403 {
 				//fmt.Println("Access Denied!")
 				return false, nil
-			} else {
-				return false, err
 			}
+			return false, err
 		}
 		return false, err
 	}
@@ -101,7 +99,7 @@ func CheckPermWriteAcl(svc *s3.Client, b *Bucket) (bool, error) {
 	return true, nil
 }
 
-func CheckPermWrite(svc *s3.Client, bucket *Bucket) (bool, error) {
+func CheckPermWrite(svc *s3.Client, bucket *bucket.Bucket) (bool, error) {
 	// TODO: Ensure bucket exists
 	// TODO: What happens if we fail to clean up temp file
 
@@ -117,9 +115,8 @@ func CheckPermWrite(svc *s3.Client, bucket *Bucket) (bool, error) {
 		if errors.As(err, &re) {
 			if re.HTTPStatusCode() == 403 { // No permission
 				return false, nil
-			} else {
-				return false, err
 			}
+			return false, err
 		}
 	}
 
@@ -135,7 +132,7 @@ func CheckPermWrite(svc *s3.Client, bucket *Bucket) (bool, error) {
 	return true, nil
 }
 
-func CheckPermRead(svc *s3.Client, bucket *Bucket) (bool, error) {
+func CheckPermRead(svc *s3.Client, bucket *bucket.Bucket) (bool, error) {
 	_, err := svc.HeadBucket(context.TODO(), &s3.HeadBucketInput{Bucket: &bucket.Name})
 	if err != nil {
 		log.Debugf("[%v][CheckPermRead] err: %v", bucket.Name, err)
