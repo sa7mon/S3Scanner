@@ -46,35 +46,35 @@ func CheckPermWriteAcl(svc *s3.Client, b *Bucket) (bool, error) {
 
 	grants := map[string][]string{}
 	if b.PermAuthUsersFullControl == PermissionAllowed {
-		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], AuthUsersUri)
+		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], AuthUsersURI)
 	}
 	if b.PermAuthUsersWriteACL == PermissionAllowed {
-		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], AuthUsersUri)
+		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], AuthUsersURI)
 	}
 	if b.PermAuthUsersWrite == PermissionAllowed {
-		grants["WRITE"] = append(grants["WRITE"], AuthUsersUri)
+		grants["WRITE"] = append(grants["WRITE"], AuthUsersURI)
 	}
 	if b.PermAuthUsersReadACL == PermissionAllowed {
-		grants["READ_ACP"] = append(grants["READ_ACP"], AuthUsersUri)
+		grants["READ_ACP"] = append(grants["READ_ACP"], AuthUsersURI)
 	}
 	if b.PermAuthUsersRead == PermissionAllowed {
-		grants["READ"] = append(grants["READ"], AuthUsersUri)
+		grants["READ"] = append(grants["READ"], AuthUsersURI)
 	}
 
 	if b.PermAllUsersFullControl == PermissionAllowed {
-		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], AllUsersUri)
+		grants["FULL_CONTROL"] = append(grants["FULL_CONTROL"], AllUsersURI)
 	}
 	if b.PermAllUsersWriteACL == PermissionAllowed {
-		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], AllUsersUri)
+		grants["WRITE_ACP"] = append(grants["WRITE_ACP"], AllUsersURI)
 	}
 	if b.PermAllUsersWrite == PermissionAllowed {
-		grants["WRITE"] = append(grants["WRITE"], AllUsersUri)
+		grants["WRITE"] = append(grants["WRITE"], AllUsersURI)
 	}
 	if b.PermAllUsersReadACL == PermissionAllowed {
-		grants["READ_ACP"] = append(grants["READ_ACP"], AllUsersUri)
+		grants["READ_ACP"] = append(grants["READ_ACP"], AllUsersURI)
 	}
 	if b.PermAllUsersRead == PermissionAllowed {
-		grants["READ"] = append(grants["READ"], AllUsersUri)
+		grants["READ"] = append(grants["READ"], AllUsersURI)
 	}
 
 	_, err := svc.PutBucketAcl(context.TODO(), &s3.PutBucketAclInput{
