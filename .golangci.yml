@@ -1,0 +1,18 @@
+linters-settings:
+  misspell:
+    locale: US
+
+linters:
+  enable:
+    - goconst
+    - gosec
+    - govet
+    - loggercheck
+    - misspell
+    - revive
+    - sloglint
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
