@@ -29,7 +29,7 @@ func eq(f []string, s []string) bool {
 
 // GetRegionsDO fetches regions from the DigitalOcean docs HTML page.
 func GetRegionsDO() ([]string, error) {
-	requestURL := "https://docs.digitalocean.com/products/platform/availability-matrix/#other-product-availability"
+	requestURL := "https://docs.digitalocean.com/platform/regional-availability/"
 	res, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
@@ -45,12 +45,12 @@ func GetRegionsDO() ([]string, error) {
 	}
 
 	regions := []string{}
-	doc.Find("h2#other-product-availability + table thead tr th").Each(func(i int, t *goquery.Selection) {
+	doc.Find("h3#other-products + table thead tr th").Each(func(i int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
 	})
 
 	spaces_supported := []bool{}
-	doc.Find("h2#other-product-availability + table tbody tr").Each(func(i int, t *goquery.Selection) {
+	doc.Find("h3#other-products + table tbody tr").Each(func(i int, t *goquery.Selection) {
 		// For each row, check the first cell for a value of "Spaces"
 		rowHeader := t.Find("td").First().Text()
 		if rowHeader == "Spaces" {
@@ -79,8 +79,18 @@ func GetRegionsDO() ([]string, error) {
 // GetRegionsLinode fetches region names from Linode docs HTML page. Linode also provides this info via
 // unauthenticated API (https://api.linode.com/v4/regions) but the region names do not include the trailing digit "-1".
 func GetRegionsLinode() ([]string, error) {
-	requestURL := "https://www.linode.com/docs/products/storage/object-storage/"
-	res, err := http.Get(requestURL)
+	requestURL := "https://techdocs.akamai.com/cloud-computing/docs/object-storage"
+
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	// server drops requests if user agent is set to the default go-http-client:
+	// `HTTP/2 stream 1 was not closed cleanly: INTERNAL_ERROR (err 2)`
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +105,7 @@ func GetRegionsLinode() ([]string, error) {
 	}
 
 	regions := []string{}
-	doc.Find("h2#availability ~ div:nth-of-type(1) table tbody tr td:nth-of-type(2)").Each(func(i int, t *goquery.Selection) {
+	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(2)").Each(func(i int, t *goquery.Selection) {
 		regions = append(regions, t.Text())
 	})
 

@@ -6,7 +6,7 @@ jobs:
   linux-matrix:
     strategy:
       matrix:
-        go: [ 1.19, "1.20", "1.21" ]
+        go: [ "1.22", "1.23" ]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     services:
@@ -37,12 +37,15 @@ jobs:
       - name: Test
         run: TEST_DB=1 TEST_MQ=1 go test ./...
         timeout-minutes: 5
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TESTING_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TESTING_AWS_SECRET_KEY }}
       - name: Build
         run: go build -v ./...
   windows-matrix:
     strategy:
       matrix:
-        go: [ 1.19, "1.20", "1.21" ]
+        go: [ "1.22", "1.23" ]
         os: [ windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -53,5 +56,8 @@ jobs:
           go-version: ${{ matrix.go }}
       - name: Test
         run: go test ./...
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TESTING_AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TESTING_AWS_SECRET_KEY }}
       - name: Build
         run: go build -v ./...

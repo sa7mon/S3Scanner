@@ -68,7 +68,7 @@ func (cp CustomProvider) Enumerate(b *bucket.Bucket) error {
 }
 
 func (cp *CustomProvider) getRegionClient(region string) *s3.Client {
-	return cp.clients.Get(region)
+	return cp.clients.Get(region, false)
 }
 
 /*
@@ -104,7 +104,7 @@ func (cp *CustomProvider) newClients() (*clientmap.ClientMap, error) {
 		if err != nil {
 			return nil, err
 		}
-		clients.Set(r, client)
+		clients.Set(r, false, client)
 	}
 
 	return clients, nil

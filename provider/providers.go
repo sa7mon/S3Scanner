@@ -212,7 +212,7 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 	results := make(chan bucketCheckResult, clients.Len())
 	e := make(chan error, 1)
 
-	clients.Each(func(region string, client *s3.Client) {
+	clients.Each(func(region string, credentials bool, client *s3.Client) {
 		go func(bucketName string, client *s3.Client, region string) {
 			logFields := log.Fields{
 				"bucket_name": b.Name,

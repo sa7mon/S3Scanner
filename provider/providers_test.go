@@ -71,7 +71,7 @@ func TestProvider_EnumerateListObjectsV2_short(t *testing.T) {
 	t.Parallel()
 	p, pErr := NewProviderAWS()
 	failIfError(t, pErr)
-	c, cErr := p.newClient("us-east-1")
+	c, cErr := p.newClient("us-east-1", nil)
 	failIfError(t, cErr)
 
 	// Bucket with "page" of objects (<1k keys)
@@ -91,7 +91,7 @@ func Test_EnumerateListObjectsV2_long(t *testing.T) {
 	t.Parallel()
 	p, pErr := NewProviderAWS()
 	failIfError(t, pErr)
-	c, cErr := p.newClient("us-east-1")
+	c, cErr := p.newClient("us-east-1", nil)
 	failIfError(t, cErr)
 
 	// Bucket with more than 1k objects
@@ -142,7 +142,7 @@ func Test_StorageProvider_BucketExists(t *testing.T) {
 	}{
 		{name: "AWS", provider: providers["aws"], goodBucket: bucket.NewBucket("s3scanner-empty"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("logo"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
-		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("bitrix24"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
+		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("images"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("books"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("2017"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
@@ -175,9 +175,9 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "Custom public-read", provider: providers["custom"], goodBucket: bucket.NewBucket("alicante"), numObjects: 209},
 		{name: "Custom no public-read", provider: providers["custom"], goodBucket: bucket.NewBucket("assets"), numObjects: 0},
 		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("action"), numObjects: 2},
-		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("bitrix24"), numObjects: 6},
+		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("acc"), numObjects: 310},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
-		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 47},
+		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 49},
 		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("3d-builder"), numObjects: 1},
 	}
 
@@ -204,11 +204,11 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		bucket      bucket.Bucket
 		permissions string
 	}{
-		{name: "AWS", provider: providers["aws"], bucket: bucket.NewBucket("s3scanner-empty"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
+		{name: "AWS", provider: providers["aws"], bucket: bucket.NewBucket("s3scanner-bucketsize"), permissions: "AuthUsers: [READ] | AllUsers: [READ]"},
 		{name: "Custom public-read-write", provider: providers["custom"], bucket: bucket.NewBucket("nurse-virtual-assistants"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Custom no public-read", provider: providers["custom"], bucket: bucket.NewBucket("assets"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "DO", provider: providers["digitalocean"], bucket: bucket.NewBucket("logo"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
-		{name: "Dreamhost", provider: providers["dreamhost"], bucket: bucket.NewBucket("bitrix24"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
+		{name: "Dreamhost", provider: providers["dreamhost"], bucket: bucket.NewBucket("acc"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("hatrioua"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Linode", provider: providers["linode"], bucket: bucket.NewBucket("vantage"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Scaleway", provider: providers["scaleway"], bucket: bucket.NewBucket("3d-builder"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
@@ -217,7 +217,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
 			gb, err := tt.provider.BucketExists(&tt.bucket)
-			scanErr := tt.provider.Scan(gb, true)
+			scanErr := tt.provider.Scan(gb, false)
 			assert.Nil(t2, err)
 			assert.Nil(t2, scanErr)
 			assert.Equal(t2, bucket.BucketExists, gb.Exists)

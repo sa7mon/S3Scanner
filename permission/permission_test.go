@@ -11,6 +11,8 @@ import (
 	"testing"
 )
 
+var doDestructiveChecks = false
+
 var east2AnonClient *s3.Client
 var east1AnonClient *s3.Client
 var euNorth1Client *s3.Client
@@ -115,12 +117,12 @@ func TestCheckPermRead(t *testing.T) {
 
 	// Bucket without READ permission
 	readNotAllowedBucket := bucket.Bucket{
-		Name:   "test",
-		Region: "eu-north-1",
+		Name:   "s3scanner-private",
+		Region: "us-east-1",
 	}
 
 	// Assert we can't read the bucket without creds
-	permReadAllowed, err = CheckPermRead(euNorth1Client, &readNotAllowedBucket)
+	permReadAllowed, err = CheckPermRead(east1AnonClient, &readNotAllowedBucket)
 	failIfError(t, err)
 	assert.False(t, permReadAllowed)
 
@@ -132,6 +134,9 @@ func TestCheckPermRead(t *testing.T) {
 
 func TestCheckPermWrite(t *testing.T) {
 	t.Parallel()
+	if !doDestructiveChecks {
+		t.Skip("skipped destructive check TestCheckPermWrite")
+	}
 
 	// Bucket with READ permission
 	readAllowedBucket := bucket.Bucket{
@@ -147,6 +152,9 @@ func TestCheckPermWrite(t *testing.T) {
 
 func TestCheckPermWriteACL(t *testing.T) {
 	t.Parallel()
+	if !doDestructiveChecks {
+		t.Skip("skipped destructive check TestCheckPermWriteACL")
+	}
 
 	// Bucket with READ permission
 	readAllowedBucket := bucket.Bucket{
@@ -166,5 +174,4 @@ func TestCheckPermWriteACL(t *testing.T) {
 	permWrite, err := CheckPermWriteAcl(east1AnonClient, &readAllowedBucket)
 	assert.Nil(t, err)
 	assert.False(t, permWrite)
-
 }

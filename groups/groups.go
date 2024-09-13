@@ -5,13 +5,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
+const AuthUsersGroup = "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
+const AllUsersGroup = "http://acs.amazonaws.com/groups/global/AllUsers"
+
 var AllUsersv2 = &types.Grantee{
 	Type: types.TypeGroup,
-	URI:  aws.String("http://acs.amazonaws.com/groups/global/AllUsers")}
+	URI:  aws.String(AllUsersGroup)}
 
 var AuthenticatedUsersv2 = &types.Grantee{
 	Type: types.TypeGroup,
-	URI:  aws.String("http://acs.amazonaws.com/groups/global/AllUsers")}
+	URI:  aws.String(AuthUsersGroup)}
 
-const ALL_USERS_URI = "uri=http://acs.amazonaws.com/groups/global/AllUsers"
-const AUTH_USERS_URI = "uri=http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
+const AllUsersUri = "uri=" + AllUsersGroup
+const AuthUsersUri = "uri=" + AuthUsersGroup
