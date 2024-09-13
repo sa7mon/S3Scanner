@@ -119,6 +119,7 @@ func TestProviderAWS_Scan(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.b.Name, func(t2 *testing.T) {
+			t.Parallel()
 			b, err := p.BucketExists(&testCase.b)
 			if err != nil {
 				t2.Error(err)

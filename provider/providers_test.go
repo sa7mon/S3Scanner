@@ -125,6 +125,7 @@ func Test_StorageProvider_Statics(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			assert.Equal(t2, tt.insecure, tt.provider.Insecure())
 			assert.Equal(t2, tt.addressStyle, tt.provider.AddressStyle())
 		})
@@ -150,6 +151,7 @@ func Test_StorageProvider_BucketExists(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			gb, err := tt.provider.BucketExists(&tt.goodBucket)
 			assert.Nil(t2, err)
 			assert.Equal(t2, bucket.BucketExists, gb.Exists)
@@ -183,6 +185,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			gb, err := tt.provider.BucketExists(&tt.goodBucket)
 			assert.Nil(t2, err)
 			err = tt.provider.Scan(&tt.goodBucket, false)
@@ -216,6 +219,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			gb, err := tt.provider.BucketExists(&tt.bucket)
 			scanErr := tt.provider.Scan(gb, false)
 			assert.Nil(t2, err)

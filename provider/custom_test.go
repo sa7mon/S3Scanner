@@ -23,6 +23,7 @@ func TestCustomProvider_BucketExists(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
+			t.Parallel()
 			gb, err := p.BucketExists(&tt.b)
 			assert.Nil(t2, err)
 			assert.Equal(t2, tt.exists, gb.Exists)
