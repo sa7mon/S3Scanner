@@ -71,7 +71,7 @@ func TestProvider_EnumerateListObjectsV2_short(t *testing.T) {
 	t.Parallel()
 	p, pErr := NewProviderAWS()
 	failIfError(t, pErr)
-	c, cErr := p.newClient("us-east-1", nil)
+	c, cErr := p.newClient("us-east-1")
 	failIfError(t, cErr)
 
 	// Bucket with "page" of objects (<1k keys)
@@ -91,7 +91,7 @@ func Test_EnumerateListObjectsV2_long(t *testing.T) {
 	t.Parallel()
 	p, pErr := NewProviderAWS()
 	failIfError(t, pErr)
-	c, cErr := p.newClient("us-east-1", nil)
+	c, cErr := p.newClient("us-east-1")
 	failIfError(t, cErr)
 
 	// Bucket with more than 1k objects

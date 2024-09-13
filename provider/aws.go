@@ -98,7 +98,7 @@ func NewProviderAWS() (*ProviderAWS, error) {
 	pa.existsClient = client
 
 	// Seed the clients map with a common region
-	usEastClient, usErr := pa.newClient("us-east-1", nil)
+	usEastClient, usErr := pa.newClient("us-east-1")
 	if usErr != nil {
 		return nil, usErr
 	}
@@ -140,8 +140,8 @@ func (*ProviderAWS) newAnonClient(region string) (*s3.Client, error) {
 	return s3.NewFromConfig(cfg), nil
 }
 
-func (a *ProviderAWS) newClient(region string, profile *string) (*s3.Client, error) {
-	logFields := log.Fields{"profile": profile, "method": "aws.newClient", "region": region}
+func (a *ProviderAWS) newClient(region string) (*s3.Client, error) {
+	logFields := log.Fields{"method": "aws.newClient", "region": region}
 
 	configOpts := []func(*config.LoadOptions) error{
 		config.WithHTTPClient(&http.Client{Transport: &http.Transport{
@@ -149,9 +149,6 @@ func (a *ProviderAWS) newClient(region string, profile *string) (*s3.Client, err
 		}}),
 		config.WithRegion(region),
 		config.WithEC2IMDSClientEnableState(imds.ClientDisabled), // Otherwise we wait 4 seconds to IMDSv2 to timeout
-	}
-	if profile != nil {
-		configOpts = append(configOpts, config.WithSharedConfigProfile(*profile))
 	}
 
 	cfg, err := config.LoadDefaultConfig(
@@ -183,7 +180,7 @@ func (a *ProviderAWS) getRegionClient(region string, useCreds bool) (*s3.Client,
 	var newClient *s3.Client
 	var newClientErr error
 	if useCreds {
-		newClient, newClientErr = a.newClient(region, nil)
+		newClient, newClientErr = a.newClient(region)
 	} else {
 		newClient, newClientErr = a.newAnonClient(region)
 	}
