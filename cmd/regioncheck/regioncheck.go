@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-// eq compares sorted string slices. Once we move to Golang 1.21, use slices.Equal instead.
+// eq compares sorted string slices. TODO: Once we move to Golang 1.21, use slices.Equal instead.
 func eq(f []string, s []string) bool {
 	if len(f) != len(s) {
 		return false
