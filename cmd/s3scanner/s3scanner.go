@@ -118,7 +118,7 @@ func Run(version string) {
 	flag.BoolVar(&args.UseMq, "mq", false, "Connect to RabbitMQ to get buckets. Requires config file key \"mq\".")
 
 	flag.BoolVar(&args.WriteToDB, "db", false, "Save results to a Postgres database. Requires config file key \"db.uri\".")
-	flag.BoolVar(&args.Json, "json", false, "Print logs to stdout in JSON format instead of human-readable.")
+	flag.BoolVar(&args.JSON, "json", false, "Print logs to stdout in JSON format instead of human-readable.")
 
 	flag.BoolVar(&args.DoEnumerate, "enumerate", false, "Enumerate bucket objects (can be time-consuming).")
 	flag.IntVar(&args.Threads, "threads", 4, "Number of threads to scan with.")
@@ -145,7 +145,7 @@ func Run(version string) {
 		log.SetLevel(log.DebugLevel)
 	}
 	log.SetOutput(os.Stdout)
-	if args.Json {
+	if args.JSON {
 		log.SetFormatter(&log2.NestedJSONFormatter{})
 	} else {
 		log.SetFormatter(&log.TextFormatter{DisableTimestamp: true})
@@ -197,7 +197,7 @@ func Run(version string) {
 
 		for i := 0; i < args.Threads; i++ {
 			wg.Add(1)
-			go worker.Work(&wg, buckets, p, args.DoEnumerate, args.WriteToDB, args.Json)
+			go worker.Work(&wg, buckets, p, args.DoEnumerate, args.WriteToDB, args.JSON)
 		}
 
 		if args.BucketFile != "" {
@@ -222,11 +222,11 @@ func Run(version string) {
 	}
 
 	// Setup mq connection and spin off consumers
-	mqUri := viper.GetString("mq.uri")
+	mqURI := viper.GetString("mq.uri")
 	mqName := viper.GetString("mq.queue_name")
-	conn, err := amqp.Dial(mqUri)
+	conn, err := amqp.Dial(mqURI)
 	if err != nil {
-		log.Fatalf("%s: %s", fmt.Sprintf("failed to connect to AMQP URI '%s'", mqUri), err)
+		log.Fatalf("%s: %s", fmt.Sprintf("failed to connect to AMQP URI '%s'", mqURI), err)
 	}
 	defer conn.Close()
 

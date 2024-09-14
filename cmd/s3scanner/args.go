@@ -10,7 +10,7 @@ type ArgCollection struct {
 	BucketFile   string
 	BucketName   string
 	DoEnumerate  bool
-	Json         bool
+	JSON         bool
 	ProviderFlag string
 	Threads      int
 	UseMq        bool
@@ -23,13 +23,13 @@ func (args ArgCollection) Validate() error {
 	// Validate: only 1 input flag is provided
 	numInputFlags := 0
 	if args.UseMq {
-		numInputFlags += 1
+		numInputFlags++
 	}
 	if args.BucketName != "" {
-		numInputFlags += 1
+		numInputFlags++
 	}
 	if args.BucketFile != "" {
-		numInputFlags += 1
+		numInputFlags++
 	}
 	if numInputFlags != 1 {
 		return errors.New("exactly one of: -bucket, -bucket-file, -mq required")
@@ -63,11 +63,11 @@ func validateConfig(args ArgCollection) error {
 
 	// Try to find and read config file
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		_, ok := err.(viper.ConfigFileNotFoundError)
+		if ok {
 			return errors.New("config file not found")
-		} else {
-			return err
 		}
+		return err
 	}
 
 	// Verify all expected keys are in the config file

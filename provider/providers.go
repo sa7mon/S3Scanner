@@ -59,7 +59,7 @@ func NewProvider(name string) (StorageProvider, error) {
 	case "aws":
 		provider, err = NewProviderAWS()
 	case "digitalocean":
-		provider, err = NewProviderDO()
+		provider, err = NewDigitalOcean()
 	case "dreamhost":
 		provider, err = NewProviderDreamhost()
 	case "gcp":
@@ -90,12 +90,6 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
-		config.WithEndpointResolverWithOptions(
-			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{
-					URL: regionURL,
-				}, nil
-			})),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
 		config.WithHTTPClient(httpClient),
 		config.WithRegion("auto"),
@@ -109,6 +103,7 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 		addrStyleOption = func(o *s3.Options) { o.UsePathStyle = true }
 	}
 
+	cfg.BaseEndpoint = aws.String(regionURL)
 	cfg.Credentials = nil // TODO: Remove and test
 	return s3.NewFromConfig(cfg, addrStyleOption), nil
 }
@@ -138,7 +133,7 @@ func enumerateListObjectsV2(client *s3.Client, b *bucket.Bucket) error {
 		}
 
 		for _, obj := range output.Contents {
-			b.Objects = append(b.Objects, bucket.BucketObject{Key: *obj.Key, Size: uint64(*obj.Size)})
+			b.Objects = append(b.Objects, bucket.Object{Key: *obj.Key, Size: uint64(*obj.Size)})
 			b.BucketSize += uint64(*obj.Size)
 		}
 
@@ -147,7 +142,7 @@ func enumerateListObjectsV2(client *s3.Client, b *bucket.Bucket) error {
 			break
 		}
 		continuationToken = output.NextContinuationToken
-		page += 1
+		page++
 		if page >= 5000 { // TODO: Should this limit be lowered?
 			return errors.New("more than 5000 pages of objects found. Skipping for now")
 		}
@@ -185,7 +180,7 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 	// Check for READ permission
 	canRead, err := permission.CheckPermRead(client, b)
 	if err != nil {
-		return fmt.Errorf("%v | error occured while checking for READ: %v", b.Name, err.Error())
+		return fmt.Errorf("%v | error occurred while checking for READ: %v", b.Name, err.Error())
 	}
 	b.PermAllUsersRead = bucket.Permission(canRead)
 
@@ -193,16 +188,16 @@ func checkPermissions(client *s3.Client, b *bucket.Bucket, doDestructiveChecks b
 		// Check for WRITE permission
 		permWrite, writeErr := permission.CheckPermWrite(client, b)
 		if writeErr != nil {
-			return fmt.Errorf("%v | error occured while checking for WRITE: %v", b.Name, writeErr.Error())
+			return fmt.Errorf("%v | error occurred while checking for WRITE: %v", b.Name, writeErr.Error())
 		}
 		b.PermAllUsersWrite = bucket.Permission(permWrite)
 
 		// Check for WRITE_ACP permission
-		permWriteAcl, writeAclErr := permission.CheckPermWriteAcl(client, b)
-		if writeAclErr != nil {
-			return fmt.Errorf("error occured while checking for WriteACL: %v", writeAclErr.Error())
+		permWriteACL, writeACLErr := permission.CheckPermWriteACL(client, b)
+		if writeACLErr != nil {
+			return fmt.Errorf("error occurred while checking for WriteACL: %v", writeACLErr.Error())
 		}
-		b.PermAllUsersWriteACL = bucket.Permission(permWriteAcl)
+		b.PermAllUsersWriteACL = bucket.Permission(permWriteACL)
 	}
 	return nil
 }
@@ -212,7 +207,7 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 	results := make(chan bucketCheckResult, clients.Len())
 	e := make(chan error, 1)
 
-	clients.Each(func(region string, credentials bool, client *s3.Client) {
+	clients.Each(func(region string, _ bool, client *s3.Client) {
 		go func(bucketName string, client *s3.Client, region string) {
 			logFields := log.Fields{
 				"bucket_name": b.Name,

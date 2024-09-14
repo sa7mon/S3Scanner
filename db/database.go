@@ -44,7 +44,7 @@ func Connect(dbConn string, migrate bool) error {
 	}
 
 	if migrate {
-		err = database.AutoMigrate(&bucket.Bucket{}, &bucket.BucketObject{})
+		err = database.AutoMigrate(&bucket.Bucket{}, &bucket.Object{})
 		if err != nil {
 			return err
 		}

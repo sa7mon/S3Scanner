@@ -16,5 +16,5 @@ var AuthenticatedUsersv2 = &types.Grantee{
 	Type: types.TypeGroup,
 	URI:  aws.String(AuthUsersGroup)}
 
-const AllUsersUri = "uri=" + AllUsersGroup
-const AuthUsersUri = "uri=" + AuthUsersGroup
+const AllUsersURI = "uri=" + AllUsersGroup
+const AuthUsersURI = "uri=" + AuthUsersGroup

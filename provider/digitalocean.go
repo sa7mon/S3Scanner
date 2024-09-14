@@ -9,23 +9,23 @@ import (
 	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
-type providerDO struct {
+type DigitalOcean struct {
 	clients *clientmap.ClientMap
 }
 
-func (pdo providerDO) Insecure() bool {
+func (pdo DigitalOcean) Insecure() bool {
 	return false
 }
 
-func (pdo providerDO) Name() string {
+func (pdo DigitalOcean) Name() string {
 	return "digitalocean"
 }
 
-func (pdo providerDO) AddressStyle() int {
+func (pdo DigitalOcean) AddressStyle() int {
 	return PathStyle
 }
 
-func (pdo providerDO) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
+func (pdo DigitalOcean) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 	b.Provider = pdo.Name()
 	exists, region, err := bucketExists(pdo.clients, b)
 	if err != nil {
@@ -41,12 +41,12 @@ func (pdo providerDO) BucketExists(b *bucket.Bucket) (*bucket.Bucket, error) {
 	return b, nil
 }
 
-func (pdo providerDO) Scan(bucket *bucket.Bucket, doDestructiveChecks bool) error {
+func (pdo DigitalOcean) Scan(bucket *bucket.Bucket, doDestructiveChecks bool) error {
 	client := pdo.getRegionClient(bucket.Region)
 	return checkPermissions(client, bucket, doDestructiveChecks)
 }
 
-func (pdo providerDO) Enumerate(b *bucket.Bucket) error {
+func (pdo DigitalOcean) Enumerate(b *bucket.Bucket) error {
 	if b.Exists != bucket.BucketExists {
 		return errors.New("bucket might not exist")
 	}
@@ -59,7 +59,7 @@ func (pdo providerDO) Enumerate(b *bucket.Bucket) error {
 	return nil
 }
 
-func (pdo *providerDO) newClients() (*clientmap.ClientMap, error) {
+func (pdo *DigitalOcean) newClients() (*clientmap.ClientMap, error) {
 	clients := clientmap.WithCapacity(len(ProviderRegions[pdo.Name()]))
 	for _, r := range ProviderRegions[pdo.Name()] {
 		client, err := newNonAWSClient(pdo, fmt.Sprintf("https://%s.digitaloceanspaces.com", r))
@@ -72,12 +72,12 @@ func (pdo *providerDO) newClients() (*clientmap.ClientMap, error) {
 	return clients, nil
 }
 
-func (pdo *providerDO) getRegionClient(region string) *s3.Client {
+func (pdo *DigitalOcean) getRegionClient(region string) *s3.Client {
 	return pdo.clients.Get(region, false)
 }
 
-func NewProviderDO() (*providerDO, error) {
-	pdo := new(providerDO)
+func NewDigitalOcean() (*DigitalOcean, error) {
+	pdo := new(DigitalOcean)
 
 	clients, err := pdo.newClients()
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 func TestScanBucketPermissions_DO(t *testing.T) {
 	t.Parallel()
 
-	do, doErr := NewProviderDO()
+	do, doErr := NewDigitalOcean()
 	assert.Nil(t, doErr)
 
 	// Bucket exists but isn't open
@@ -56,5 +56,4 @@ func TestScanBucketPermissions_DO(t *testing.T) {
 	//}
 	//assert.Equal(t, bucket.BucketExists, dotBucket.Exists)
 	//assert.Equal(t, bucket.PermissionAllowed, dotBucket.PermAllUsersRead)
-
 }

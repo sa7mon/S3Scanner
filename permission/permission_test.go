@@ -171,7 +171,7 @@ func TestCheckPermWriteACL(t *testing.T) {
 	}
 
 	// Assert we can read the bucket without creds
-	permWrite, err := CheckPermWriteAcl(east1AnonClient, &readAllowedBucket)
+	permWrite, err := CheckPermWriteACL(east1AnonClient, &readAllowedBucket)
 	assert.Nil(t, err)
 	assert.False(t, permWrite)
 }
