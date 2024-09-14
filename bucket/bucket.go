@@ -28,15 +28,15 @@ var bucketRe = regexp.MustCompile(`[^.\-a-z0-9]`)
 
 type Bucket struct {
 	//gorm.Model
-	ID                uint           `gorm:"primarykey" json:",omitempty"`
-	Name              string         `json:"name" gorm:"name;size:64;index"`
-	Region            string         `json:"region" gorm:"size:20"`
-	Exists            uint8          `json:"exists"`
-	DateScanned       time.Time      `json:"date_scanned"`
-	Objects           []BucketObject `json:"objects"`
-	ObjectsEnumerated bool           `json:"objects_enumerated"`
-	Provider          string         `json:"provider"`
-	NumObjects        int32          `json:"num_objects"`
+	ID                uint      `gorm:"primarykey" json:",omitempty"`
+	Name              string    `json:"name" gorm:"name;size:64;index"`
+	Region            string    `json:"region" gorm:"size:20"`
+	Exists            uint8     `json:"exists"`
+	DateScanned       time.Time `json:"date_scanned"`
+	Objects           []Object  `json:"objects"`
+	ObjectsEnumerated bool      `json:"objects_enumerated"`
+	Provider          string    `json:"provider"`
+	NumObjects        int32     `json:"num_objects"`
 
 	// Total size of all bucket objects in bytes
 	BucketSize       uint64 `json:"bucket_size"`
@@ -56,7 +56,7 @@ type Bucket struct {
 	PermAllUsersFullControl uint8 `json:"perm_all_users_full_control"`
 }
 
-type BucketObject struct {
+type Object struct {
 	//gorm.Model
 	ID       uint   `gorm:"primarykey" json:",omitempty"`
 	Key      string `json:"key" gorm:"type:string;size:1024"` // Keys can be up to 1,024 bytes long, UTF-8 encoded plus an additional byte just in case. https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html

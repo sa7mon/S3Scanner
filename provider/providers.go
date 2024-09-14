@@ -90,12 +90,6 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
-		config.WithEndpointResolverWithOptions(
-			aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				return aws.Endpoint{
-					URL: regionURL,
-				}, nil
-			})),
 		config.WithCredentialsProvider(aws.AnonymousCredentials{}),
 		config.WithHTTPClient(httpClient),
 		config.WithRegion("auto"),
@@ -109,6 +103,7 @@ func newNonAWSClient(sp StorageProvider, regionURL string) (*s3.Client, error) {
 		addrStyleOption = func(o *s3.Options) { o.UsePathStyle = true }
 	}
 
+	cfg.BaseEndpoint = aws.String(regionURL)
 	cfg.Credentials = nil // TODO: Remove and test
 	return s3.NewFromConfig(cfg, addrStyleOption), nil
 }
@@ -138,7 +133,7 @@ func enumerateListObjectsV2(client *s3.Client, b *bucket.Bucket) error {
 		}
 
 		for _, obj := range output.Contents {
-			b.Objects = append(b.Objects, bucket.BucketObject{Key: *obj.Key, Size: uint64(*obj.Size)})
+			b.Objects = append(b.Objects, bucket.Object{Key: *obj.Key, Size: uint64(*obj.Size)})
 			b.BucketSize += uint64(*obj.Size)
 		}
 

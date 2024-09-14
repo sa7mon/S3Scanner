@@ -47,11 +47,11 @@ func makeRandomBucket(numObjects int) bucket.Bucket {
 		PermAllUsersWriteACL:     randPermission(),
 		PermAllUsersFullControl:  randPermission(),
 	}
-	bucketObjects := make([]bucket.BucketObject, numObjects)
+	bucketObjects := make([]bucket.Object, numObjects)
 	for j := 0; j < numObjects; j++ {
 		randSize, _ := rand.Int(rand.Reader, big.NewInt(250000000000))
 
-		obj := bucket.BucketObject{
+		obj := bucket.Object{
 			Key:  RandStringRunes(50),
 			Size: randSize.Uint64(), // 25GB max
 		}
