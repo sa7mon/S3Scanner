@@ -6,12 +6,12 @@ toolchain go1.22.7
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/aws/aws-sdk-go-v2 v1.30.5
+	github.com/aws/aws-sdk-go-v2 v1.32.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.33
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.13
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.18
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2
-	github.com/aws/smithy-go v1.20.4
+	github.com/aws/smithy-go v1.22.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
