@@ -44,7 +44,7 @@ var AllProviders = []string{
 }
 
 var ProviderRegions = map[string][]string{
-	"digitalocean": {"ams3", "blr1", "fra1", "lon1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1"},
+	"digitalocean": {"ams3", "blr1", "fra1", "lon1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1", "tor1"},
 	"dreamhost":    {"us-east-1"},
 	"linode": {"ap-south-1", "br-gru-1", "es-mad-1", "eu-central-1", "fr-par-1", "id-cgk-1", "in-maa-1",
 		"it-mil-1", "jp-osa-1", "nl-ams-1", "se-sto-1", "us-east-1", "us-iad-1", "us-lax-1", "us-mia-1",
