@@ -1,5 +1,3 @@
-version: "2.1"
-
 services:
   dev_mq:
     image: rabbitmq:3-management
@@ -19,7 +17,7 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
 
   app_dev: &app
-    image: golang:1.22-alpine
+    image: golang:1.23.4-alpine
     container_name: app_dev
     volumes:
       - $PWD:/app
