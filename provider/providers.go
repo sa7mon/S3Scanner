@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -50,6 +51,9 @@ var ProviderRegions = map[string][]string{
 		"it-mil-1", "jp-osa-1", "nl-ams-1", "se-sto-1", "us-east-1", "us-iad-1", "us-lax-1", "us-mia-1",
 		"us-ord-1", "us-sea-1", "us-southeast-1"},
 	"scaleway": {"fr-par", "nl-ams", "pl-waw"},
+	"wasabi": {"us-west-1", "us-east-1", "us-east-2", "us-central-1", "ca-central-1", "eu-west-1", "eu-west-2",
+		"eu-west-3", "eu-central-1", "eu-central-2", "eu-south-1", "ap-northeast-1", "ap-northeast-2", "ap-southeast-2",
+		"ap-southeast-1"},
 }
 
 func NewProvider(name string) (StorageProvider, error) {
@@ -70,6 +74,8 @@ func NewProvider(name string) (StorageProvider, error) {
 		provider, err = NewProviderLinode()
 	case "scaleway":
 		provider, err = NewProviderScaleway()
+	case "wasabi":
+		provider, err = NewProviderWasabi()
 	default:
 		err = fmt.Errorf("unknown provider: %s", name)
 	}
@@ -273,4 +279,44 @@ func bucketExists(clients *clientmap.ClientMap, b *bucket.Bucket) (bool, string,
 		}
 	}
 	return false, "", nil
+}
+
+// bucketExists301 takes a bucket name and checks if it exists. It assumes the server will respond with a 301 status
+// and `x-amz-bucket-region` header pointing to the correct region if an incorrect region is specified.
+func bucketExists301(client *s3.Client, region string, b *bucket.Bucket) (bool, string, error) {
+	logFields := log.Fields{
+		"bucket_name": b.Name,
+		"region":      region,
+		"method":      "providers.bucketExists301()",
+	}
+
+	bucketURL, err := url.JoinPath(*client.Options().BaseEndpoint, b.Name)
+	if err != nil {
+		return false, "", logErr(logFields, err)
+	}
+	req, reqErr := http.NewRequest("HEAD", bucketURL, nil)
+	if reqErr != nil {
+		return false, "", logErr(logFields, reqErr)
+	}
+	res, resErr := client.Options().HTTPClient.Do(req)
+	if resErr != nil {
+		return false, "", logErr(logFields, resErr)
+	}
+
+	switch res.StatusCode {
+	case 301:
+		return true, res.Header.Get("x-amz-bucket-region"), nil
+	case 404:
+		return false, "", nil
+	case 200:
+		return true, region, nil
+	case 403:
+		return true, region, nil
+	}
+	return false, "", logErr(logFields, errors.New(fmt.Sprintf("unexpected status code: %d", res.StatusCode)))
+}
+
+func logErr(fields log.Fields, err error) error {
+	log.WithFields(fields).Error(err.Error())
+	return err
 }

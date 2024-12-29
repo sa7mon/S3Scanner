@@ -58,6 +58,12 @@ func TestMain(m *testing.M) {
 	}
 	providers["scaleway"] = provider
 
+	provider, err = NewProviderWasabi()
+	if err != nil {
+		panic(err)
+	}
+	providers["wasabi"] = provider
+
 	code := m.Run()
 	os.Exit(code)
 }
@@ -120,6 +126,7 @@ func Test_StorageProvider_Statics(t *testing.T) {
 		{name: "GCP", provider: providers["gcp"], insecure: false, addressStyle: PathStyle},
 		{name: "Linode", provider: providers["linode"], insecure: false, addressStyle: VirtualHostStyle},
 		{name: "Scaleway", provider: providers["scaleway"], insecure: false, addressStyle: PathStyle},
+		{name: "Wasabi", provider: providers["wasabi"], insecure: false, addressStyle: PathStyle},
 	}
 
 	for _, tt := range tests {
@@ -145,6 +152,7 @@ func Test_StorageProvider_BucketExists(t *testing.T) {
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("books"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("2017"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
+		{name: "Wasabi", provider: providers["wasabi"], goodBucket: bucket.NewBucket("acp"), badBucket: bucket.NewBucket("s3scanner-no-exist")},
 	}
 
 	for _, tt := range tests {
@@ -177,6 +185,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 50},
 		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("3d-builder"), numObjects: 1},
+		{name: "Wasabi", provider: providers["wasabi"], goodBucket: bucket.NewBucket("animals"), numObjects: 102},
 	}
 
 	for _, tt := range tests {
@@ -210,6 +219,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("hatrioua"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Linode", provider: providers["linode"], bucket: bucket.NewBucket("vantage"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Scaleway", provider: providers["scaleway"], bucket: bucket.NewBucket("3d-builder"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
+		{name: "Wasabi", provider: providers["wasabi"], bucket: bucket.NewBucket("acceptance"), permissions: "AuthUsers: [] | AllUsers: [READ, READ_ACP]"},
 	}
 
 	for _, tt := range tests {
