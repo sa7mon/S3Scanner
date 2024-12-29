@@ -304,14 +304,14 @@ func bucketExists301(client *s3.Client, region string, b *bucket.Bucket) (bool, 
 	}
 
 	switch res.StatusCode {
-	case 301:
-		return true, res.Header.Get("x-amz-bucket-region"), nil
-	case 404:
-		return false, "", nil
 	case 200:
 		return true, region, nil
+	case 301:
+		return true, res.Header.Get("x-amz-bucket-region"), nil
 	case 403:
 		return true, region, nil
+	case 404:
+		return false, "", nil
 	}
 	return false, "", logErr(logFields, errors.New(fmt.Sprintf("unexpected status code: %d", res.StatusCode)))
 }
