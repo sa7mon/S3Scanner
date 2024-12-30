@@ -313,7 +313,7 @@ func bucketExists301(client *s3.Client, region string, b *bucket.Bucket) (bool, 
 	case 404:
 		return false, "", nil
 	}
-	return false, "", logErr(logFields, errors.New(fmt.Sprintf("unexpected status code: %d", res.StatusCode)))
+	return false, "", logErr(logFields, fmt.Errorf("unexpected status code: %d", res.StatusCode))
 }
 
 func logErr(fields log.Fields, err error) error {

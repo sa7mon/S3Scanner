@@ -64,7 +64,7 @@ func (w *Wasabi) getRegionClient(region string) *s3.Client {
 
 func (w *Wasabi) newExistsClient() (*s3.Client, error) {
 	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error { // don't follow redirects
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error { // don't follow redirects
 			return http.ErrUseLastResponse
 		},
 		Transport: &http.Transport{
