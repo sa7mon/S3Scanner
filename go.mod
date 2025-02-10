@@ -4,12 +4,12 @@ go 1.23.4
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
-	github.com/aws/aws-sdk-go-v2 v1.32.7
+	github.com/aws/aws-sdk-go-v2 v1.36.1
 	github.com/aws/aws-sdk-go-v2/config v1.28.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.22
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.44
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.1
-	github.com/aws/smithy-go v1.22.1
+	github.com/aws/smithy-go v1.22.2
 	github.com/dustin/go-humanize v1.0.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
