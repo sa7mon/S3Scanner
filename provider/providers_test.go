@@ -180,7 +180,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "AWS", provider: providers["aws"], goodBucket: bucket.NewBucket("s3scanner-empty"), numObjects: 0},
 		{name: "Custom public-read", provider: providers["custom"], goodBucket: bucket.NewBucket("alicante"), numObjects: 209},
 		{name: "Custom no public-read", provider: providers["custom"], goodBucket: bucket.NewBucket("assets"), numObjects: 0},
-		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("action"), numObjects: 2},
+		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("action"), numObjects: 4},
 		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("acc"), numObjects: 310},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 50},

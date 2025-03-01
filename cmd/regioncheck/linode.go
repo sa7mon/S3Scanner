@@ -6,6 +6,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -13,7 +14,7 @@ import (
 // unauthenticated API (https://api.linode.com/v4/regions) but the region names do not include the trailing digit "-1".
 func GetRegionsLinode() ([]string, error) {
 	// Akamai docs return a strange HTTP2 internal error if you don't request HTTP/2 with compression
-	req, err := http.NewRequest(http.MethodGet, "https://techdocs.akamai.com/cloud-computing/docs/object-storage", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://techdocs.akamai.com/cloud-computing/docs/object-storage-product-limits", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +58,13 @@ func GetRegionsLinode() ([]string, error) {
 		return nil, err
 	}
 
+	regionRe := regexp.MustCompile(`[\w-]+\.linodeobjects\.com`)
+
 	regions := []string{}
-	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(2)").Each(func(_ int, t *goquery.Selection) {
-		regions = append(regions, t.Text())
+	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(4)").Each(func(_ int, t *goquery.Selection) {
+		for _, r := range regionRe.FindAllString(t.Text(), -1) {
+			regions = append(regions, strings.Replace(r, ".linodeobjects.com", "", -1))
+		}
 	})
 
 	return regions, nil
