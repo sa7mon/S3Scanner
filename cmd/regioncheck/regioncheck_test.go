@@ -15,7 +15,7 @@ func TestGetRegionsDO(t *testing.T) {
 func TestGetRegionsLinode(t *testing.T) {
 	r, err := GetRegionsLinode()
 	assert.Nil(t, err)
-	assert.Equal(t, len(r), 18)
+	assert.Equal(t, len(r), 25)
 	assert.Contains(t, r, "us-east-1")
 }
 
