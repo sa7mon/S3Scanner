@@ -3,9 +3,9 @@ package worker
 import (
 	"fmt"
 	"github.com/dustin/go-humanize"
-	"github.com/sa7mon/s3scanner/bucket"
-	"github.com/sa7mon/s3scanner/db"
-	"github.com/sa7mon/s3scanner/provider"
+	"github.com/sa7mon/s3scanner/internal/bucket"
+	"github.com/sa7mon/s3scanner/internal/db"
+	"github.com/sa7mon/s3scanner/internal/provider"
 	log "github.com/sirupsen/logrus"
 	"sync"
 )

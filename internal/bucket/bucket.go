@@ -3,6 +3,7 @@ package bucket
 import (
 	"bufio"
 	"fmt"
+	"github.com/sa7mon/s3scanner/internal/groups"
 	"io"
 	"os"
 	"regexp"
@@ -12,7 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/sa7mon/s3scanner/groups"
 	log "github.com/sirupsen/logrus"
 )
 

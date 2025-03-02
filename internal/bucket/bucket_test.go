@@ -3,6 +3,7 @@ package bucket
 import (
 	"context"
 	"fmt"
+	"github.com/sa7mon/s3scanner/internal/groups"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/sa7mon/s3scanner/groups"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
 )

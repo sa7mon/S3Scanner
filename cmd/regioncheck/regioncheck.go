@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sa7mon/s3scanner/provider"
+	"github.com/sa7mon/s3scanner/internal/provider"
 	"log"
 	"os"
 	"sort"

@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/sa7mon/s3scanner/permission"
+	"github.com/sa7mon/s3scanner/internal/bucket"
+	"github.com/sa7mon/s3scanner/internal/permission"
+	"github.com/sa7mon/s3scanner/internal/provider/clientmap"
 	"net/http"
 	"time"
 
@@ -14,8 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/sa7mon/s3scanner/bucket"
-	"github.com/sa7mon/s3scanner/provider/clientmap"
 	log "github.com/sirupsen/logrus"
 )
 
