@@ -1,4 +1,30 @@
+---
+weight: -1
+---
+
 # Usage
+
+```
+INPUT: (1 required)
+-bucket        string  Name of bucket to check.
+-bucket-file   string  File of bucket names to check.
+-mq                    Connect to RabbitMQ to get buckets. Requires config file key "mq". Default: "false"
+
+OUTPUT:
+-db       Save results to a Postgres database. Requires config file key "db.uri". Default: "false"
+-json     Print logs to stdout in JSON format instead of human-readable. Default: "false"
+
+OPTIONS:
+-enumerate           Enumerate bucket objects (can be time-consuming). Default: "false"
+-provider    string  Object storage provider: aws, custom, digitalocean, dreamhost, gcp, linode, scaleway - custom requires config file. Default: "aws"
+-threads     int     Number of threads to scan with. Default: "4"
+
+DEBUG:
+-verbose     Enable verbose logging. Default: "false"
+-version     Print version Default: "false"
+
+If config file is required these locations will be searched for config.yml: "." "/etc/s3scanner/" "$HOME/.s3scanner/"
+```
 
 ## Input
 

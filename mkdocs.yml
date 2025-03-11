@@ -1,0 +1,12 @@
+site_name: S3Scanner
+site_url: https://s3scanner.local
+theme:
+  name: material
+plugins:
+  - search
+  - mkdocs-nav-weight:
+      section_renamed: false
+      index_weight: -10
+      warning: true
+      reverse: false
+      headless_included: false
