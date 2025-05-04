@@ -1,9 +1,16 @@
 package s3scanner
 
 import (
+	"bufio"
 	"bytes"
 	"flag"
 	"fmt"
+	"os"
+	"reflect"
+	"strings"
+	"sync"
+	"text/tabwriter"
+
 	"github.com/mux0x/S3Scanner/bucket"
 	"github.com/mux0x/S3Scanner/db"
 	log2 "github.com/mux0x/S3Scanner/log"
@@ -12,11 +19,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
-	"os"
-	"reflect"
-	"strings"
-	"sync"
-	"text/tabwriter"
 )
 
 type flagSetting struct {
@@ -214,6 +216,23 @@ func Run(version string) {
 			}
 			c := bucket.NewBucket(strings.ToLower(args.BucketName))
 			buckets <- c
+			close(buckets)
+		} else if isPipedInput() {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				line := strings.TrimSpace(scanner.Text())
+				if line == "" {
+					continue
+				}
+				if !bucket.IsValidS3BucketName(line) {
+					log.Infof("invalid   | %s", line)
+					continue
+				}
+				buckets <- bucket.NewBucket(strings.ToLower(line))
+			}
+			if err := scanner.Err(); err != nil {
+				log.Errorf("error reading stdin: %v", err)
+			}
 			close(buckets)
 		}
 

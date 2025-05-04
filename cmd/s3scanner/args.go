@@ -3,7 +3,10 @@ package s3scanner
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"github.com/spf13/viper"
+	// "bufio"
 )
 
 type ArgCollection struct {
@@ -17,6 +20,15 @@ type ArgCollection struct {
 	Verbose      bool
 	Version      bool
 	WriteToDB    bool
+	StdinInput   bool
+}
+
+func isPipedInput() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice == 0
 }
 
 func (args ArgCollection) Validate() error {
@@ -29,6 +41,9 @@ func (args ArgCollection) Validate() error {
 		numInputFlags++
 	}
 	if args.BucketFile != "" {
+		numInputFlags++
+	}
+	if isPipedInput() {
 		numInputFlags++
 	}
 	if numInputFlags != 1 {
