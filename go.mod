@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.3
 	github.com/aws/smithy-go v1.22.3
 	github.com/dustin/go-humanize v1.0.1
+	github.com/mux0x/S3Scanner v0.0.0-20250301184506-b6c26d67bc2a
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.20.1
 	github.com/streadway/amqp v1.1.0

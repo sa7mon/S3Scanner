@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/sa7mon/s3scanner/groups"
+	"github.com/mux0x/S3Scanner/groups"
 	log "github.com/sirupsen/logrus"
 )
 

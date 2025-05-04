@@ -77,8 +77,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
-github.com/sa7mon/s3scanner v0.0.0-20250301184506-b6c26d67bc2a h1:bvRO+Gat8VjW+D2g5ctBTIWWiY9WtuXn5NYHKvSkPUY=
-github.com/sa7mon/s3scanner v0.0.0-20250301184506-b6c26d67bc2a/go.mod h1:K0GD5Nl5VNcgM1+koQJWSZsXcvDiZ3qlogDzjVlcW8k=
+github.com/mux0x/S3Scanner v0.0.0-20250301184506-b6c26d67bc2a h1:bvRO+Gat8VjW+D2g5ctBTIWWiY9WtuXn5NYHKvSkPUY=
+github.com/mux0x/S3Scanner v0.0.0-20250301184506-b6c26d67bc2a/go.mod h1:K0GD5Nl5VNcgM1+koQJWSZsXcvDiZ3qlogDzjVlcW8k=
 github.com/sagikazarmark/locafero v0.7.0 h1:5MqpDsTGNDhY8sGp0Aowyf0qKsPrhewaLSsFaodPcyo=
 github.com/sagikazarmark/locafero v0.7.0/go.mod h1:2za3Cg5rMaTMoG/2Ulr9AwtFaIppKXTRYnozin4aB5k=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=

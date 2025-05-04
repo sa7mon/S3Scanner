@@ -2,8 +2,8 @@ package worker
 
 import (
 	"bytes"
-	"github.com/sa7mon/s3scanner/bucket"
-	"github.com/sa7mon/s3scanner/provider"
+	"github.com/mux0x/S3Scanner/bucket"
+	"github.com/mux0x/S3Scanner/provider"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 	"github.com/stretchr/testify/assert"

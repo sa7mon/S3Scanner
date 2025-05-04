@@ -90,7 +90,7 @@ Scan a bucket in GCP, enumerate all objects, and save results to database
 |---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | BlackArch                 | [![BlackArch package](https://repology.org/badge/version-for-repo/blackarch/s3scanner.svg?header=BlackArch)](https://repology.org/project/s3scanner/versions) | `pacman -S s3scanner`                                                                      |
 | Docker                    | ![Docker release](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Docker)                                                                      | `docker run ghcr.io/sa7mon/s3scanner`                                                      |
-| Go                        | ![Golang](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Go)                                                                                  | `go install -v github.com/sa7mon/s3scanner@latest`                                         |
+| Go                        | ![Golang](https://img.shields.io/github/v/release/sa7mon/s3scanner?label=Go)                                                                                  | `go install -v github.com/mux0x/S3Scanner@latest`                                         |
 | Kali Linux                | [![Kali package](https://repology.org/badge/version-for-repo/kali_rolling/s3scanner.svg?header=Kali+Linux)](https://repology.org/project/s3scanner/versions)  | `apt install s3scanner`                                                                    |
 | MacOS                     | [![homebrew version](https://img.shields.io/homebrew/v/s3scanner)](https://github.com/Homebrew/homebrew-core/blob/master/Formula/s/s3scanner.rb)              | `brew install s3scanner`                                                                   |
 | Parrot OS                 | [![Parrot package](https://repology.org/badge/version-for-repo/parrot/s3scanner.svg?header=Parrot+OS)](https://repology.org/project/s3scanner/versions)       | `apt install s3scanner`                                                                    |
@@ -148,7 +148,7 @@ Connects to a RabbitMQ server and consumes messages containing bucket names to s
 s3scanner -mq
 ```
 
-Messages should be JSON-encoded [`Bucket`](https://github.com/sa7mon/s3scanner/blob/main/bucket/bucket.go) objects - refer to [`mqingest`](https://github.com/sa7mon/s3scanner/blob/main/cmd/mqingest/mqingest.go) for a Golang publishing example.
+Messages should be JSON-encoded [`Bucket`](https://github.com/mux0x/S3Scanner/blob/main/bucket/bucket.go) objects - refer to [`mqingest`](https://github.com/mux0x/S3Scanner/blob/main/cmd/mqingest/mqingest.go) for a Golang publishing example.
 
 `-mq` requires the `mq.uri` and `mq.queue_name` config file keys. See Config File section for example.
 

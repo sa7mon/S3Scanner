@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/mux0x/S3Scanner/bucket"
 	"github.com/streadway/amqp"
 	"log"
 	"os"

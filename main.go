@@ -1,6 +1,6 @@
 package main
 
-import "github.com/sa7mon/s3scanner/cmd/s3scanner"
+import "github.com/mux0x/S3Scanner/cmd/s3scanner"
 
 var version = "dev"
 

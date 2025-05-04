@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/sa7mon/s3scanner/bucket"
-	"github.com/sa7mon/s3scanner/provider/clientmap"
+	"github.com/mux0x/S3Scanner/bucket"
+	"github.com/mux0x/S3Scanner/provider/clientmap"
 )
 
 type DigitalOcean struct {
