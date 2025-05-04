@@ -91,23 +91,33 @@ func (a *AWS) Enumerate(b *bucket.Bucket) error {
 
 func NewProviderAWS() (*AWS, error) {
 	pa := new(AWS)
+
+	// Start with an anonymous client just to detect existence
 	client, err := pa.newAnonClient("us-east-1")
 	if err != nil {
 		return nil, err
 	}
 	pa.existsClient = client
 
-	// Seed the clients map with a common region
-	usEastClient, usErr := pa.newClient("us-east-1")
+	// Check credentials by trying to load a client with them
+	var usEastClient *s3.Client
+	var usErr error
+	usEastRegion := "us-east-1"
+
+	usEastClient, usErr = pa.newClient(usEastRegion)
+	clientHasCreds := ClientHasCredentials(usEastClient)
+
+	if !clientHasCreds {
+		usEastClient, usErr = pa.newAnonClient(usEastRegion)
+	}
 	if usErr != nil {
 		return nil, usErr
 	}
 
-	// check if the user has properly configured credentials for scanning
-	clientHasCreds := ClientHasCredentials(usEastClient)
 	pa.hasCredentials = clientHasCreds
 	pa.clients = clientmap.New()
-	pa.clients.Set("us-east-1", clientHasCreds, usEastClient)
+	pa.clients.Set(usEastRegion, clientHasCreds, usEastClient)
+
 	return pa, nil
 }
 
