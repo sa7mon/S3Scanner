@@ -9,7 +9,7 @@ import (
 
 func GetRegionsScaleway() ([]string, error) {
 	var re = regexp.MustCompile(`Region: \x60(.+)\x60`)
-	requestURL := "https://raw.githubusercontent.com/scaleway/docs-content/main/storage/object/how-to/create-a-bucket.mdx"
+	requestURL := "https://raw.githubusercontent.com/scaleway/docs-content/refs/heads/main/pages/object-storage/how-to/create-a-bucket.mdx"
 	res, err := http.Get(requestURL)
 	if err != nil {
 		return nil, err
