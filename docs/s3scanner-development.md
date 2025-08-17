@@ -1,3 +1,7 @@
+---
+weight: 100
+---
+
 # Development
 
 A docker compose file is included which creates 4 containers:

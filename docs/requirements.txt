@@ -1,0 +1,2 @@
+mkdocs-material == 9.*
+mkdocs-nav-weight==0.2.0
