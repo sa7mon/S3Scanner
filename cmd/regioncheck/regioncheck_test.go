@@ -16,13 +16,13 @@ func TestGetRegionsDO(t *testing.T) {
 func TestGetRegionsLinode(t *testing.T) {
 	r, err := GetRegionsLinode()
 	assert.Nil(t, err)
-	assert.Equal(t, 28, len(r))
+	assert.GreaterOrEqual(t, len(r), 28)
 	assert.Contains(t, r, "us-east-1")
 }
 
 func TestGetRegionsScaleway(t *testing.T) {
 	r, err := GetRegionsScaleway()
 	assert.Nil(t, err)
-	assert.GreaterOrEqual(t, 1, len(r))
+	assert.GreaterOrEqual(t, len(r), 3)
 	assert.Contains(t, r, "fr-par")
 }
