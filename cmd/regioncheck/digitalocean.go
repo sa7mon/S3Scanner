@@ -25,34 +25,26 @@ func GetRegionsDO() ([]string, error) {
 		return nil, err
 	}
 
-	regions := []string{}
+	var regions []string
 	doc.Find("h2#other-digitalocean-products + div table thead tr th").Each(func(_ int, t *goquery.Selection) {
-		regions = append(regions, t.Text())
+		if t.Text() != "Product" {
+			regions = append(regions, t.Text())
+		}
 	})
 
-	spacesSupported := []bool{}
+	var supportedRegions []string
 	doc.Find("h2#other-digitalocean-products + div table tbody tr").Each(func(_ int, t *goquery.Selection) {
 		// For each row, check the first cell for a value of "Spaces"
 		rowHeader := t.Find("td").First().Text()
 		if rowHeader == "Spaces" {
 			// For each cell in the "Spaces" row, check if the contents are not empty - meaning Spaces is supported
-			t.Find("td").Each(func(_ int, v *goquery.Selection) {
-				supported := v.Text() != ""
-				spacesSupported = append(spacesSupported, supported)
+			t.Find("td").Each(func(i int, v *goquery.Selection) {
+				if v.Has("i.fa-circle").Length() != 0 {
+					supportedRegions = append(supportedRegions, strings.ToLower(regions[i-1]))
+				}
 			})
 		}
 	})
 
-	supportedRegions := []string{}
-	for i := 0; i < len(regions); i++ {
-		if regions[i] == "Product" {
-			continue
-		}
-		if spacesSupported[i] {
-			supportedRegions = append(supportedRegions, strings.ToLower(regions[i]))
-		}
-	}
-
-	// Return slice of region names
 	return supportedRegions, nil
 }
