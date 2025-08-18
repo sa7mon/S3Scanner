@@ -45,12 +45,12 @@ var AllProviders = []string{
 }
 
 var ProviderRegions = map[string][]string{
-	"digitalocean": {"ams3", "blr1", "fra1", "lon1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1", "tor1"},
+	"digitalocean": {"ams3", "atl1", "blr1", "fra1", "lon1", "nyc3", "sfo2", "sfo3", "sgp1", "syd1", "tor1"},
 	"dreamhost":    {"us-east-1"},
 	"linode": {"us-east-1", "us-ord-1", "us-lax-1", "us-sea-1", "us-southeast-1", "us-mia-1", "us-sea-9",
-		"us-iad-1", "us-iad-10", "id-cgk-1", "in-maa-1", "in-bom-1", "jp-osa-1", "ap-south-1", "sg-sin-1",
+		"us-iad-1", "us-iad-10", "id-cgk-1", "in-maa-1", "in-bom-1", "jp-osa-1", "jp-tyo-1", "ap-south-1", "sg-sin-1",
 		"eu-central-1", "de-fra-1", "es-mad-1", "fr-par-1", "gb-lon-1", "it-mil-1", "nl-ams-1", "se-sto-1",
-		"au-mel-1", "br-gru-1"},
+		"au-mel-1", "br-gru-1", "us-lax-4", "us-ord-10"},
 	"scaleway": {"fr-par", "nl-ams", "pl-waw"},
 	"wasabi": {"us-west-1", "us-east-1", "us-east-2", "us-central-1", "ca-central-1", "eu-west-1", "eu-west-2",
 		"eu-west-3", "eu-central-1", "eu-central-2", "eu-south-1", "ap-northeast-1", "ap-northeast-2", "ap-southeast-2",
