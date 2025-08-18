@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/sa7mon/s3scanner/internal/provider"
 	"log"
 	"os"
 	"sort"
 	"sync"
+
+	"github.com/sa7mon/s3scanner/internal/provider"
 )
 
 // eq compares sorted string slices. TODO: Once we move to Golang 1.21, use slices.Equal instead.
