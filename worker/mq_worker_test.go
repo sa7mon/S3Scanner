@@ -2,9 +2,9 @@ package worker
 
 import (
 	"encoding/json"
-	"github.com/sa7mon/s3scanner/internal/bucket"
-	"github.com/sa7mon/s3scanner/internal/mq"
-	"github.com/sa7mon/s3scanner/internal/provider"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/mq"
+	"github.com/sa7mon/s3scanner/provider"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"os"

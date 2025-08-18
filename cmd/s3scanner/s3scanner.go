@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/sa7mon/s3scanner/internal/bucket"
-	"github.com/sa7mon/s3scanner/internal/db"
-	log2 "github.com/sa7mon/s3scanner/internal/log"
-	provider2 "github.com/sa7mon/s3scanner/internal/provider"
-	worker2 "github.com/sa7mon/s3scanner/internal/worker"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/db"
+	log2 "github.com/sa7mon/s3scanner/log"
+	"github.com/sa7mon/s3scanner/provider"
+	"github.com/sa7mon/s3scanner/worker"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
@@ -112,7 +112,7 @@ func Run(version string) {
 
 	flag.StringVar(&args.ProviderFlag, "provider", "aws", fmt.Sprintf(
 		"Object storage provider: %s - custom requires config file.",
-		strings.Join(provider2.AllProviders, ", ")))
+		strings.Join(provider.AllProviders, ", ")))
 	flag.StringVar(&args.BucketName, "bucket", "", "Name of bucket to check.")
 	flag.StringVar(&args.BucketFile, "bucket-file", "", "File of bucket names to check.")
 	flag.BoolVar(&args.UseMq, "mq", false, "Connect to RabbitMQ to get buckets. Requires config file key \"mq\".")
@@ -151,7 +151,7 @@ func Run(version string) {
 		log.SetFormatter(&log.TextFormatter{DisableTimestamp: true})
 	}
 
-	var p provider2.StorageProvider
+	var p provider.StorageProvider
 	var err error
 	configErr := validateConfig(args)
 	if configErr != nil {
@@ -161,7 +161,7 @@ func Run(version string) {
 	if args.ProviderFlag == "custom" {
 		if viper.IsSet("providers.custom") {
 			log.Debug("found custom provider")
-			p, err = provider2.NewCustomProvider(
+			p, err = provider.NewCustomProvider(
 				viper.GetString("providers.custom.address_style"),
 				viper.GetBool("providers.custom.insecure"),
 				viper.GetStringSlice("providers.custom.regions"),
@@ -172,7 +172,7 @@ func Run(version string) {
 			}
 		}
 	} else {
-		p, err = provider2.NewProvider(args.ProviderFlag)
+		p, err = provider.NewProvider(args.ProviderFlag)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
@@ -197,7 +197,7 @@ func Run(version string) {
 
 		for i := 0; i < args.Threads; i++ {
 			wg.Add(1)
-			go worker2.Work(&wg, buckets, p, args.DoEnumerate, args.WriteToDB, args.JSON)
+			go worker.Work(&wg, buckets, p, args.DoEnumerate, args.WriteToDB, args.JSON)
 		}
 
 		if args.BucketFile != "" {
@@ -232,7 +232,7 @@ func Run(version string) {
 
 	for i := 0; i < args.Threads; i++ {
 		wg.Add(1)
-		go worker2.WorkMQ(i, &wg, conn, p, mqName, args.Threads, args.DoEnumerate, args.WriteToDB)
+		go worker.WorkMQ(i, &wg, conn, p, mqName, args.Threads, args.DoEnumerate, args.WriteToDB)
 	}
 	log.Printf("Waiting for messages. To exit press CTRL+C")
 	wg.Wait()

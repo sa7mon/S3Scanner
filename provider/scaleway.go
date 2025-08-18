@@ -3,8 +3,8 @@ package provider
 import (
 	"errors"
 	"fmt"
-	"github.com/sa7mon/s3scanner/internal/bucket"
-	"github.com/sa7mon/s3scanner/internal/provider/clientmap"
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/sa7mon/s3scanner/provider/clientmap"
 )
 
 type Scaleway struct {

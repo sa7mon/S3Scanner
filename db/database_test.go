@@ -3,7 +3,7 @@ package db
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/sa7mon/s3scanner/internal/bucket"
+	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"os"
