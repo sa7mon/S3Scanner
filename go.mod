@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.87.0
 	github.com/aws/smithy-go v1.22.5
 	github.com/dustin/go-humanize v1.0.1
-	github.com/imroc/req/v3 v3.54.0
+	github.com/imroc/req/v3 v3.54.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.20.1
 	github.com/streadway/amqp v1.1.0
@@ -40,8 +40,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/icholy/digest v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
