@@ -28,7 +28,7 @@ func GetRegionsLinode() ([]string, error) {
 	regions := []string{}
 	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(4)").Each(func(_ int, t *goquery.Selection) {
 		for _, r := range regionRe.FindAllString(t.Text(), -1) {
-			regions = append(regions, strings.Replace(r, ".linodeobjects.com", "", -1))
+			regions = append(regions, strings.ReplaceAll(r, ".linodeobjects.com", ""))
 		}
 	})
 

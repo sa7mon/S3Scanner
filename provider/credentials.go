@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"errors"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/smithy-go"
@@ -18,7 +19,7 @@ func HasCredentials(cfg aws.Config) (bool, string) {
 	if credsErr != nil {
 		var oe *smithy.OperationError
 		if errors.As(credsErr, &oe) {
-			if !(oe.ServiceID == "ec2imds" && oe.OperationName == "GetMetadata") {
+			if oe.ServiceID != "ec2imds" || oe.OperationName != "GetMetadata" {
 				log.WithFields(log.Fields{"method": "provider.HasCredentials"}).Error(oe.Error())
 			}
 			return false, ""
@@ -32,7 +33,7 @@ func ClientHasCredentials(client *s3.Client) bool {
 	if credsErr != nil {
 		var oe *smithy.OperationError
 		if errors.As(credsErr, &oe) {
-			if !(oe.ServiceID == "ec2imds" && oe.OperationName == "GetMetadata") {
+			if oe.ServiceID != "ec2imds" || oe.OperationName != "GetMetadata" {
 				log.WithFields(log.Fields{"method": "provider.ClientHasCredentials"}).Error(oe.Error())
 			}
 			return false
