@@ -80,11 +80,12 @@ func NewCustomProvider(addressStyle string, insecure bool, regions []string, end
 	cp.regions = regions
 	cp.insecure = insecure
 	cp.endpointFormat = endpointFormat
-	if addressStyle == "path" {
+	switch addressStyle {
+	case "path":
 		cp.addressStyle = PathStyle
-	} else if addressStyle == "vhost" {
+	case "vhost":
 		cp.addressStyle = VirtualHostStyle
-	} else {
+	default:
 		return cp, fmt.Errorf("unknown custom provider address style: %s. Expected 'path' or 'vhost'", addressStyle)
 	}
 
@@ -99,7 +100,7 @@ func NewCustomProvider(addressStyle string, insecure bool, regions []string, end
 func (cp *CustomProvider) newClients() (*clientmap.ClientMap, error) {
 	clients := clientmap.WithCapacity(len(cp.regions))
 	for _, r := range cp.regions {
-		regionURL := strings.Replace(cp.endpointFormat, "$REGION", r, -1)
+		regionURL := strings.ReplaceAll(cp.endpointFormat, "$REGION", r)
 		client, err := newNonAWSClient(cp, regionURL)
 		if err != nil {
 			return nil, err
