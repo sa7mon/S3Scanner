@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	"github.com/mux0x/S3Scanner/permission"
 	"net/http"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/sa7mon/s3scanner/permission"
 
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -73,10 +74,7 @@ func (a *AWS) Scan(b *bucket.Bucket, doDestructiveChecks bool) error {
 }
 
 func (a *AWS) Enumerate(b *bucket.Bucket) error {
-	useCreds := false
-	if b.PermAuthUsersRead == bucket.PermissionAllowed {
-		useCreds = true
-	}
+	useCreds := b.PermAuthUsersRead == bucket.PermissionAllowed
 	client, err := a.getRegionClient(b.Region, useCreds)
 	if err != nil {
 		return err

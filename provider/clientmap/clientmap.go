@@ -1,8 +1,9 @@
 package clientmap
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"sync"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type ClientKey struct {
@@ -22,10 +23,10 @@ func New() *ClientMap {
 	}
 }
 
-func WithCapacity(cap int) *ClientMap {
+func WithCapacity(capacity int) *ClientMap {
 	return &ClientMap{
 		Mutex: sync.Mutex{},
-		inner: make(map[ClientKey]*s3.Client, cap),
+		inner: make(map[ClientKey]*s3.Client, capacity),
 	}
 }
 

@@ -1,9 +1,11 @@
 package provider
 
 import (
-	"github.com/mux0x/S3Scanner/bucket"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestScanBucketPermissions_DO(t *testing.T) {
@@ -13,9 +15,10 @@ func TestScanBucketPermissions_DO(t *testing.T) {
 	assert.Nil(t, doErr)
 
 	// Bucket exists but isn't open
-	c := bucket.NewBucket("admin")
+	c := bucket.NewBucket("123")
 	c2, cErr := do.BucketExists(&c)
-	assert.Nil(t, cErr)
+	require.Nil(t, cErr)
+	require.Equal(t, bucket.BucketExists, c2.Exists)
 	cScanErr := do.Scan(c2, true)
 	assert.Nil(t, cScanErr)
 	assert.Equal(t, bucket.BucketExists, c2.Exists)

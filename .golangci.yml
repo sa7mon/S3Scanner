@@ -1,19 +1,7 @@
-linters-settings:
-  misspell:
-    locale: US
-  gosec:
-    excludes:
-      - G115 # Flags for potentially-unsafe casting of ints
-
-issues:
-  exclude-rules:
-    - path: provider/providers.go # TLS verification is skipped when provider.Insecure() == true
-      text: "InsecureSkipVerify"
-
+version: "2"
 linters:
   enable:
     - gosec
-    - govet
     - loggercheck
     - misspell
     - revive
@@ -21,5 +9,31 @@ linters:
     - tparallel
     - unconvert
     - unparam
-    - unused
     - whitespace
+  settings:
+    gosec:
+      excludes:
+        - G115  # Flags for potentially-unsafe casting of ints
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: provider/providers.go  # TLS verification is skipped when provider.Insecure() == true
+        text: InsecureSkipVerify
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

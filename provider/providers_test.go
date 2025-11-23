@@ -1,10 +1,11 @@
 package provider
 
 import (
-	"github.com/mux0x/S3Scanner/bucket"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/sa7mon/s3scanner/bucket"
+	"github.com/stretchr/testify/assert"
 )
 
 var providers = map[string]StorageProvider{}
@@ -183,7 +184,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "DO", provider: providers["digitalocean"], goodBucket: bucket.NewBucket("action"), numObjects: 4},
 		{name: "Dreamhost", provider: providers["dreamhost"], goodBucket: bucket.NewBucket("acc"), numObjects: 310},
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
-		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 50},
+		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 51},
 		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("3d-builder"), numObjects: 1},
 		{name: "Wasabi", provider: providers["wasabi"], goodBucket: bucket.NewBucket("animals"), numObjects: 102},
 	}

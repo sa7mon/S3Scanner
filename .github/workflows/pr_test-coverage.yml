@@ -33,7 +33,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22'
+          go-version: '1.24'
       - name: Test
         run: TEST_DB=1 TEST_MQ=1 go test ./... -coverprofile=cover.out
         timeout-minutes: 5
