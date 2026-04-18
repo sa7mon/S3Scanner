@@ -16,7 +16,7 @@ func GetRegionsLinode() ([]string, error) {
 	resp := req.
 		ImpersonateFirefox().
 		R().
-		MustGet("https://techdocs.akamai.com/cloud-computing/docs/object-storage-product-limits")
+		MustGet("https://techdocs.akamai.com/cloud-computing/docs/endpoint-types")
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(resp.String()))
 	if err != nil {
@@ -26,7 +26,7 @@ func GetRegionsLinode() ([]string, error) {
 	regionRe := regexp.MustCompile(`[\w-]+\.linodeobjects\.com`)
 
 	regions := []string{}
-	doc.Find(".rdmd-table:nth-of-type(1) tbody tr td:nth-of-type(4)").Each(func(_ int, t *goquery.Selection) {
+	doc.Find(".rdmd-table:nth-of-type(2) tbody tr td:nth-of-type(7)").Each(func(_ int, t *goquery.Selection) {
 		for _, r := range regionRe.FindAllString(t.Text(), -1) {
 			regions = append(regions, strings.ReplaceAll(r, ".linodeobjects.com", ""))
 		}
