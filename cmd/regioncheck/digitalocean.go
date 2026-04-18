@@ -36,7 +36,7 @@ func GetRegionsDO() ([]string, error) {
 	doc.Find("h2#other-digitalocean-products + div table tbody tr").Each(func(_ int, t *goquery.Selection) {
 		// For each row, check the first cell for a value of "Spaces"
 		rowHeader := t.Find("td").First().Text()
-		if rowHeader == "Spaces" {
+		if rowHeader == "Spaces Standard Storage" {
 			// For each cell in the "Spaces" row, check if the contents are not empty - meaning Spaces is supported
 			t.Find("td").Each(func(i int, v *goquery.Selection) {
 				if v.Has("i.fa-circle").Length() != 0 {
