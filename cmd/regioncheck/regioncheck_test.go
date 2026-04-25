@@ -23,6 +23,6 @@ func TestGetRegionsLinode(t *testing.T) {
 func TestGetRegionsScaleway(t *testing.T) {
 	r, err := GetRegionsScaleway()
 	assert.Nil(t, err)
-	assert.GreaterOrEqual(t, len(r), 3)
+	assert.Equal(t, 3, len(r))
 	assert.Contains(t, r, "fr-par")
 }
