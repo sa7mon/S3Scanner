@@ -9,7 +9,7 @@ import (
 func TestGetRegionsDO(t *testing.T) {
 	r, err := GetRegionsDO()
 	assert.Nil(t, err)
-	assert.Equal(t, 11, len(r))
+	assert.Equal(t, 12, len(r))
 	assert.Contains(t, r, "nyc3")
 }
 
@@ -23,6 +23,6 @@ func TestGetRegionsLinode(t *testing.T) {
 func TestGetRegionsScaleway(t *testing.T) {
 	r, err := GetRegionsScaleway()
 	assert.Nil(t, err)
-	assert.Equal(t, 3, len(r))
+	assert.Equal(t, 4, len(r))
 	assert.Contains(t, r, "fr-par")
 }
