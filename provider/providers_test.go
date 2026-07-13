@@ -232,7 +232,6 @@ func Test_StorageProvider_Scan(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t2 *testing.T) {
-
 			t2.Parallel()
 			gb, err := tt.provider.BucketExists(&tt.bucket)
 			assert.Nil(t2, err)
