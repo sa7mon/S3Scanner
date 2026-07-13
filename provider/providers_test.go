@@ -186,7 +186,7 @@ func Test_StorageProvider_Enum(t *testing.T) {
 		{name: "GCP", provider: providers["gcp"], goodBucket: bucket.NewBucket("assets"), numObjects: 3},
 		{name: "Linode", provider: providers["linode"], goodBucket: bucket.NewBucket("vantage"), numObjects: 51},
 		{name: "Scaleway", provider: providers["scaleway"], goodBucket: bucket.NewBucket("3d-builder"), numObjects: 1},
-		{name: "Wasabi", provider: providers["wasabi"], goodBucket: bucket.NewBucket("animals"), numObjects: 102},
+		{name: "Wasabi", provider: providers["wasabi"], goodBucket: bucket.NewBucket("appliance-repair"), numObjects: 34},
 	}
 
 	for _, tt := range tests {
@@ -194,11 +194,13 @@ func Test_StorageProvider_Enum(t *testing.T) {
 			t2.Parallel()
 			gb, err := tt.provider.BucketExists(&tt.goodBucket)
 			assert.Nil(t2, err)
+			if !assert.Equal(t2, bucket.BucketExists, gb.Exists, "expected bucket to exist but it does not") {
+				return
+			}
 			err = tt.provider.Scan(&tt.goodBucket, false)
 			assert.Nil(t2, err)
 			scanErr := tt.provider.Enumerate(gb)
 			assert.Nil(t2, scanErr)
-			assert.Equal(t2, bucket.BucketExists, gb.Exists)
 			assert.Equal(t2, int32(tt.numObjects), gb.NumObjects)
 		})
 	}
@@ -220,7 +222,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("hatrioua"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "Linode", provider: providers["linode"], bucket: bucket.NewBucket("vantage"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Scaleway", provider: providers["scaleway"], bucket: bucket.NewBucket("3d-builder"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
-		{name: "Wasabi", provider: providers["wasabi"], bucket: bucket.NewBucket("acceptance"), permissions: "AuthUsers: [] | AllUsers: [READ, READ_ACP]"},
+		{name: "Wasabi", provider: providers["wasabi"], bucket: bucket.NewBucket("appliance-repair"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 	}
 
 	for _, tt := range tests {
