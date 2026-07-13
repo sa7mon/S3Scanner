@@ -219,7 +219,7 @@ func Test_StorageProvider_Scan(t *testing.T) {
 		{name: "Custom no public-read", provider: providers["custom"], bucket: bucket.NewBucket("assets"), permissions: "AuthUsers: [] | AllUsers: []"},
 		{name: "DO", provider: providers["digitalocean"], bucket: bucket.NewBucket("logo"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Dreamhost", provider: providers["dreamhost"], bucket: bucket.NewBucket("acc"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
-		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("hatrioua"), permissions: "AuthUsers: [] | AllUsers: []"},
+		{name: "GCP", provider: providers["gcp"], bucket: bucket.NewBucket("3d-printer"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Linode", provider: providers["linode"], bucket: bucket.NewBucket("vantage"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Scaleway", provider: providers["scaleway"], bucket: bucket.NewBucket("3d-builder"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
 		{name: "Wasabi", provider: providers["wasabi"], bucket: bucket.NewBucket("appliance-repair"), permissions: "AuthUsers: [] | AllUsers: [READ]"},
