@@ -1,9 +1,10 @@
 package provider
 
 import (
+	"testing"
+
 	"github.com/sa7mon/s3scanner/bucket"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestWasabi_NewExistsClient(t *testing.T) {
@@ -27,4 +28,9 @@ func TestWasabi_BucketExists(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, bucket.BucketExists, exists.Exists)
 	assert.Equal(t, "us-east-1", exists.Region)
+
+	// no such bucket
+	exists, err = w.BucketExists(&bucket.Bucket{Name: "helmet-rocket-trinket"})
+	assert.Nil(t, err)
+	assert.Equal(t, bucket.BucketNotExist, exists.Exists)
 }
