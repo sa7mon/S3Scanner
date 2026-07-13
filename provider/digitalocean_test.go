@@ -25,7 +25,7 @@ func TestScanBucketPermissions_DO(t *testing.T) {
 	assert.Equal(t, bucket.PermissionDenied, c2.PermAllUsersRead)
 
 	// Bucket exists and has READ open
-	o := bucket.NewBucket("stats")
+	o := bucket.NewBucket("advertising")
 	o2, oErr := do.BucketExists(&o)
 	assert.Nil(t, oErr)
 	oScanErr := do.Scan(o2, true)
